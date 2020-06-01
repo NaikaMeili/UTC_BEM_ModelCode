@@ -14,6 +14,9 @@ Radius_tree		=	0.289;				% Tree-crown radius (m), Calculated out of rescaled tre
 Height_tree		=	5-Radius_tree;		% Tree height (m)
 Distance_tree	=	0.5+Radius_tree;	% Tree-to-wall distance (m)
 
+Hcan_max	=	10;	% Maximum height of roughness elements (buidlings)
+Hcan_std	=	1;	% Standard deviation of roughness elements (buildings)
+
 trees   =	1;		% Easy switch to include (=1) and exclude (=0) trees in the urban canyon
 ftree	=	1;		% DO NOT CHANGE: Tree fraction along canyon axis
 
@@ -34,13 +37,15 @@ wroof_norm		=	wroof/(wcanyon+wroof);			% normalized roof width overall (-)
 
 Gemeotry_m	=	struct('Height_canyon',Height_canyon,'Width_canyon',Width_canyon,...
 				'Width_roof',Width_roof,'Height_tree',Height_tree,...
-				'Radius_tree',Radius_tree,'Distance_tree',Distance_tree);
+				'Radius_tree',Radius_tree,'Distance_tree',Distance_tree,...
+				'Hcan_max',Hcan_max,'Hcan_std',Hcan_std);
 
 ParTree		=	struct('trees',trees,'ftree',ftree);
 
 geometry	=	struct('hcanyon',hcanyon,'wcanyon',wcanyon,'wroof',wroof,...
 				'htree',htree,'radius_tree',radius_tree,'distance_tree',distance_tree,...
 				'ratio',ratio,'wcanyon_norm',wcanyon_norm,'wroof_norm',wroof_norm);
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% SURFACE FRACTIONS

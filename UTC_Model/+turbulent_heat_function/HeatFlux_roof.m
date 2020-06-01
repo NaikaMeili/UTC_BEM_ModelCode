@@ -209,7 +209,7 @@ end
 % Wind profile
 [u_ref_und,u_Hveg]=resistance_functions.WindProfile_Roof(H,Zatm,Uatm,zom,disp_h,hc_roof,2);
 
-[ra]=resistance_functions.Aerodynamic_Resistence(Tatm-273.15,Troof-273.15,Pre/100,Zatm-H,disp_h,zom,zoh,Uatm,NaN,NaN);
+[ra]=resistance_functions.Aerodynamic_Resistence(Tatm-273.15,Troof-273.15,Pre/100,Zatm-H,disp_h,zom,zoh,Uatm,ea,esat_roof);
 %[ra]=Aerodynamic_Resistence(Ta,Ts,Pre,zatm,disp_h,zom,zoh,Ws,ea,es)
 
 [rb]=resistance_functions.Leaf_Boundary_Resistence(u_Hveg,Troof_veg-273.15,Tatm-273,hc_roof,d_leaf_roof,LAI_roof,Zatm,disp_h,zom);

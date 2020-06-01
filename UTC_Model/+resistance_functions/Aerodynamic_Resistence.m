@@ -36,20 +36,20 @@ Os=(Ts +273.15)*(Pre/P_Ref)^-(Rd/cp); %% Potential temperature surface [K]
 % Ova	= Oa;
 % Ovs = Os; 
 
-if isnan(es)==1
-	%surface [K] 
-alpha	=	1;
-% esatTs	=	611*exp(17.27*(Os-273.16)/(237.3+(Os-273.16)));	% vapor pressure saturation at T_canyon [Pa]
+% if isnan(es)==1
+% 	%surface [K] 
+% alpha	=	1;
+% % esatTs	=	611*exp(17.27*(Os-273.16)/(237.3+(Os-273.16)));	% vapor pressure saturation at T_canyon [Pa]
+% % Ova = Oa;
 % Ova = Oa;
-Ova = Oa;
-Ovs = Os; 
-else
+% Ovs = Os; 
+% else
 % Naika test
 alpha	=	1;
-% % esatTs	=	611*exp(17.27*(Os-273.16)/(237.3+(Os-273.16)));	% vapor pressure saturation at T_canyon [Pa]
+%esatTs	=	611*exp(17.27*(Os-273.16)/(237.3+(Os-273.16)));	% vapor pressure saturation at T_canyon [Pa]
 Ova		=	Oa*Pre./(Pre - 0.378*ea); %% Virtual Potential temperature air [K]
 Ovs		=	Os*Pre./(Pre - 0.378*alpha*es); %% Virtual Potential temperature
-end
+%end
 
 %%%%%%%%%%%%%%%%%%
 %%% Richardson Number calculation

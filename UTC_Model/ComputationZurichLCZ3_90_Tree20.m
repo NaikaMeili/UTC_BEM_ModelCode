@@ -5,7 +5,7 @@ n			=	72;					% Calculation lenght
 m			=	1;					% Length for sensitivity analysis
 Name_Site	=	'ZH_LCZ3_Tree20';	% Name for Data_UEHM_site
 Name_SiteFD	=	'ZH_LCZ3_90';		% Name for UEHMForcingData
-OPTION_RAY	=	0; % Load precalculated view factors [1], Recalculate view factors [0]
+OPTION_RAY	=	1; % Load precalculated view factors [1], Recalculate view factors [0]
 
 NameOutput	=	'ZH_LCZ3_90_Tree20';
 

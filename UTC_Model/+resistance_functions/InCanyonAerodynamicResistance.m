@@ -1,5 +1,5 @@
 function[rap_can,rap_Zp1,rap_Zp1_In,rap_Zp2,rap_Zp2_In,rap_Zp3,rap_Zp3_In,u_Hcan,u_Zp1,u_Zp2,u_Zp3,uref_und,alpha]...
-	=InCanyonAerodynamicResistance(uatm,Zatm,Ta,Ts,hcan,dcan,zomcan,Zref_und,zom_und,Zp1,Zp2,Zp3)
+	=InCanyonAerodynamicResistance(uatm,Zatm,Ta,Ts,hcan_max,hcan,dcan,zomcan,Zref_und,zom_und,Zp1,Zp2,Zp3,Pre,ea,RoughnessParameter)
 % [rap_can,rap_Zp1,rap_Zp1_In,rap_Zp2,rap_Zp2_In,rap_Zp3,rap_Zp3_In,u_Hcan,u_Zp1,u_Zp2,u_Zp3,uref_und]=...
 % resistance_functions.InCanyonAerodynamicResistance(10,40,20,25,30,20,0.123*30,1.5,0.1,0:0.1:40,4,10);
 
@@ -54,6 +54,10 @@ if zom_und(zom_und>Zref_und)
 	zom_und(zom_und>=Zref_und)	=	Zref_und-0.01;
 end
 
+if isequal(RoughnessParameter{1},'MacD')
+	hcan_max	=	hcan;
+end
+
 Zu_prof					=	Zp1;
 
 Zp1(Zp1>(dcan+zomcan))	=	(dcan+zomcan);
@@ -71,17 +75,29 @@ k		=	0.41; %% Von Karman Constant
 % Wind speeds and undercanopy resistance at Hcan and Zref
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 us_atm		=	k.*uatm./log((Zatm-dcan)./zomcan);			% Friction Velocity Atmosphere [m/s]
-u_Hcan		=	(us_atm./k).*log((hcan-dcan)./zomcan);		% Wind Speed at canyon top [m/s]
-alpha		=	log(uatm./u_Hcan)./(Zatm./hcan -1);			% Attenuation Coefficient Canyon not corrected for presence of trees.
-uref_und	=	u_Hcan.*exp(-alpha.*(1-Zref_und./hcan));	% Reference height within the canyon
-Kh_can		=	k^2.*uatm.*(hcan-dcan)./log((Zatm-dcan)./zomcan); % Eddy diffusion coefficient at canyon height
+u_Hcan		=	(us_atm./k).*log((hcan_max-dcan)./zomcan);		% Wind Speed at canyon top [m/s]
+alpha		=	log(uatm./u_Hcan)./(Zatm./hcan_max -1);			% Attenuation Coefficient Canyon not corrected for presence of trees.
+uref_und	=	u_Hcan.*exp(-alpha.*(1-Zref_und./hcan_max));	% Reference height within the canyon
+Kh_can		=	k^2.*uatm.*(hcan_max-dcan)./log((Zatm-dcan)./zomcan); % Eddy diffusion coefficient at canyon height
 
 % Undercanopy resistance of canyon
-rap_can		=	hcan.*exp(alpha)./(Kh_can.*alpha).*(exp(-alpha.*(Zref_und./hcan))-exp(-alpha.*((dcan+zomcan)./hcan)))...
+rap_can		=	hcan_max.*exp(alpha)./(Kh_can.*alpha).*(exp(-alpha.*(Zref_und./hcan_max))-exp(-alpha.*((dcan+zomcan)./hcan_max)))...
 				+ 1./(k^2.*uref_und)*log(Zref_und./zom_und).^2;
-                
+		
 %%% Stability correction
-Ri2 = (g.*(Ta-Ts).*Zref_und)./(uref_und.^2.*(0.5.*(Ta+Ts)+273.15)); %% [-]
+P_Ref	=	100000; %% [Pa] reference pressure 
+Rd		=	287.05; %% [J/kg K] dry air gas constant 
+cp		=	1005 + ((Ta +23.15)^2)/3364; %% specific heat air  [J/kg K]
+Oa		=	(Ta +273.15)*(Pre/P_Ref)^-(Rd/cp); %% Potential temperature air [K]
+Os		=	(Ts +273.15)*(Pre/P_Ref)^-(Rd/cp); %% Potential temperature surface [K]
+
+% esatTs	=	611*exp(17.27*(Os-273.16)/(237.3+(Os-273.16)));	% vapor pressure saturation at T_canyon [Pa]
+% Ova		=	Oa*Pre./(Pre - 0.378*ea); %% Virtual Potential temperature air [K]
+% Ovs		=	Os*Pre./(Pre - 0.378*esatTs); %% Virtual Potential temperature
+Ova		=	Oa;
+Ovs		=	Os;
+
+Ri2 = (g.*(Ova-Ovs).*Zref_und)./(uref_und.^2.*(0.5.*(Ova+Ovs))); %% [-]
 Ri2(Ri2>0.16)=0.16; %% Max. Stability
 if Ri2 < 0 %% unstable
 	rap_can = rap_can./((1-5.*Ri2).^(3/4));
@@ -92,8 +108,8 @@ end
 
 % Wind speeds and undercanopy resistance at Zp1 within the canyon
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-u_Zp1	=	u_Hcan.*exp(-alpha.*(1-Zp1./hcan)); %% Wind at canyon height Zp
-rap_Zp1	=	hcan.*exp(alpha)./(Kh_can.*alpha).*(exp(-alpha.*(Zref_und./hcan))-exp(-alpha.*(Zp1./hcan)))...
+u_Zp1	=	u_Hcan.*exp(-alpha.*(1-Zp1./hcan_max)); %% Wind at canyon height Zp
+rap_Zp1	=	hcan_max.*exp(alpha)./(Kh_can.*alpha).*(exp(-alpha.*(Zref_und./hcan_max))-exp(-alpha.*(Zp1./hcan_max)))...
 			+ 1./(k^2.*uref_und).*log(Zref_und./zom_und).^2;
 
 if Ri2 < 0 %% unstable
@@ -108,8 +124,8 @@ rap_Zp1_In	=	max(rap_can-rap_Zp1,0);
 
 % Wind speeds and undercanopy resistance at Zp2 within the canyon
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-u_Zp2	=	u_Hcan.*exp(-alpha.*(1-Zp2./hcan)); %% Wind at canyon height Zp
-rap_Zp2	=	hcan.*exp(alpha)./(Kh_can.*alpha).*(exp(-alpha.*(Zref_und./hcan))-exp(-alpha.*(Zp2./hcan)))...
+u_Zp2	=	u_Hcan.*exp(-alpha.*(1-Zp2./hcan_max)); %% Wind at canyon height Zp
+rap_Zp2	=	hcan_max.*exp(alpha)./(Kh_can.*alpha).*(exp(-alpha.*(Zref_und./hcan_max))-exp(-alpha.*(Zp2./hcan_max)))...
 			+ 1./(k^2.*uref_und).*log(Zref_und./zom_und).^2;
 
 if Ri2 < 0 %% unstable
@@ -122,8 +138,8 @@ rap_Zp2_In	=	max(rap_can-rap_Zp2,0);
 
 % Wind speeds and undercanopy resistance at Zp3 within the canyon
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-u_Zp3	=	u_Hcan.*exp(-alpha.*(1-Zp3./hcan)); %% Wind at canyon height Zp
-rap_Zp3	=	hcan.*exp(alpha)./(Kh_can.*alpha).*(exp(-alpha.*(Zref_und./hcan))-exp(-alpha.*(Zp3./hcan)))...
+u_Zp3	=	u_Hcan.*exp(-alpha.*(1-Zp3./hcan_max)); %% Wind at canyon height Zp
+rap_Zp3	=	hcan_max.*exp(alpha)./(Kh_can.*alpha).*(exp(-alpha.*(Zref_und./hcan_max))-exp(-alpha.*(Zp3./hcan_max)))...
 			+ 1./(k^2.*uref_und).*log(Zref_und./zom_und).^2;
 
 if Ri2 < 0 %% unstable
@@ -135,15 +151,15 @@ end
 rap_Zp3_In	=	max(rap_can-rap_Zp3,0);
 
 % % Wind profile
-% u_log1		=	(us_atm./k).*log((Zu_prof(Zu_prof>=hcan)-dcan)./zomcan);	% Wind Speed at canyon top [m/s]
-% u_exp		=	u_Hcan.*exp(-alpha.*(1-Zu_prof(Zu_prof<=hcan&Zu_prof>=Zref_und)./hcan));		% Wind at canyon height Zp [m/s]
+% u_log1		=	(us_atm./k).*log((Zu_prof(Zu_prof>=hcan_max)-dcan)./zomcan);	% Wind Speed at canyon top [m/s]
+% u_exp		=	u_Hcan.*exp(-alpha.*(1-Zu_prof(Zu_prof<=hcan_max&Zu_prof>=Zref_und)./hcan_max));		% Wind at canyon height Zp [m/s]
 % usref_und	=	k*uref_und/log(Zref_und/zom_und);			% Friction Velocity Atmosphere [m/s]
 % u_log2		=	(usref_und./k).*log(Zu_prof(Zu_prof<=Zref_und)./zom_und);		% Wind Speed at canyon ground [m/s]
 % 
 % figure
-% plot(u_log1,Zu_prof(Zu_prof>=hcan),'DisplayName','Wind speed above canyon[m/s]')
+% plot(u_log1,Zu_prof(Zu_prof>=hcan_max),'DisplayName','Wind speed above canyon[m/s]')
 % hold on
-% plot(u_exp,Zu_prof(Zu_prof<=hcan&Zu_prof>=Zref_und),'DisplayName','Wind speed in canyon [m/s]')
+% plot(u_exp,Zu_prof(Zu_prof<=hcan_max&Zu_prof>=Zref_und),'DisplayName','Wind speed in canyon [m/s]')
 % plot(u_log2,Zu_prof(Zu_prof<=Zref_und),'DisplayName','Wind speed at ground surface [m/s]')
 % xlabel('Canyon height [m]')
 % ylabel('mean wind speed u [m/s]')

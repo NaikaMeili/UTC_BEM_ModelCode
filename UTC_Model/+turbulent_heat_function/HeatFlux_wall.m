@@ -11,11 +11,14 @@ Ttree			=	TemperatureC(1,6);
 Twsun			=	TemperatureC(1,4);
 Twshade			=	TemperatureC(1,5);
 T_canyon		=	TemperatureC(1,9);
+qcanyon			=	TemperatureC(1,10);
 H				=	Gemeotry_m.Height_canyon;
 W				=	Gemeotry_m.Width_canyon;
 Wroof			=	Gemeotry_m.Width_roof;
 Htree			=	Gemeotry_m.Height_tree;
 R_tree			=	Gemeotry_m.Radius_tree;
+Hcan_max		=	Gemeotry_m.Hcan_max;
+Hcan_std		=	Gemeotry_m.Hcan_std;
 rad_tree		=	Gemeotry_m.Radius_tree/Gemeotry_m.Width_canyon;
 Kopt			=	ParVegTree.Kopt;
 LAI_t			=	ParVegTree.LAI;
@@ -55,6 +58,8 @@ rho_atm		=	(Pre/(287.04*Tatm))*(1-(ea/Pre)*(1-0.622));	% dry air density at atmo
 % q_atm		=	0.622*ea/(Pre-0.378*ea);					% Specifc humidity of air at reference height []
 L_heat		=	1000*(2501.3 - 2.361*(Tatm-273.15));				% Latent heat vaporization/condensaition [J/kg]
 
+e_T_canyon		=	qcanyon*Pre/(0.622+0.378*qcanyon);
+
 Ctree			=	(trees==1);
 Tsurf		=	(fgveg*Tveg+fgbare*Tbare+fgimp*Timp+Ctree*Ttree*(4*rad_tree)+H/W*Twsun+H/W*Twshade)/(fgveg+fgbare+fgimp+(Ctree*4*rad_tree)+2*H/W);    % Average temperature of the ground [K]
 % Tsurf		=	(Twsun+Twshade)/2-273.15;
@@ -64,8 +69,9 @@ Tsurf		=	(fgveg*Tveg+fgbare*Tbare+fgimp*Timp+Ctree*Ttree*(4*rad_tree)+H/W*Twsun+
 [~,~,zom_ground,~,~,~,~,~,~,~,~,~]...
 	=resistance_functions.Urban_roughness(0,(fgveg>0)*hc_L,(fgbare>0),(fgimp>0),0);
 
-[dcan,zomcan,~,~,~,~]=resistance_functions.WindProfile_Canyon...
-	(H,Htree,R_tree,W,Wroof,Kopt,LAI_t,Zatm,Uatm,2,trees,1.5,zom_ground);
+[dcan,zomcan,~,~,~,~,RoughnessParameter]=resistance_functions.WindProfile_Canyon...
+	(H,Htree,R_tree,W,Wroof,Kopt,LAI_t,Zatm,Uatm,2,trees,1.5,zom_ground,Hcan_max,Hcan_std);
+
 
 Zp1	=	2;
 Zp2	=	2*Zp1+(H-2*Zp1)/2;
@@ -73,7 +79,7 @@ wcan=	0;
 
 [~,rap_Zp1,rap_Zp1_In,rap_Zp2,rap_Zp2_In,~,~,~,u_Zp1,u_Zp2,~,~,~]...
 	=resistance_functions.InCanyonAerodynamicResistance(Uatm,Zatm,T_canyon-273.15,Tsurf-273.15,...
-	H,dcan,zomcan,1.5,zom_ground,Zp1,Zp2,2);
+	Hcan_max,H,dcan,zomcan,1.5,zom_ground,Zp1,Zp2,2,Pre,e_T_canyon,RoughnessParameter);
 
 RES_w1	=	cp_atm*rho_atm*(11.8+4.2*sqrt((u_Zp1)^2+(wcan)^2))^(-1);
 RES_w2	=	cp_atm*rho_atm*(11.8+4.2*sqrt((u_Zp2)^2+(wcan)^2))^(-1);

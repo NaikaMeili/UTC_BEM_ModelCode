@@ -37,6 +37,8 @@ w				=	geometry.wcanyon;
 Wroof			=	Gemeotry_m.Width_roof;
 Htree			=	Gemeotry_m.Height_tree;
 R_tree			=	Gemeotry_m.Radius_tree;
+Hcan_max		=	Gemeotry_m.Hcan_max;
+Hcan_std		=	Gemeotry_m.Hcan_std;
 wroof_norm		=	geometry.wroof_norm;	
 rad_tree		=	geometry.radius_tree;
 fgveg			=	FractionsGround.fveg;
@@ -261,21 +263,21 @@ dw_L				=	Cveg*(min(1,(In_veg_tm1/In_max_L)^(2/3)));	% Fraction of vegetation co
 %[zom,zoh,disp_h,zom_H,zom_L,zoh_H,zoh_L,d_H,d_L,zom_other]=Urban_roughness(hc_H,hc_L,Csoil,Croad,Croof)
 
 if Ctree>0
-[dcan,zomcan,u_Hcan,u_tree,w_tree,alpha]=resistance_functions.WindProfile_Canyon(...
-	H,Htree,R_tree,W,Wroof,Kopt_H,LAI_H,Zatm,Uatm,Ctree*hc_H,trees,1.5,zom_ground);
+[dcan,zomcan,u_Hcan,u_tree,w_tree,alpha,RoughnessParameter]=resistance_functions.WindProfile_Canyon(...
+	H,Htree,R_tree,W,Wroof,Kopt_H,LAI_H,Zatm,Uatm,Ctree*hc_H,trees,1.5,zom_ground,Hcan_max,Hcan_std);
 else
 	u_tree=0.1;
 end
 
 if Cveg>0
-[dcan,zomcan,u_Hcan,u_Lveg,w_Lveg,alpha]=resistance_functions.WindProfile_Canyon(...
-	H,Htree,R_tree,W,Wroof,Kopt_H,LAI_H,Zatm,Uatm,Cveg*hc_L,trees,1.5,zom_ground);
+[dcan,zomcan,u_Hcan,u_Lveg,w_Lveg,alpha,RoughnessParameter]=resistance_functions.WindProfile_Canyon(...
+	H,Htree,R_tree,W,Wroof,Kopt_H,LAI_H,Zatm,Uatm,Cveg*hc_L,trees,1.5,zom_ground,Hcan_max,Hcan_std);
 else
 	u_Lveg=0.1;
 end
 
-[dcan,zomcan,u_Hcan,u_Zref_und,w_Zref_und,alpha]=resistance_functions.WindProfile_Canyon(...
-	H,Htree,R_tree,W,Wroof,Kopt_H,LAI_H,Zatm,Uatm,1.5,trees,1.5,zom_ground);
+[dcan,zomcan,u_Hcan,u_Zref_und,w_Zref_und,alpha,RoughnessParameter]=resistance_functions.WindProfile_Canyon(...
+	H,Htree,R_tree,W,Wroof,Kopt_H,LAI_H,Zatm,Uatm,1.5,trees,1.5,zom_ground,Hcan_max,Hcan_std);
 % [dcan,zomcan,u_Hcan,u_Zp,w_Zp]=...
 % 	WindProfile_Canyon(Hcan,Htree,R_tree,Wcan,Wroof,Kopt,LAI_t,Zatm,uatm,Zp,trees,Zref_und,zom_und)
 
@@ -283,7 +285,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 [rap_can,rap_Htree,rap_Htree_In,rap_2m,rap_2m_In,rap_Zp3,rap_Zp3_In,u_Hcan,u_Htree,u_Zp2,u_Zp3,uref_und,alpha]...
 	=resistance_functions.InCanyonAerodynamicResistance(Uatm,Zatm,Tcanyon-273.15,Tsurf-273.15,...
-	H,dcan,zomcan,1.5,zom_ground,hc_H,2,2);
+	Hcan_max,H,dcan,zomcan,1.5,zom_ground,hc_H,2,2,Pre,e_T_canyon,RoughnessParameter);
 % [rap_can,rap_Zp1,rap_Zp1_In,rap_Zp2,rap_Zp2_In,rap_Zp3,rap_Zp3_In,u_Hcan,u_Zp1,u_Zp2,u_Zp3,uref_und]...
 % 	=InCanyonAerodynamicResistance(uatm,Zatm,Ta,Ts,hcan,dcan,zomcan,Zref_und,zom_und,Zp1,Zp2,Zp3)
 

@@ -26,6 +26,8 @@ W				=	Gemeotry_m.Width_canyon;
 Wroof			=	Gemeotry_m.Width_roof;
 Htree			=	Gemeotry_m.Height_tree;
 R_tree			=	Gemeotry_m.Radius_tree;
+Hcan_max		=	Gemeotry_m.Hcan_max;
+Hcan_std		=	Gemeotry_m.Hcan_std;
 Kopt			=	ParVegTree.Kopt;
 LAI_t			=	ParVegTree.LAI;
 trees			=	ParTree.trees;
@@ -52,11 +54,12 @@ rel_hum_canyon	=	e_T_canyon/esat_T_canyon;
 
 % Calculation of structural parameters and wind profile in the city
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-[dcan,zomcan,~,~,~]=resistance_functions.WindProfile_Canyon(...
-	H,Htree,R_tree,W,Wroof,Kopt,LAI_t,Zatm,Uatm,H,trees,1.5,0.01);
+[dcan,zomcan,~,~,~,~]=resistance_functions.WindProfile_Canyon(...
+	H,Htree,R_tree,W,Wroof,Kopt,LAI_t,Zatm,Uatm,H,trees,1.5,0.01,Hcan_max,Hcan_std);
 
 zom_town	=	zomcan;			% Momentum roughness length of canyon, calculated according to McDonald 1998
 zoh_town	=	zom_town/10;	% Heat roughness length of canyon
+% zoh_town	=	zom_town;	% Heat roughness length of canyon
 
 [ra]=resistance_functions.Aerodynamic_Resistence(Tatm-273.15,T_canyon-273.15,Pre/100,Zatm,dcan,zom_town,zoh_town,Uatm,ea,e_T_canyon);
 % [ra]=Aerodynamic_Resistence(Ta,Ts,Pre,zatm,disp_h,zom,zoh,Ws);
