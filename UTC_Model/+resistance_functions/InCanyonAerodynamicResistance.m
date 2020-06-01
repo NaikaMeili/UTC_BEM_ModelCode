@@ -118,8 +118,9 @@ else %% Stable
 	rap_Zp1 = rap_Zp1./((1-5.*Ri2).^2);
 end
 
-rap_Zp1_In	=	max(rap_can-rap_Zp1,0);
-
+rap_Zp1_In	=	max(rap_can-rap_Zp1,0.1);
+% rap_Zp1_In cannot be 0 as this lead to a division by 0. Hence, it is set
+% to a small value (0.1)
 
 
 % Wind speeds and undercanopy resistance at Zp2 within the canyon
@@ -134,7 +135,7 @@ else %% Stable
 	rap_Zp2 = rap_Zp2./((1-5.*Ri2).^2);
 end
 
-rap_Zp2_In	=	max(rap_can-rap_Zp2,0);
+rap_Zp2_In	=	max(rap_can-rap_Zp2,0.1);
 
 % Wind speeds and undercanopy resistance at Zp3 within the canyon
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -148,7 +149,7 @@ else %% Stable
 	rap_Zp3 = rap_Zp3./((1-5.*Ri2).^2);
 end
 
-rap_Zp3_In	=	max(rap_can-rap_Zp3,0);
+rap_Zp3_In	=	max(rap_can-rap_Zp3,0.1);
 
 % % Wind profile
 % u_log1		=	(us_atm./k).*log((Zu_prof(Zu_prof>=hcan_max)-dcan)./zomcan);	% Wind Speed at canyon top [m/s]
