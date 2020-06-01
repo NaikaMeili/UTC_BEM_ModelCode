@@ -1,4 +1,4 @@
-function[BoleanInSun]=PersonInShadeYesOrNo(trees,h_can,w_can,d_tree,h_tree,r_tree,theta_Z,theta_n,h_P,x_P,ParVegTree,Wcan)
+function[BoleanInSun]=PersonInShadeYesOrNo(trees,h_can,w_can,d_tree,h_tree,r_tree,theta_Z,theta_n,h_P,x_P,ParVegTree,Wcan,TimeOfMaxSolAlt,TimeHr)
 
 % INPUT
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -13,7 +13,11 @@ function[BoleanInSun]=PersonInShadeYesOrNo(trees,h_can,w_can,d_tree,h_tree,r_tre
 % x_P			=	Relative position within canyon with 0 at the left canyon edge and 1 at the right canyon edge [-]
 
 h_P	=	h_P/Wcan;
-x_P	=	x_P/Wcan;
+if TimeHr<=TimeOfMaxSolAlt
+	x_P	=	x_P/Wcan;
+else
+	x_P	=	(Wcan-x_P)/Wcan;
+end
 
 Kopt_T	=	ParVegTree.Kopt;
 LAI_T	=	ParVegTree.LAI;

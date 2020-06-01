@@ -16,17 +16,25 @@ h_P			=	Person.PositionPz;
 x_P			=	Person.PositionPx;
 SWR_dir		=	MeteoData.SW_dir;
 Wcan		=	Gemeotry_m.Width_canyon;
+TimeOfMaxSolAlt	=	SunPosition.TimeOfMaxSolAlt;
+TimeHr			=	SunPosition.Datam(4);
+SunDSM_MRT	=	MeteoData.SunDSM_MRT;
 
 % Person/Point in Shade position or not? 0 = in full shade of wall, 1 = in
 % full sunlight, >0 & <1 = in partial shade of tree
-[BoleanInSun]=MRT.PersonInShadeYesOrNo(trees,h_can,w_can,d_tree,h_tree,r_tree,theta_Z,theta_n,h_P,x_P,ParVegTree,Wcan);
+[BoleanInSun]=MRT.PersonInShadeYesOrNo(trees,h_can,w_can,d_tree,h_tree,r_tree,theta_Z,theta_n,h_P,x_P,ParVegTree,Wcan,TimeOfMaxSolAlt,TimeHr);
+
+% Shade if the point would be shaded in the DSM
+if SunDSM_MRT==0 && BoleanInSun>0
+	BoleanInSun=0;
+end
 
 % Direct shortwave radiation received by the person from the sky 
 [SWRdir_Person,SWRdir_in_top,SWRdir_in_bottom,SWRdir_in_east,SWRdir_in_south,SWRdir_in_west,SWRdir_in_north]=...
 	MRT.SWRDirPerson(SWR_dir,zeta_S,theta_Z,BoleanInSun);
 
 % Diffuse shortwave radiation and longwave radiation received by a point
-[SWRdiff_Person,LWR_Person]=MRT.SWRDiffPerson(SWRout_t,LWRout_t,MeteoData,ViewFactorPoint);
+[SWRdiff_Person,LWR_Person]=MRT.SWRDiffPerson(SWRout_t,LWRout_t,MeteoData,ViewFactorPoint,TimeOfMaxSolAlt,TimeHr,BoleanInSun);
 
 
 % Calculate MRT

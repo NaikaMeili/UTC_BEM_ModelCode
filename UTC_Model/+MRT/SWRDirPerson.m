@@ -48,8 +48,17 @@ end
 
 
 % Total direct solar radiation arriving onto human
+% --------------------------------------------------
 SWRdir_Person	=	0.06*(SWRdir_in_top+SWRdir_in_bottom) + ...
 	0.22*(SWRdir_in_north+SWRdir_in_east+SWRdir_in_south+SWRdir_in_west);
 
+% Considerations:
+%--------------------------------------------------------------------------
+% The globe temperature is measured for a sphere, hence, the weighting
+% factors for the sides, top and bottom have to be adjusted. They will be
+% all equal, as it is a sphere (compared to a human with different 
+% weighting factors form the top and sides).
 
+% SWRdir_Person	=	(1/4)*( (SWRdir_in_top + SWRdir_in_bottom) + ...
+% 	(SWRdir_in_north + SWRdir_in_east + SWRdir_in_south + SWRdir_in_west) );
 

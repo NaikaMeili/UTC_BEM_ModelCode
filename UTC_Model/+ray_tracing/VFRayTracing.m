@@ -1,6 +1,6 @@
 % Compute view factors with ray tracing
 function[F_gs_T,F_gt_T,F_gw_T,F_ww_T,F_wt_T,F_wg_T,F_ws_T,F_ts_T,F_tw_T,...
-	F_tt_T,F_tg_T,F_sg_T,F_sw_T,F_st_T,F_pg,F_ps,F_pw,F_pt,VFRayTracingRaw_T]=VFRayTracing(H,W,a,ht,d,Person,MCSampleSize,NRays)
+	F_tt_T,F_tg_T,F_sg_T,F_sw_T,F_st_T,F_pg,F_ps,F_pw1,F_pw2,F_pt,VFRayTracingRaw_T]=VFRayTracing(H,W,a,ht,d,Person,MCSampleSize,NRays)
 
 % Output 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -86,14 +86,15 @@ F_st_T	=	View_factor(6,4)+View_factor(6,5);
 
 F_pg	=	View_factor(7,3);
 F_ps	=	View_factor(7,6);
-F_pw	=	(View_factor(7,1)+View_factor(7,2))/2;
+F_pw1	=	View_factor(7,1);
+F_pw2	=	View_factor(7,2);
 F_pt	=	View_factor(7,4)+View_factor(7,5);
 
 % Check sum
 Sum(1)	=	F_gs_T+F_gt_T+F_gw_T*2;
 Sum(2)	=	F_ww_T+F_wt_T+F_wg_T+F_ws_T;
 Sum(3)	=	F_sg_T+2*F_sw_T+F_st_T;
-Sum(4)	=	F_pg+F_ps+2*F_pw+F_pt;
+Sum(4)	=	F_pg+F_ps+F_pw1+F_pw2+F_pt;
 Sum(5)	=	F_ts_T+2*F_tw_T+F_tt_T+F_tg_T;
 
 if a==0
@@ -112,7 +113,7 @@ toc
 VFRayTracingRaw_T	=	struct('F_gs_T',F_gs_T,'F_gt_T',F_gt_T,'F_gw_T',F_gw_T,'F_ww_T',F_ww_T,...
 					'F_wt_T',F_wt_T,'F_wg_T',F_wg_T,'F_ws_T',F_ws_T,'F_sg_T',F_sg_T,...
 					'F_sw_T',F_sw_T,'F_st_T',F_st_T,'F_tg_T',F_tg_T,'F_tw_T',F_tw_T,...
-					'F_ts_T',F_ts_T,'F_tt_T',F_tt_T,'F_pg',F_pg,'F_ps',F_ps,'F_pw',F_pw,'F_pt',F_pt);
+					'F_ts_T',F_ts_T,'F_tt_T',F_tt_T,'F_pg',F_pg,'F_ps',F_ps,'F_pw1',F_pw1,'F_pw2',F_pw2,'F_pt',F_pt);
 
 
 

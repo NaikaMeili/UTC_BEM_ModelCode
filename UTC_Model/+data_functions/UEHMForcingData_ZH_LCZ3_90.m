@@ -33,7 +33,7 @@ Datam			=	Datam(itt,:);
 t_bef			=	0.5;
 t_aft			=	0.5;
 
-[h_S,~,zeta_S,~,~,~,~] = data_functions.SetSunVariables(Datam, DeltaGMT, lambda, phi, t_bef,t_aft);
+[h_S,~,zeta_S,T_sunrise,T_sunset,~,~] = data_functions.SetSunVariables(Datam, DeltaGMT, lambda, phi, t_bef,t_aft);
 
 theta_Z			=	pi/2-h_S;	% solar zenith angle
 
@@ -43,8 +43,10 @@ end
 
 theta_n			=	zeta_S-theta_canyon;	% difference between solar azimuth angle and canyon orientation
 
+TimeOfMaxSolAlt	=	(T_sunrise+T_sunset)./2;
+
 SunPosition		=	struct('Datam',Datam,'t_bef',t_bef,'t_aft',t_aft,...
-					'theta_Z',theta_Z,'theta_n',theta_n,'zeta_S',zeta_S);
+					'theta_Z',theta_Z,'theta_n',theta_n,'zeta_S',zeta_S,'TimeOfMaxSolAlt',TimeOfMaxSolAlt);
 
 %% Radiation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -72,11 +74,12 @@ Catm_CO2		=	400;					% [ppm]-[umolCO2/mol] Atmospheric CO2 concentration 2017
 Catm_O2			=	210000;					% [ppm] - [umolO2/mol] Intercellular Partial Pressure Oxygen
 Rain			=	rain(itt,1);			% Precipiation [mm]
 Time			=	date_time(itt,1);	
+SunDSM_MRT		=	NaN;
 
 MeteoData		=	struct('SW_dir',SW_dir,'SW_diff',SW_diff,'LWR',LWR,'Zatm',Zatm,...
 					'Tatm',Tatm,'Uatm',Uatm,'esat_Tatm',esat_Tatm,'rel_hum',rel_hum,...
 					'ea',ea,'Pre',Pre,'q_atm',q_atm,'Catm_CO2',Catm_CO2,'Catm_O2',Catm_O2,...
-					'Rain',Rain,'Time',Time);
+					'Rain',Rain,'Time',Time,'SunDSM_MRT',SunDSM_MRT);
 
 HumidityAtm		=	struct('AtmRelative',rel_hum,'AtmSpecific',q_atm,'AtmVapourPre',ea,...
 					'AtmRelativeSat',1,'AtmSpecificSat',qSat_atm,'AtmVapourPreSat',esat_Tatm);
