@@ -2,6 +2,8 @@ load(['Calculation', NameOutput,'.mat'])
 
 
 DateTime		=	MeteoDataRaw.Date(1:n);
+TempData.Time	=	DateTime(1);
+TempData.Zatm	=	Zatm;
 
 for ittm=1:m
 
@@ -9,7 +11,7 @@ for ittm=1:m
 	WallLayers,ParSoilRoof,ParSoilGround,ParInterceptionTree,...
 	PropOpticalRoof,PropOpticalGround,PropOpticalWall,PropOpticalTree,...
 	ParThermalRoof,ParThermalGround,ParThermalWall,ParThermalTree,...
-	ParVegRoof,ParVegGround,ParVegTree]=feval(strcat('data_functions.Data_UEHM_site_',Name_Site),Zatm,ittm);
+	ParVegRoof,ParVegGround,ParVegTree]=feval(strcat('data_functions.Data_UEHM_site_',Name_Site),TempData,ittm,NaN);
 
 clearvars -except geometry FractionsGround FractionsRoof m ittm MeteoDataRaw MeteoDataPreston_h DateTime NameOutput
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

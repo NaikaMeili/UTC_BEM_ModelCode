@@ -1,6 +1,10 @@
 %%%%%%%%%% RUN TIME SERIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 load(fullfile('+data_functions', 'ForcingData_ZH.mat'));
 
+% Decide if a varying LAI timeseries is provided [1] or not [0]
+[LAI_TimeSeries]=data_functions.VaryingLAIInput(1,'LAI_Zurich_Area'); 
+
+
 n			=	72;					% Calculation lenght
 m			=	1;					% Length for sensitivity analysis
 Name_Site	=	'ZH_LCZ3_Tree20';	% Name for Data_UEHM_site
@@ -8,6 +12,7 @@ Name_SiteFD	=	'ZH_LCZ3_90';		% Name for UEHMForcingData
 OPTION_RAY	=	1; % Load precalculated view factors [1], Recalculate view factors [0]
 
 NameOutput	=	'ZH_LCZ3_90_Tree20';
+
 
 %% Meteo data
 % LWR_in [W/m2], SAB1_in [W/m2], SAB2_in [W/m2], SAD1_in [W/m2], SAD2_in [W/m2]
@@ -31,7 +36,7 @@ MeteoDataRaw	=	struct('LWR_in',MeteoDataZH_h.LWRin(1:n,:),'SAB1_in',MeteoDataZH_
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%	
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%	
-clearvars -except MeteoDataRaw n m Name_Site OPTION_RAY NameOutput Name_SiteFD
+clearvars -except MeteoDataRaw n m Name_Site OPTION_RAY NameOutput Name_SiteFD LAI_TimeSeries
 
 SoilWPot.SoilPotWGroundTot_H =0;
 SoilWPot.SoilPotWGroundVeg_L=0;
@@ -40,7 +45,7 @@ SoilWPot.SoilPotWGroundVeg_L=0;
 [~,MeteoData,HumidityAtm,~,~,~]=feval(strcat('data_functions.UEHMForcingData_',Name_SiteFD),MeteoDataRaw,1,SoilWPot);
 
 % Soil parameters
-[~,~,~,~,~,~,ParSoilRoof,ParSoilGround,~,~,~,~,~,~,~,~,~,~,~,~,~]=feval(strcat('data_functions.Data_UEHM_site_',Name_Site),MeteoData.Zatm,1);
+[~,~,~,~,~,~,ParSoilRoof,ParSoilGround,~,~,~,~,~,~,~,~,~,~,~,~,~]=feval(strcat('data_functions.Data_UEHM_site_',Name_Site),MeteoData,1,LAI_TimeSeries);
 
 ParSoil		=	struct('Roof',ParSoilRoof,'Ground',ParSoilGround);
 [~,~,~,~,ParSoil.Roof.O33,~,~,~,~,~]=soil_functions.Soil_parameters(ParSoil.Roof.Psan,ParSoil.Roof.Pcla,ParSoil.Roof.Porg);
@@ -732,6 +737,12 @@ MeanRadiantTemperatureNames	=	{'Tmrt';'BoleanInSun';'SWRdir_Person';'SWRdir_in_t
 %% Outdoor thermal comfort: UTCI
 UTCI	=	zeros(n,1,m);
 
+%% LAI output for varying LAI
+LAI_ts          =	[];
+LAI_ts.LAI_R	=	zeros(n,1,m);
+LAI_ts.LAI_G	=	zeros(n,1,m);
+LAI_ts.LAI_T	=	zeros(n,1,m);
+
 
 
 %% Start calculation
@@ -745,7 +756,7 @@ for ittm = 1:m
 	WallLayers,ParSoilRoof,ParSoilGround,ParInterceptionTree,...
 	PropOpticalRoof,PropOpticalGround,PropOpticalWall,PropOpticalTree,...
 	ParThermalRoof,ParThermalGround,ParThermalWall,ParThermalTree,...
-	ParVegRoof,ParVegGround,ParVegTree,Person]=feval(strcat('data_functions.Data_UEHM_site_',Name_Site),MeteoData.Zatm,ittm);
+	ParVegRoof,ParVegGround,ParVegTree,Person]=feval(strcat('data_functions.Data_UEHM_site_',Name_Site),MeteoData,ittm,LAI_TimeSeries);
 
 
 %% Calculate view factors
@@ -775,7 +786,7 @@ for ittn	= 1:n
 	WallLayers,ParSoilRoof,ParSoilGround,ParInterceptionTree,...
 	PropOpticalRoof,PropOpticalGround,PropOpticalWall,PropOpticalTree,...
 	ParThermalRoof,ParThermalGround,ParThermalWall,ParThermalTree,...
-	ParVegRoof,ParVegGround,ParVegTree,Person]=feval(strcat('data_functions.Data_UEHM_site_',Name_Site),MeteoData.Zatm,ittm);  
+	ParVegRoof,ParVegGround,ParVegTree,Person]=feval(strcat('data_functions.Data_UEHM_site_',Name_Site),MeteoData,ittm,LAI_TimeSeries);  
 
 
 	for i=1:size(TempVecNames,1)
@@ -1074,6 +1085,11 @@ end
 % Universal thermal comfort index (UTCI)
 UTCI(ittn,1,ittm)	=	UTCI_approx;
 
+% Assing LAI for cases with varying LAI
+LAI_ts.LAI_R(ittn,1,ittm)	=	ParVegRoof.LAI;
+LAI_ts.LAI_G(ittn,1,ittm)	=	ParVegGround.LAI;
+LAI_ts.LAI_T(ittn,1,ittm)	=	ParVegTree.LAI;
+
 
 % Humidity
 for i=1:6
@@ -1316,7 +1332,8 @@ save(['Calculation',NameOutput],'Solver','TempVec','Humidity','SWRabs','SWRin','
 	'WallLayers_Out','ParSoilRoof_Out','ParSoilGround_Out','ParInterceptionTree_Out',...
 	'PropOpticalRoof_Out','PropOpticalGround_Out','PropOpticalWall_Out','PropOpticalTree_Out',...
 	'ParThermalRoof_Out','ParThermalGround_Out','ParThermalWall_Out','ParThermalTree_Out',...
-	'ParVegRoof_Out','ParVegGround_Out','ParVegTree_Out','Results2mEnergyFlux','MeanRadiantTemperature','Zatm','UTCI')
+	'ParVegRoof_Out','ParVegGround_Out','ParVegTree_Out','LAI_ts','Results2mEnergyFlux','MeanRadiantTemperature','Zatm','UTCI')
 
 
+%% Check the energy balance and calculation
 EnergyBalanceCheck

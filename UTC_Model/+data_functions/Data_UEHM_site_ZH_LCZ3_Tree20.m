@@ -2,8 +2,26 @@ function[Gemeotry_m,ParTree,geometry,FractionsRoof,FractionsGround,...
 	WallLayers,ParSoilRoof,ParSoilGround,ParInterceptionTree,...
 	PropOpticalRoof,PropOpticalGround,PropOpticalWall,PropOpticalTree,...
 	ParThermalRoof,ParThermalGround,ParThermalWall,ParThermalTree,...
-	ParVegRoof,ParVegGround,ParVegTree,Person]=Data_UEHM_site(Zatm,varargin)
+	ParVegRoof,ParVegGround,ParVegTree,Person]=Data_UEHM_site(MeteoData,varargin)
 
+% Assign vlaues in case there is a varying LAI
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+doy		=	day(MeteoData.Time,'dayofyear'); % Day of year
+
+if isstruct(varargin{1, 2})
+    LAIvarying  = 1;
+    LAI_Rvar	=   varargin{1, 2}.LAI_R(doy);
+    LAI_Gvar	=   varargin{1, 2}.LAI_G(doy);
+    LAI_Tvar	=	varargin{1, 2}.LAI_T(doy);
+    
+    LAI_Rvar(LAI_Rvar==0) = 10^-6; % Somehow the solver fails if LAI_T is zero. But it can be very low
+    LAI_Gvar(LAI_Gvar==0) = 10^-6;
+    LAI_Tvar(LAI_Tvar==0) = 10^-6;
+else 
+    LAIvarying = 0;
+    LAI_Rvar = 0; LAI_Gvar = 0; LAI_Tvar = 0;
+end
+    
 
 %% GEOMETRY OF URBAN AREA
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -141,7 +159,7 @@ ParThermalTree	=	struct('Cthermal_leaf',Cthermal_leaf);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ROOF VEGETATION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % General
-LAI_R		=	2.5;		% Leaf area index for the roof vegetation (-)
+LAI_R		=	LAIvarying*LAI_Rvar + (1-LAIvarying) * 2.5;         % Leaf area index for the roof vegetation (-)
 SAI_R		=	0.001;		% Stem area index for the roof vegetation (-)
 hc_R		=	0.15;		% canopy height roof vegetation	(m)
 h_disp_R	=	2/3*hc_R;	% Zero plane displacement height of roof vegetation [m]
@@ -187,7 +205,7 @@ ParVegRoof	=	struct('LAI',LAI_R,'SAI',SAI_R,'hc',hc_R,'h_disp',h_disp_R,...
 % GROUND VEGETATION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % GRASS
 % General
-LAI_G		=	2.5;		% Leaf area index for the roof vegetation (-)
+LAI_G		=	LAIvarying*LAI_Gvar + (1-LAIvarying) * 2.5; 		% Leaf area index for the roof vegetation (-)
 SAI_G		=	0.001;		% Stem area index for the roof vegetation (-)
 hc_G		=	0.15;		% canopy height roof vegetation (m)
 h_disp_G	=	2/3*hc_G;	% Zero plane displacement height of roof vegetation [m]
@@ -232,7 +250,7 @@ ParVegGround	=	struct('LAI',LAI_G,'SAI',SAI_G,'hc',hc_G,'h_disp',h_disp_G,...
 					
 % TREE VEGETATION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % General
-LAI_T		=	5;		% Leaf area index for the ground vegetation (-)
+LAI_T		=	LAIvarying*LAI_Tvar + (1-LAIvarying) * 5; 		% Leaf area index for the ground vegetation (-)
 SAI_T		=	0.2;	% Stem area index for the ground vegetation (-)
 d_leaf_T	=	4;		% Leaf dimension of ground vegetation [cm]
 
@@ -380,7 +398,7 @@ Person		=	struct('PositionPx',PositionPx,'PositionPz',PositionPz,...
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Check feasibility of input parameter
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-data_functions.GeometryCheck(Gemeotry_m,ParTree,Person,Zatm);
+data_functions.GeometryCheck(Gemeotry_m,ParTree,Person,MeteoData.Zatm);
 data_functions.InputParameterCheck(FractionsRoof,FractionsGround,ParVegRoof,ParVegGround,ParVegTree);
 
 
