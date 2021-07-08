@@ -1,4 +1,4 @@
-function[SWRin_nT,SWRout_nT,SWRabs_nT,SWRabsDir_nT,SWRabsDiff_nT,SWREB_nT]...
+function[SWRin_nT,SWRout_nT,SWRabs_nT,SWRabsDir_nT,SWRabsDiff_nT,SWREB_nT,albedo_canyon]...
          =SWRabsorbedNoTrees(h_can,w_can,fgveg,fgbare,fgimp,aw,agveg,agbare,agimp,...
          SWR_dir,SWR_diff,theta_Z,theta_n,ViewFactor,ParVegTree)
  
@@ -164,6 +164,8 @@ TotalSWRref_to_atm	=	SWRout_i(1)*F_sg_nT*fgveg + SWRout_i(2)*F_sg_nT*fgbare + SW
 					
 EBSurface			=	TotalSWRSurface_in - TotalSWRSurface_abs - TotalSWRSurface_out;
 EBCanyon			=	SWRin_atm - TotalSWRSurface_abs - TotalSWRref_to_atm;
+
+albedo_canyon		=	TotalSWRref_to_atm/SWRin_atm;
 
 % Energy balance
 if abs(EBSurface)>=10^-6

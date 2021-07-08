@@ -733,6 +733,11 @@ MeanRadiantTemperature.LWR_Person		=	zeros(n,1,m);
 MeanRadiantTemperatureNames	=	{'Tmrt';'BoleanInSun';'SWRdir_Person';'SWRdir_in_top';'SWRdir_in_bottom';...
 	'SWRdir_in_east';'SWRdir_in_south';'SWRdir_in_west';'SWRdir_in_north';'SWRdiff_Person';'LWR_Person';};
 
+% Albedo
+AlbedoOutput			=	[];
+AlbedoOutput.TotalUrban	=	zeros(n,1,m);
+AlbedoOutput.TotalCanyon=	zeros(n,1,m);
+AlbedoOutput.Roof		=	zeros(n,1,m);
 
 %% Outdoor thermal comfort: UTCI
 UTCI	=	zeros(n,1,m);
@@ -946,7 +951,7 @@ for ittn	= 1:n
 	
 % Calculate Energy and Water fluxes Canyon
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-[SWRin_t,SWRout_t,SWRabs_t,SWRabsDir_t,SWRabsDiff_t,SWREB_t,...
+[SWRin_t,SWRout_t,SWRabs_t,SWRabsDir_t,SWRabsDiff_t,SWREB_t,albedo_canyon,...
 		LWRin_t,LWRout_t,LWRabs_t,LWREB_t,...
 		HfluxGroundImp,HfluxGroundBare,HfluxGroundVeg,HfluxTree,HfluxGround,...
 		EfluxGroundImp,EfluxGroundBarePond,EfluxGroundBareSoil,EfluxGroundVegInt,...
@@ -1076,6 +1081,14 @@ Anthropo.Qf_roof(ittn,:,ittm)			=	Anthropogenic.Qf_roof;
 Anthropo.Waterf_canyonVeg(ittn,:,ittm)	=	Anthropogenic.Waterf_canyonVeg;
 Anthropo.Waterf_canyonBare(ittn,:,ittm)	=	Anthropogenic.Waterf_canyonBare;
 Anthropo.Waterf_roof(ittn,:,ittm)		=	Anthropogenic.Waterf_roof;
+
+% Albedo
+albedo_urban	=	geometry.wcanyon_norm*albedo_canyon + geometry.wroof_norm*PropOpticalRoof.albedo;
+
+AlbedoOutput.TotalUrban(ittn,:,ittm)	=	albedo_urban;
+AlbedoOutput.TotalCanyon(ittn,:,ittm)	=	albedo_canyon;
+AlbedoOutput.Roof(ittn,:,ittm)			=	PropOpticalRoof.albedo;
+
 
 % Mean radiant temperature
 for i=1:length(MeanRadiantTemperatureNames)
@@ -1323,6 +1336,13 @@ end
 
 Zatm = MeteoData.Zatm;
 
+% Plot and calculate radiation and energy balance
+[EnergyFluxUrban,EnergyFluxCan,EnergyFluxRoof]=PlanAreaEnergyBalanceCalculation(ViewFactor,MeteoDataRaw,...
+    SWRin,SWRout,SWRabs,LWRin,LWRout,LWRabs,LEflux,Hflux,Gflux,...
+    geometry_Out,FractionsGround_Out,PropOpticalRoof_Out,Anthropo);
+
+
+
 save(['Calculation',NameOutput],'Solver','TempVec','Humidity','SWRabs','SWRin','SWRout','SWREB','LWRabs','LWRin','LWRout',...
 	'LWREB','Hflux','LEflux','Gflux','dStorage','RES','Eflux','Runoff','Runon','Leakage',...
 	'Int','dInt_dt','Infiltration','Vwater','dVwater_dt','Owater','OSwater','ExWater','SoilPotW',...
@@ -1332,8 +1352,13 @@ save(['Calculation',NameOutput],'Solver','TempVec','Humidity','SWRabs','SWRin','
 	'WallLayers_Out','ParSoilRoof_Out','ParSoilGround_Out','ParInterceptionTree_Out',...
 	'PropOpticalRoof_Out','PropOpticalGround_Out','PropOpticalWall_Out','PropOpticalTree_Out',...
 	'ParThermalRoof_Out','ParThermalGround_Out','ParThermalWall_Out','ParThermalTree_Out',...
-	'ParVegRoof_Out','ParVegGround_Out','ParVegTree_Out','LAI_ts','Results2mEnergyFlux','MeanRadiantTemperature','Zatm','UTCI')
+	'ParVegRoof_Out','ParVegGround_Out','ParVegTree_Out','LAI_ts','Results2mEnergyFlux','MeanRadiantTemperature','Zatm','UTCI',...
+    'AlbedoOutput','ViewFactor','EnergyFluxUrban','EnergyFluxCan','EnergyFluxRoof')
 
 
 %% Check the energy balance and calculation
 EnergyBalanceCheck
+
+
+
+
