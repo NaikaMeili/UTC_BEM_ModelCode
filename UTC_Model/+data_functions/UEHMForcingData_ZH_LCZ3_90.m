@@ -102,20 +102,9 @@ Qf_roof		=	0;	% Not included in the model yet: Anthropogenic heat input above th
 
 % Anthropogenic water
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% This irrigates so no water stress of plants occur. Feel free to change
-% how you like.
-if itt == 1
-	Waterf_canyonVeg	=	0;		% [mm/h] applied on the vegetated ground surface area
-else
-	if varargin{1,1}.SoilPotWGroundTot_H(itt-1) <= -0.1 || varargin{1,1}.SoilPotWGroundVeg_L(itt-1)<=-0.3
-		Waterf_canyonVeg	=	1;	% [mm/h] applied on the vegetated ground surface area
-	else
-		Waterf_canyonVeg	=	0;	% [mm/h] applied on the vegetated ground surface area
-	end
-end
-
-Waterf_canyonBare	=	0;% [mm/h] applied on the vegetated ground surface area
-Waterf_roof			=	0;% [mm/h] applied on the vegetated ground surface area
+Waterf_canyonVeg	=	0;	% [mm/time step] applied on the vegetated ground surface area
+Waterf_canyonBare	=	0;  % [mm/time step] applied on the vegetated ground surface area
+Waterf_roof			=	0;  % [mm/time step] applied on the vegetated ground surface area
 
 Anthropogenic	=	struct('Tb',Tb,'Qf_canyon',Qf_canyon,'Qf_roof',Qf_roof,...
 					'Waterf_canyonVeg',Waterf_canyonVeg,'Waterf_canyonBare',Waterf_canyonBare,'Waterf_roof',Waterf_roof);

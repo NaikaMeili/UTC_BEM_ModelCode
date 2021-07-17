@@ -85,74 +85,6 @@ Per_runoff_G	=	0.9;	% Percentage of excess water that leaves the system as runof
 
 FractionsGround	=	struct('fveg',fveg_G,'fbare',fbare_G,'fimp',fimp_G,'Per_runoff',Per_runoff_G);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% OPTICAL PROPERTIES
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% ROOF OPTICAL PROPERTIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-aveg_R		=	0.2;	% Roof vegetation surface albedo (-)
-aimp_R		=	0.15;	% Roof impervious albedo (-)
-albedo_R	=	fveg_R*aveg_R+fimp_R*aimp_R;	% equivalent roof surface albedo (-)
-
-eveg_R		=	0.95;	% Roof vegetation surface emissivity (-)
-eimp_R		=	0.95;	% Roof impervious emissivity (-)
-emissivity_R=	fveg_R*eveg_R+fimp_R*eimp_R;	% equivalent roof surface emissivity (-)
-
-PropOpticalRoof	=	struct('aveg',aveg_R,'aimp',aimp_R,'albedo',albedo_R,...
-					'eveg',eveg_R,'eimp',eimp_R,'emissivity',emissivity_R);
-
-% GROUND OPTICAL PROPERTIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-aveg_G		=	0.2;	% Ground vegetation surface albedo (-)
-abare_G		=	0.15;	% Ground vegetation surface albedo (-)
-aimp_G		=	0.1;	% Ground impervious albedo (-)
-albedo_G	=	fveg_G*aveg_G + fbare_G*abare_G + fimp_G*aimp_G;	% equivalent ground surface albedo (-)
-
-eveg_G		=	0.95;	% Ground vegetation surface emissivity (-)
-ebare_G		=	0.95;	% Ground vegetation surface emissivity (-)
-eimp_G		=	0.95;	% Ground impervious emissivity (-)
-emissivity_G=	fveg_G*eveg_G + fbare_G*ebare_G + fimp_G*eimp_G;	% equivalent ground surface emissivity (-)
-
-PropOpticalGround	=	struct('aveg',aveg_G,'abare',abare_G,'aimp',aimp_G,'albedo',albedo_G,...
-						'eveg',eveg_G,'ebare',ebare_G,'eimp',eimp_G,'emissivity',emissivity_G);
-					
-% WALL OPTICAL PROPERTIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-albedo_W		=	0.4;	% Wall surface albedo (-)
-emissivity_W	=	0.95;	% Wall emissivity (-)
-
-PropOpticalWall	=	struct('albedo',albedo_W,'emissivity',emissivity_W);
-
-% TREE OPTICAL PROPERTIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-albedo_T		=	0.2;	% Tree albedo (-)
-emissivity_T	=	0.95;	% Tree emissivity (-)
-
-PropOpticalTree	=	struct('albedo',albedo_T,'emissivity',emissivity_T);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% THERMAL PROPERTIES
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% ROOF THERMAL PROPERTIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-lan_dry_imp_R	=	0.67;		% Thermal conductivity dry solid [W/m K]
-cv_s_imp_R		=	1.0*10^6;	% Volumetric heat capacity solid [J/m^3 K]
-
-ParThermalRoof	=	struct('lan_dry_imp',lan_dry_imp_R,'cv_s_imp',cv_s_imp_R);
-
-% GROUND THERMAL PROPERTIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-lan_dry_imp_G	=	1.2;		% Thermal conductivity dry solid [W/m K]
-cv_s_imp_G		=	1.5*10^6;	% Volumetric heat capacity solid [J/m^3 K]
-
-ParThermalGround	=	struct('lan_dry_imp',lan_dry_imp_G,'cv_s_imp',cv_s_imp_G);
-
-% WALL THERMAL PROPERTIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-lan_dry_W	=	0.67;			% Thermal conductivity dry solid [W/m K]
-cv_s_W		=	1.0*10^6;		% Volumetric heat capacity solid [J/m^3 K]
-
-ParThermalWall	=	struct('lan_dry',lan_dry_W,'cv_s',cv_s_W);
-
-% VEGETATION THERMAL PROPERTIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% This is not used in the model yet
-Cthermal_leaf	=	640;	% [J m-2 K-1] Heat capacity per single leaf area based on Kitaya et al. 2003, Ryu et al. 2016
-
-ParThermalTree	=	struct('Cthermal_leaf',Cthermal_leaf);
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% VEGETATION
@@ -294,6 +226,75 @@ ParVegTree	=	struct('LAI',LAI_T,'SAI',SAI_T,'d_leaf',d_leaf_T,'CASE_ROOT',CASE_R
 				'Kopt',Kopt_T,'Knit',Knit_T,'Vmax',Vmax_T,'mSl',mSl_T,'e_rel',e_rel_T,...
 				'e_relN',e_relN_T,'Psi_sto_00',Psi_sto_00_T,'Psi_sto_50',Psi_sto_50_T,...
 				'Sl',Sl_T,'SPARTREE',SPARTREE);
+            
+                    
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% OPTICAL PROPERTIES
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% ROOF OPTICAL PROPERTIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+aveg_R		=	0.2;	% Roof vegetation surface albedo (-)
+aimp_R		=	0.15;	% Roof impervious albedo (-)
+albedo_R	=	fveg_R*aveg_R+fimp_R*aimp_R;	% equivalent roof surface albedo (-)
+
+eveg_R		=	1 - exp(-(LAI_R+SAI_R));	% Roof vegetation emissivity (-) 
+eimp_R		=	0.95;	% Roof impervious emissivity (-)
+emissivity_R=	fveg_R*eveg_R+fimp_R*eimp_R;	% equivalent roof surface emissivity (-)
+
+PropOpticalRoof	=	struct('aveg',aveg_R,'aimp',aimp_R,'albedo',albedo_R,...
+					'eveg',eveg_R,'eimp',eimp_R,'emissivity',emissivity_R);
+
+% GROUND OPTICAL PROPERTIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+aveg_G		=	0.2;	% Ground vegetation surface albedo (-)
+abare_G		=	0.15;	% Ground vegetation surface albedo (-)
+aimp_G		=	0.1;	% Ground impervious albedo (-)
+albedo_G	=	fveg_G*aveg_G + fbare_G*abare_G + fimp_G*aimp_G;	% equivalent ground surface albedo (-)
+
+eveg_G		=	1 - exp(-(LAI_G+SAI_G));	% Ground vegetation emissivity (-) 
+ebare_G		=	0.95;	% Ground vegetation surface emissivity (-)
+eimp_G		=	0.95;	% Ground impervious emissivity (-)
+emissivity_G=	fveg_G*eveg_G + fbare_G*ebare_G + fimp_G*eimp_G;	% equivalent ground surface emissivity (-)
+
+PropOpticalGround	=	struct('aveg',aveg_G,'abare',abare_G,'aimp',aimp_G,'albedo',albedo_G,...
+						'eveg',eveg_G,'ebare',ebare_G,'eimp',eimp_G,'emissivity',emissivity_G);
+					
+% WALL OPTICAL PROPERTIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+albedo_W		=	0.4;	% Wall surface albedo (-)
+emissivity_W	=	0.95;	% Wall emissivity (-)
+
+PropOpticalWall	=	struct('albedo',albedo_W,'emissivity',emissivity_W);
+
+% TREE OPTICAL PROPERTIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+albedo_T		=	0.2;	% Tree albedo (-)
+emissivity_T	=	1 - exp(-(LAI_T+SAI_T));	% Tree emissivity (-)  
+
+PropOpticalTree	=	struct('albedo',albedo_T,'emissivity',emissivity_T);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% THERMAL PROPERTIES
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% ROOF THERMAL PROPERTIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+lan_dry_imp_R	=	0.67;		% Thermal conductivity dry solid [W/m K]
+cv_s_imp_R		=	1.0*10^6;	% Volumetric heat capacity solid [J/m^3 K]
+
+ParThermalRoof	=	struct('lan_dry_imp',lan_dry_imp_R,'cv_s_imp',cv_s_imp_R);
+
+% GROUND THERMAL PROPERTIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+lan_dry_imp_G	=	1.2;		% Thermal conductivity dry solid [W/m K]
+cv_s_imp_G		=	1.5*10^6;	% Volumetric heat capacity solid [J/m^3 K]
+
+ParThermalGround	=	struct('lan_dry_imp',lan_dry_imp_G,'cv_s_imp',cv_s_imp_G);
+
+% WALL THERMAL PROPERTIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+lan_dry_W	=	0.67;			% Thermal conductivity dry solid [W/m K]
+cv_s_W		=	1.0*10^6;		% Volumetric heat capacity solid [J/m^3 K]
+
+ParThermalWall	=	struct('lan_dry',lan_dry_W,'cv_s',cv_s_W);
+
+% VEGETATION THERMAL PROPERTIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% This is not used in the model yet
+Cthermal_leaf	=	640;	% [J m-2 K-1] Heat capacity per single leaf area based on Kitaya et al. 2003, Ryu et al. 2016
+
+ParThermalTree	=	struct('Cthermal_leaf',Cthermal_leaf);            
 					
 					
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -308,10 +309,22 @@ dz2_R	=	0.1;       % Thickness of second roof layer [m]
 Zs_R	=	[ 0 10 20 50 100];	% soil layer discretization [mm]
 ms_R	=	length(Zs_R)-1;		% number of soil layers [-]
 
+% Fix soil moisture to field capacity in certain layers -> instead of
+% irrigation at the top
+FixSM_R             =   1; % 1=yes, 0, no
+FixSM_LayerStart_R  =   1; % First layer with fixed soil moisture
+FixSM_LayerEnd_R    =   ms_R; % Last layer with fixed soil moisture
+
 % GROUND %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Soil layer discretization 
 Zs_G	=	[0 10 20 50 100 150 200 300 400 600 800 1000 1500 2000];	% soil layer discretization [mm]
 ms_G	=	length(Zs_G)-1;		% number of soil layers [-]
+
+% Fix soil moisture to field capacity in certain layers -> instead of
+% irrigation at the top
+FixSM_G             =   1; % 1=yes, 0, no
+FixSM_LayerStart_G  =   11; % First layer with fixed soil moisture
+FixSM_LayerEnd_G    =   ms_G; % Last layer with fixed soil moisture
 
 % WALL %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Layer thickness %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -343,6 +356,7 @@ SPAR_R	=	2;				% SOIL PARAMETER TYPE 1-VanGenuchten 2-Saxton-Rawls
 % when dry
 
 ParSoilRoof	=	struct('Zs',Zs_R,'ms',ms_R,'dz1',dz1_R,'dz2',dz2_R,...
+                'FixSM_R',FixSM_R,'FixSM_LayerStart_R',FixSM_LayerStart_R,'FixSM_LayerEnd_R',FixSM_LayerEnd_R,...
 				'In_max_imp',In_max_imp_R,'In_max_ground',In_max_ground_R,...
 				'Sp_In',Sp_In_R,'Kimp',Kimp_R,'Kfc',Kfc_R,'Phy',Phy_R,'SPAR',SPAR_R,...
 				'Kbot',Kbot_R,'Pcla',Pcla_R,'Psan',Psan_R,'Porg',Porg_R);
@@ -369,6 +383,7 @@ SPAR_G	=	2;			% SOIL PARAMETER TYPE 1-VanGenuchten 2-Saxton-Rawls
 Kbot_G	=	NaN;		% [mm/h] Conductivity at the bedrock layer
 
 ParSoilGround	=	struct('Zs',Zs_G,'ms',ms_G,'In_max_imp',In_max_imp_G,...
+                    'FixSM_G',FixSM_G,'FixSM_LayerStart_G',FixSM_LayerStart_G,'FixSM_LayerEnd_G',FixSM_LayerEnd_G,...
 					'In_max_underveg',In_max_underveg_G,'In_max_bare',In_max_bare_G,...
 					'Sp_In',Sp_In_G,'Kimp',Kimp_G,'Kfc',Kfc_G,'Phy',Phy_G,'SPAR',SPAR_G,...
 					'Kbot',Kbot_G,'Pcla',Pcla_G,'Psan',Psan_G,'Porg',Porg_G);

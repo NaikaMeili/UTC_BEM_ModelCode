@@ -17,7 +17,7 @@ NameOutput	=	'ZH_LCZ3_90_Tree20';
 %% Meteo data
 % LWR_in [W/m2], SAB1_in [W/m2], SAB2_in [W/m2], SAD1_in [W/m2], SAD2_in [W/m2]
 % T_atm	[K], windspeed_u[m/s, pressure_atm [Pa], rain [mm/h], rel_humidity [-]
-MeteoDataZH_h.Ws(MeteoDataZH_h.Windspeed(1:n,:)==0) = 0.01;	% Wind speed cannot be 0 otherwise the resistance function fails
+MeteoDataZH_h.Windspeed(MeteoDataZH_h.Windspeed(1:n,:)==0) = 0.01;	% Wind speed cannot be 0 otherwise the resistance function fails
 
 
 MeteoDataRaw	=	struct('LWR_in',MeteoDataZH_h.LWRin(1:n,:),'SAB1_in',MeteoDataZH_h.SAB1(1:n,:),...
@@ -26,8 +26,6 @@ MeteoDataRaw	=	struct('LWR_in',MeteoDataZH_h.LWRin(1:n,:),'SAB1_in',MeteoDataZH_
 					'windspeed_u',MeteoDataZH_h.Windspeed(1:n,:),'pressure_atm',MeteoDataZH_h.Pressure_Pa(1:n,:),...
 					'rain',MeteoDataZH_h.Precipitation(1:n,:),'rel_humidity',MeteoDataZH_h.RelativeHumidity(1:n,:)./100,...
 					'Date',MeteoDataZH_h.Time(1:n,:));
-			
-
 
 %% Calculation starts here. No need to change anything after this point
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -45,14 +43,40 @@ SoilWPot.SoilPotWGroundVeg_L=0;
 [~,MeteoData,HumidityAtm,~,~,~]=feval(strcat('data_functions.UEHMForcingData_',Name_SiteFD),MeteoDataRaw,1,SoilWPot);
 
 % Soil parameters
-[~,~,~,~,~,~,ParSoilRoof,ParSoilGround,~,~,~,~,~,~,~,~,~,~,~,~,~]=feval(strcat('data_functions.Data_UEHM_site_',Name_Site),MeteoData,1,LAI_TimeSeries);
+[~,~,~,~,~,~,ParSoilRoof,ParSoilGround,~,~,~,~,~,~,~,~,~,ParVegRoof,ParVegGround,ParVegTree,~]=feval(strcat('data_functions.Data_UEHM_site_',Name_Site),MeteoData,1,LAI_TimeSeries);
+
+% ParSoil		=	struct('Roof',ParSoilRoof,'Ground',ParSoilGround);
+% [~,~,~,~,ParSoil.Roof.O33,~,~,~,~,~]=soil_functions.Soil_parameters(ParSoil.Roof.Psan,ParSoil.Roof.Pcla,ParSoil.Roof.Porg);
+% [~,~,~,~,ParSoil.Ground.O33,~,~,~,~,~]=soil_functions.Soil_parameters(ParSoil.Ground.Psan,ParSoil.Ground.Pcla,ParSoil.Ground.Porg);
+% ParSoil.Roof.dz		=	diff(ParSoil.Roof.Zs);	% [mm]  Thickness of the Layers
+% ParSoil.Ground.dz	=	diff(ParSoil.Ground.Zs);% [mm]  Thickness of the Layers
 
 ParSoil		=	struct('Roof',ParSoilRoof,'Ground',ParSoilGround);
-[~,~,~,~,ParSoil.Roof.O33,~,~,~,~,~]=soil_functions.Soil_parameters(ParSoil.Roof.Psan,ParSoil.Roof.Pcla,ParSoil.Roof.Porg);
-[~,~,~,~,ParSoil.Ground.O33,~,~,~,~,~]=soil_functions.Soil_parameters(ParSoil.Ground.Psan,ParSoil.Ground.Pcla,ParSoil.Ground.Porg);
+
+[~,~,~,ParSoil.Roof.Osat,ParSoil.Roof.Ohy,~,~,~,~,~,ParSoil.Roof.O33,...
+    ~,~,~,~,~,~,~,~,~,~,~,~,~,~,~]...
+	=soil_functions.SoilParametersTotal(ParSoilRoof.Pcla,ParSoilRoof.Psan,ParSoilRoof.Porg,...
+    ParSoilRoof.Kfc,ParSoilRoof.Phy,ParSoilRoof.SPAR,ParSoilRoof.Kbot,...
+	ParVegRoof.CASE_ROOT,ParVegRoof.CASE_ROOT,ParVegRoof.ZR95,ParVegRoof.ZR95,...
+    ParVegRoof.ZR50,ParVegRoof.ZR50,ParVegRoof.ZRmax,ParVegRoof.ZRmax,ParSoilRoof.Zs);
+
+[~,~,~,ParSoil.Ground.Osat,ParSoil.Ground.Ohy,~,~,~,~,~,ParSoil.Ground.O33,...
+    ~,~,~,~,~,~,~,~,~,~,~,~,~,~,~]...
+	=soil_functions.SoilParametersTotal(ParSoilGround.Pcla,ParSoilGround.Psan,ParSoilGround.Porg,...
+    ParSoilGround.Kfc,ParSoilGround.Phy,ParSoilGround.SPAR,ParSoilGround.Kbot,...
+	ParVegTree.CASE_ROOT,ParVegGround.CASE_ROOT,ParVegTree.ZR95,ParVegGround.ZR95,...
+    ParVegTree.ZR50,ParVegGround.ZR50,ParVegTree.ZRmax,ParVegGround.ZRmax,ParSoilGround.Zs);
+
 ParSoil.Roof.dz		=	diff(ParSoil.Roof.Zs);	% [mm]  Thickness of the Layers
 ParSoil.Ground.dz	=	diff(ParSoil.Ground.Zs);% [mm]  Thickness of the Layers
 
+ParSoil.Roof.Osat   = unique(ParSoil.Roof.Osat);
+ParSoil.Roof.Ohy    = unique(ParSoil.Roof.Ohy);
+ParSoil.Roof.O33    = unique(ParSoil.Roof.O33);
+
+ParSoil.Ground.Osat = unique(ParSoil.Ground.Osat);
+ParSoil.Ground.Ohy  = unique(ParSoil.Ground.Ohy);
+ParSoil.Ground.O33  = unique(ParSoil.Ground.O33);
 
 %% Initializing vectors %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Temperature
@@ -781,6 +805,13 @@ Vwater.VGroundSoilVeg(1,:,ittm)		=	repmat(0.*ParSoil.Ground.dz,1,1,1);	% Startin
 Owater.OwGroundSoilVeg(1,:,ittm)	=	0;				% Starting with dry soil
 end
 
+% to save initial soil moisture for back-computation
+OwaterInitial.OwRoofSoilVeg(1,:,ittm)     = Owater.OwRoofSoilVeg(1,:,ittm);
+OwaterInitial.OwGroundSoilImp(1,:,ittm)   = Owater.OwGroundSoilImp(1,:,ittm);
+OwaterInitial.OwGroundSoilBare(1,:,ittm)  = Owater.OwGroundSoilBare(1,:,ittm);
+OwaterInitial.OwGroundSoilVeg(1,:,ittm)   = Owater.OwGroundSoilVeg(1,:,ittm);
+OwaterInitial.OwGroundSoilTot(1,:,ittm)   = Owater.OwGroundSoilTot(1,:,ittm);
+
 for ittn	= 1:n  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 [SunPosition,MeteoData,HumidityAtm,Anthropogenic,location,ParCalculation]...
@@ -883,8 +914,8 @@ for ittn	= 1:n
 		else
 			Qinlat_ittm.(cell2mat(QinlatNames(i)))	=	Qinlat.(cell2mat(QinlatNames(i)))(ittn-1,:,ittm); 
 		end
-	end
-	
+    end
+    	
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%	
 % Calculate Energy Budget of Roof
 	ittn_only	=	1;
@@ -1210,11 +1241,37 @@ dVwater_dt.dVGroundSoilBare_dt(ittn,:,ittm)	=	dVGroundSoilBare_dt;
 dVwater_dt.dVGroundSoilVeg_dt(ittn,:,ittm)	=	dVGroundSoilVeg_dt;
 dVwater_dt.dVGroundSoilTot_dt(ittn,:,ittm)	=	dVGroundSoilTot_dt;
 
+% OwaterAfterExtraction.OwRoofSoilVeg(ittn,:,ittm)      =	OwRoofSoilVeg;
+% OwaterAfterExtraction.OwGroundSoilImp(ittn,:,ittm)	=	OwGroundSoilImp;
+% OwaterAfterExtraction.OwGroundSoilBare(ittn,:,ittm)   =	OwGroundSoilBare;
+% OwaterAfterExtraction.OwGroundSoilVeg(ittn,:,ittm)	=	OwGroundSoilVeg;
+% OwaterAfterExtraction.OwGroundSoilTot(ittn,:,ittm)	=	OwGroundSoilTot;
+
 Owater.OwRoofSoilVeg(ittn,:,ittm)	=	OwRoofSoilVeg;
 Owater.OwGroundSoilImp(ittn,:,ittm)	=	OwGroundSoilImp;
 Owater.OwGroundSoilBare(ittn,:,ittm)=	OwGroundSoilBare;
 Owater.OwGroundSoilVeg(ittn,:,ittm)	=	OwGroundSoilVeg;
 Owater.OwGroundSoilTot(ittn,:,ittm)	=	OwGroundSoilTot;
+
+% Fixed soil moisture
+if ParSoilRoof.FixSM_R==1
+    ReplaceVal_R    =   ParSoil.Roof.O33;
+    SMReplace_R     =   false(ParSoilRoof.ms,1);
+    SMReplace_R(ParSoilRoof.FixSM_LayerStart_R:ParSoilRoof.FixSM_LayerEnd_R,1) = true;
+    
+    Owater.OwRoofSoilVeg(ittn,(SMReplace_R & OwRoofSoilVeg'<ReplaceVal_R),ittm)	=	ReplaceVal_R;
+end
+
+if ParSoilGround.FixSM_G==1
+    ReplaceVal_G    =   ParSoil.Ground.O33;
+    SMReplace_G     =   false(ParSoilGround.ms,1);
+    SMReplace_G(ParSoilGround.FixSM_LayerStart_G:ParSoilGround.FixSM_LayerEnd_G,1) = true;
+ 
+    Owater.OwGroundSoilImp(ittn,(SMReplace_G & OwGroundSoilImp'<ReplaceVal_G),ittm)	=	ReplaceVal_G;	
+    Owater.OwGroundSoilBare(ittn,(SMReplace_G & OwGroundSoilBare'<ReplaceVal_G),ittm)=	ReplaceVal_G;	
+    Owater.OwGroundSoilVeg(ittn,(SMReplace_G & OwGroundSoilVeg'<ReplaceVal_G),ittm)	=	ReplaceVal_G;	
+    Owater.OwGroundSoilTot(ittn,(SMReplace_G & OwGroundSoilTot'<ReplaceVal_G),ittm)	=	ReplaceVal_G;	
+end
 
 OSwater.OSwRoofSoilVeg(ittn,:,ittm)	=	OSwRoofSoilVeg;
 OSwater.OSwGroundSoilImp(ittn,:,ittm)=	OSwGroundSoilImp;
@@ -1315,6 +1372,8 @@ ParThermalTree_Out(ittm)		=	ParThermalTree;
 ParVegRoof_Out(ittm)			=	ParVegRoof;
 ParVegGround_Out(ittm)			=	ParVegGround;
 ParVegTree_Out(ittm)			=	ParVegTree;
+ParCalculation_Out(ittm)		=	ParCalculation;
+
 
 end
 
@@ -1339,21 +1398,26 @@ Zatm = MeteoData.Zatm;
 % Plot and calculate radiation and energy balance
 [EnergyFluxUrban,EnergyFluxCan,EnergyFluxRoof]=PlanAreaEnergyBalanceCalculation(ViewFactor,MeteoDataRaw,...
     SWRin,SWRout,SWRabs,LWRin,LWRout,LWRabs,LEflux,Hflux,Gflux,...
-    geometry_Out,FractionsGround_Out,PropOpticalRoof_Out,Anthropo);
+    geometry_Out,FractionsGround_Out,PropOpticalRoof_Out,Anthropo,1);
 
+[WaterFluxRoof,WaterFluxCan,WaterFluxUrban]=WaterBalanceComponents(MeteoDataRaw,...
+    Runon,Leakage,LEflux,dVwater_dt,OwaterInitial,Owater,dInt_dt,Int,Anthropo,...
+    ParSoil,ParCalculation_Out,FractionsRoof_Out,FractionsGround_Out,geometry_Out,1);
 
 
 save(['Calculation',NameOutput],'Solver','TempVec','Humidity','SWRabs','SWRin','SWRout','SWREB','LWRabs','LWRin','LWRout',...
 	'LWREB','Hflux','LEflux','Gflux','dStorage','RES','Eflux','Runoff','Runon','Leakage',...
-	'Int','dInt_dt','Infiltration','Vwater','dVwater_dt','Owater','OSwater','ExWater','SoilPotW',...
+	'Int','dInt_dt','Infiltration','Vwater','dVwater_dt','Owater',...
+    'OwaterInitial','OSwater','ExWater','SoilPotW',...
 	'CiCO2Leaf','WBRoof','WBCanyonIndv','WBCanyonTot','EB','Wind','TempDamp','Qinlat','Results2m',...
 	'n','m','Name_Site','MeteoDataRaw','Anthropo',...
 	'Gemeotry_m_Out','ParTree_Out','geometry_Out','FractionsRoof_Out','FractionsGround_Out',...
 	'WallLayers_Out','ParSoilRoof_Out','ParSoilGround_Out','ParInterceptionTree_Out',...
 	'PropOpticalRoof_Out','PropOpticalGround_Out','PropOpticalWall_Out','PropOpticalTree_Out',...
-	'ParThermalRoof_Out','ParThermalGround_Out','ParThermalWall_Out','ParThermalTree_Out',...
+	'ParThermalRoof_Out','ParThermalGround_Out','ParThermalWall_Out','ParThermalTree_Out','ParCalculation_Out',...
 	'ParVegRoof_Out','ParVegGround_Out','ParVegTree_Out','LAI_ts','Results2mEnergyFlux','MeanRadiantTemperature','Zatm','UTCI',...
-    'AlbedoOutput','ViewFactor','EnergyFluxUrban','EnergyFluxCan','EnergyFluxRoof')
+    'AlbedoOutput','ViewFactor','EnergyFluxUrban','EnergyFluxCan','EnergyFluxRoof',...
+    'WaterFluxRoof','WaterFluxCan','WaterFluxUrban','ParSoil')
 
 
 %% Check the energy balance and calculation

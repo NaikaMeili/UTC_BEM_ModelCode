@@ -1,6 +1,6 @@
 function[EnergyFluxUrban,EnergyFluxCan,EnergyFluxRoof]=PlanAreaEnergyBalanceCalculation(ViewFactor,MeteoDataRaw,...
     SWRin,SWRout,SWRabs,LWRin,LWRout,LWRabs,LEflux,Hflux,Gflux,...
-    geometry_Out,FractionsGround_Out,PropOpticalRoof_Out,Anthropo)
+    geometry_Out,FractionsGround_Out,PropOpticalRoof_Out,Anthropo,Figure)
 
 
 % Incoming radiation
@@ -185,6 +185,8 @@ EnergyFluxRoof.LWREB    = LWRin.LWRinTotalRoof - LWRabs.LWRabsTotalRoof - LWRout
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Plot graphs
+if Figure==1
+    
 TTUrban = table(hour(MeteoDataRaw.Date),month(MeteoDataRaw.Date),...
             EnergyFluxUrban.SWRin_PlanArea,EnergyFluxUrban.SWRabs_SurfArea,EnergyFluxUrban.SWRout_Ref_to_Atm,...
             EnergyFluxUrban.LWRin_PlanArea,EnergyFluxUrban.LWRabs_SurfArea,EnergyFluxUrban.LWRout_Ref_to_Atm,...
@@ -294,4 +296,4 @@ subplot(2,2,4)
 plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_BowenRatio,'k','DisplayName','Bowen ratio')
 xlim([1 12]); xlabel('month'); ylabel('(-)'); title('Bowen ratio');
 %legend
-
+end
