@@ -101,60 +101,60 @@ VFRayTracing_T	=	struct('F_gs_T',F_gs_T,'F_gt_T',F_gt_T,'F_gw_T',F_gw_T,'F_ww_T'
 					'F_sw_T',F_sw_T,'F_st_T',F_st_T,'F_tg_T',F_tg_T,'F_tw_T',F_tw_T,...
 					'F_ts_T',F_ts_T,'F_tt_T',F_tt_T,'F_pg',F_pg,'F_ps',F_ps,'F_pw1',F_pw1,'F_pw2',F_pw2,'F_pt',F_pt);
 
-% Plot raw view factors together with reciprocal view factors as a visual
-% check. Ideally, raw and reciprocal view factors are very close together
-figure
-plot(ratio,VFRayTracingRaw_T.F_gs_T,'bo','DisplayName','Fgs ray tracing')
-hold on
-plot(ratio,F_gs_T,'b*','DisplayName','Fgs reciprocity')
-plot(ratio,VFRayTracingRaw_T.F_gw_T,'go','DisplayName','Fgw ray tracing')
-plot(ratio,F_gw_T,'g*','DisplayName','Fgw reciprocity')
-plot(ratio,VFRayTracingRaw_T.F_gt_T,'ro','DisplayName','Fgt ray tracing')
-plot(ratio,F_gt_T,'r*','DisplayName','Fgt reciprocity')
-plot(ratio,Sum(1),'k.','DisplayName','Sum view factors')
-plot(ratio,Sum2(1),'ko','DisplayName','Sum view factors reciprocity')
-xlabel('canyon aspect ratio (H/W)')
-legend('show')
-
-figure
-plot(ratio,VFRayTracingRaw_T.F_ww_T,'bo','DisplayName','Fww ray tracing')
-hold on
-plot(ratio,F_ww_T,'b*','DisplayName','Fww reciprocity')
-plot(ratio,VFRayTracingRaw_T.F_ws_T,'ro','DisplayName','Fws ray tracing')
-plot(ratio,F_ws_T,'r*','DisplayName','Fws reciprocity')
-plot(ratio,VFRayTracingRaw_T.F_wg_T,'yo','DisplayName','Fwg ray tracing')
-plot(ratio,F_wg_T,'y*','DisplayName','Fwg reciprocity')
-plot(ratio,VFRayTracingRaw_T.F_wt_T,'go','DisplayName','Fwt ray tracing')
-plot(ratio,F_wt_T,'g*','DisplayName','Fwt reciprocity')
-plot(ratio,Sum(2),'k.','DisplayName','Sum view factors')
-plot(ratio,Sum2(2),'ko','DisplayName','Sum view factors reciprocity')
-xlabel('canyon aspect ratio (H/W)')
-legend('show')
-
-figure
-plot(ratio,VFRayTracingRaw_T.F_sg_T,'bo','DisplayName','Fsg ray tracing')
-hold on
-plot(ratio,F_sg_T,'b*','DisplayName','Fsg reciprocity')
-plot(ratio,VFRayTracingRaw_T.F_sw_T,'go','DisplayName','Fsw ray tracing')
-plot(ratio,F_sw_T,'g*','DisplayName','Fsw reciprocity')
-plot(ratio,VFRayTracingRaw_T.F_st_T,'ro','DisplayName','Fswt ray tracing')
-plot(ratio,F_st_T,'r*','DisplayName','Fst reciprocity')
-plot(ratio,Sum(3),'k.','DisplayName','Sum view factors')
-plot(ratio,Sum2(3),'ko','DisplayName','Sum view factors reciprocity')
-xlabel('canyon aspect ratio (H/W)')
-legend('show')
-
-figure
-plot(ratio,VFRayTracingRaw_T.F_tw_T,'bo','DisplayName','Ftw ray tracing')
-hold on
-plot(ratio,F_tw_T,'b*','DisplayName','Ftw reciprocity')
-plot(ratio,VFRayTracingRaw_T.F_ts_T,'ro','DisplayName','Fts ray tracing')
-plot(ratio,F_ts_T,'r*','DisplayName','Fts reciprocity')
-plot(ratio,VFRayTracingRaw_T.F_tg_T,'yo','DisplayName','Ftg ray tracing')
-plot(ratio,F_tg_T,'y*','DisplayName','Ftg reciprocity')
-plot(ratio,VFRayTracingRaw_T.F_tt_T,'go','DisplayName','Ftt ray tracing')
-plot(ratio,F_tt_T,'g*','DisplayName','Ftt reciprocity')
-plot(ratio,Sum(4),'k.','DisplayName','Sum view factors')
-plot(ratio,Sum2(4),'ko','DisplayName','Sum view factors reciprocity')
-xlabel('canyon aspect ratio (H/W)')
-legend('show')
+% % Plot raw view factors together with reciprocal view factors as a visual
+% % check. Ideally, raw and reciprocal view factors are very close together
+% figure
+% plot(ratio,VFRayTracingRaw_T.F_gs_T,'bo','DisplayName','Fgs ray tracing')
+% hold on
+% plot(ratio,F_gs_T,'b*','DisplayName','Fgs reciprocity')
+% plot(ratio,VFRayTracingRaw_T.F_gw_T,'go','DisplayName','Fgw ray tracing')
+% plot(ratio,F_gw_T,'g*','DisplayName','Fgw reciprocity')
+% plot(ratio,VFRayTracingRaw_T.F_gt_T,'ro','DisplayName','Fgt ray tracing')
+% plot(ratio,F_gt_T,'r*','DisplayName','Fgt reciprocity')
+% plot(ratio,Sum(1),'k.','DisplayName','Sum view factors')
+% plot(ratio,Sum2(1),'ko','DisplayName','Sum view factors reciprocity')
+% xlabel('canyon aspect ratio (H/W)')
+% legend('show')
+% 
+% figure
+% plot(ratio,VFRayTracingRaw_T.F_ww_T,'bo','DisplayName','Fww ray tracing')
+% hold on
+% plot(ratio,F_ww_T,'b*','DisplayName','Fww reciprocity')
+% plot(ratio,VFRayTracingRaw_T.F_ws_T,'ro','DisplayName','Fws ray tracing')
+% plot(ratio,F_ws_T,'r*','DisplayName','Fws reciprocity')
+% plot(ratio,VFRayTracingRaw_T.F_wg_T,'yo','DisplayName','Fwg ray tracing')
+% plot(ratio,F_wg_T,'y*','DisplayName','Fwg reciprocity')
+% plot(ratio,VFRayTracingRaw_T.F_wt_T,'go','DisplayName','Fwt ray tracing')
+% plot(ratio,F_wt_T,'g*','DisplayName','Fwt reciprocity')
+% plot(ratio,Sum(2),'k.','DisplayName','Sum view factors')
+% plot(ratio,Sum2(2),'ko','DisplayName','Sum view factors reciprocity')
+% xlabel('canyon aspect ratio (H/W)')
+% legend('show')
+% 
+% figure
+% plot(ratio,VFRayTracingRaw_T.F_sg_T,'bo','DisplayName','Fsg ray tracing')
+% hold on
+% plot(ratio,F_sg_T,'b*','DisplayName','Fsg reciprocity')
+% plot(ratio,VFRayTracingRaw_T.F_sw_T,'go','DisplayName','Fsw ray tracing')
+% plot(ratio,F_sw_T,'g*','DisplayName','Fsw reciprocity')
+% plot(ratio,VFRayTracingRaw_T.F_st_T,'ro','DisplayName','Fswt ray tracing')
+% plot(ratio,F_st_T,'r*','DisplayName','Fst reciprocity')
+% plot(ratio,Sum(3),'k.','DisplayName','Sum view factors')
+% plot(ratio,Sum2(3),'ko','DisplayName','Sum view factors reciprocity')
+% xlabel('canyon aspect ratio (H/W)')
+% legend('show')
+% 
+% figure
+% plot(ratio,VFRayTracingRaw_T.F_tw_T,'bo','DisplayName','Ftw ray tracing')
+% hold on
+% plot(ratio,F_tw_T,'b*','DisplayName','Ftw reciprocity')
+% plot(ratio,VFRayTracingRaw_T.F_ts_T,'ro','DisplayName','Fts ray tracing')
+% plot(ratio,F_ts_T,'r*','DisplayName','Fts reciprocity')
+% plot(ratio,VFRayTracingRaw_T.F_tg_T,'yo','DisplayName','Ftg ray tracing')
+% plot(ratio,F_tg_T,'y*','DisplayName','Ftg reciprocity')
+% plot(ratio,VFRayTracingRaw_T.F_tt_T,'go','DisplayName','Ftt ray tracing')
+% plot(ratio,F_tt_T,'g*','DisplayName','Ftt reciprocity')
+% plot(ratio,Sum(4),'k.','DisplayName','Sum view factors')
+% plot(ratio,Sum2(4),'ko','DisplayName','Sum view factors reciprocity')
+% xlabel('canyon aspect ratio (H/W)')
+% legend('show')
