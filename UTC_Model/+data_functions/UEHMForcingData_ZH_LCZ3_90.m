@@ -55,7 +55,8 @@ SW_diff		=	SAD1_in(itt,1) + SAD2_in(itt,1);	% Diffuse incoming shortwave radiati
 LWR			=	LWR_in(itt,1);						% Atmospheric longwave radiation W per m^2 of horizontal surface
 
 if abs(cos(theta_Z))< 0.1
-    SW_dir		=	0;
+    SW_diff	=	SW_diff + SW_dir; 
+    SW_dir		=	0; 
 end
 
 %% Meteorological data
@@ -112,9 +113,8 @@ Anthropogenic	=	struct('Tb',Tb,'Qf_canyon',Qf_canyon,'Qf_roof',Qf_roof,...
 %% GENERAL PARAMETERS FOR CALCULATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Time steps other than dth=1 and tds=3600 are not extensively tested in this version of the code.
-% If issues occur with varying the time step, please contact me (Naika Meili)
-dth		=	1;										% time step of calculation [h]
-dts		=	3600;									% time step of calculation [s]
+dth		=	hours(date_time(2)-date_time(1));        % time step of calculation [h]
+dts		=	3600.*hours(date_time(2)-date_time(1));	% time step of calculation [s]
 row		=	1000;									% density of water [kg/m^3]
 cp_atm	=	1005+(((Tatm-273.15)+23.15)^2)/3364;	% specific heat air  [J/kg K]
 rho_atm	=	(Pre/(287.04*Tatm))*(1-(ea/Pre)*(1-0.622));	% dry air density at atmosphere [kg/m^3]

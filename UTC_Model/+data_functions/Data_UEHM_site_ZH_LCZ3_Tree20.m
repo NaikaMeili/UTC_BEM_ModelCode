@@ -32,8 +32,8 @@ Radius_tree		=	0.289;				% Tree-crown radius (m), Calculated out of rescaled tre
 Height_tree		=	5-Radius_tree;		% Tree height (m)
 Distance_tree	=	0.5+Radius_tree;	% Tree-to-wall distance (m)
 
-Hcan_max	=	10;	% Maximum height of roughness elements (buidlings)
-Hcan_std	=	1;	% Standard deviation of roughness elements (buildings)
+Hcan_max	=	NaN;	% Maximum height of roughness elements (buidlings), (m)
+Hcan_std	=	NaN;	% Standard deviation of roughness elements (buildings), (m)
 
 trees   =	1;		% Easy switch to include (=1) and exclude (=0) trees in the urban canyon
 ftree	=	1;		% DO NOT CHANGE: Tree fraction along canyon axis
@@ -91,7 +91,8 @@ FractionsGround	=	struct('fveg',fveg_G,'fbare',fbare_G,'fimp',fimp_G,'Per_runoff
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ROOF VEGETATION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % General
-LAI_R		=	LAIvarying*LAI_Rvar + (1-LAIvarying) * 2.5;         % Leaf area index for the roof vegetation (-)
+LAI_RC      =   2.5;
+LAI_R		=	LAIvarying*LAI_Rvar + (1-LAIvarying) * LAI_RC;         % Leaf area index for the roof vegetation (-)
 SAI_R		=	0.001;		% Stem area index for the roof vegetation (-)
 hc_R		=	0.15;		% canopy height roof vegetation	(m)
 h_disp_R	=	2/3*hc_R;	% Zero plane displacement height of roof vegetation [m]
@@ -137,7 +138,8 @@ ParVegRoof	=	struct('LAI',LAI_R,'SAI',SAI_R,'hc',hc_R,'h_disp',h_disp_R,...
 % GROUND VEGETATION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % GRASS
 % General
-LAI_G		=	LAIvarying*LAI_Gvar + (1-LAIvarying) * 2.5; 		% Leaf area index for the roof vegetation (-)
+LAI_GC      =   2.5;
+LAI_G		=	LAIvarying*LAI_Gvar + (1-LAIvarying) * LAI_GC; 		% Leaf area index for the roof vegetation (-)
 SAI_G		=	0.001;		% Stem area index for the roof vegetation (-)
 hc_G		=	0.15;		% canopy height roof vegetation (m)
 h_disp_G	=	2/3*hc_G;	% Zero plane displacement height of roof vegetation [m]
@@ -182,7 +184,8 @@ ParVegGround	=	struct('LAI',LAI_G,'SAI',SAI_G,'hc',hc_G,'h_disp',h_disp_G,...
 					
 % TREE VEGETATION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % General
-LAI_T		=	LAIvarying*LAI_Tvar + (1-LAIvarying) * 5; 		% Leaf area index for the ground vegetation (-)
+LAI_TC      =   5;
+LAI_T		=	LAIvarying*LAI_Tvar + (1-LAIvarying) * LAI_TC; 		% Leaf area index for the ground vegetation (-)
 SAI_T		=	0.2;	% Stem area index for the ground vegetation (-)
 d_leaf_T	=	4;		% Leaf dimension of ground vegetation [cm]
 

@@ -5,7 +5,7 @@ load(fullfile('+data_functions', 'ForcingData_ZH.mat'));
 [LAI_TimeSeries]=data_functions.VaryingLAIInput(1,'LAI_Zurich_Area'); 
 
 
-n			=	72;					% Calculation lenght
+n			=	size(MeteoDataZH_h,1);% Calculation length, there is no need to change this
 m			=	1;					% Length for sensitivity analysis
 Name_Site	=	'ZH_LCZ3_Tree20';	% Name for Data_UEHM_site
 Name_SiteFD	=	'ZH_LCZ3_90';		% Name for UEHMForcingData
@@ -45,12 +45,6 @@ SoilWPot.SoilPotWGroundVeg_L=0;
 % Soil parameters
 [~,~,~,~,~,~,ParSoilRoof,ParSoilGround,~,~,~,~,~,~,~,~,~,ParVegRoof,ParVegGround,ParVegTree,~]=feval(strcat('data_functions.Data_UEHM_site_',Name_Site),MeteoData,1,LAI_TimeSeries);
 
-% ParSoil		=	struct('Roof',ParSoilRoof,'Ground',ParSoilGround);
-% [~,~,~,~,ParSoil.Roof.O33,~,~,~,~,~]=soil_functions.Soil_parameters(ParSoil.Roof.Psan,ParSoil.Roof.Pcla,ParSoil.Roof.Porg);
-% [~,~,~,~,ParSoil.Ground.O33,~,~,~,~,~]=soil_functions.Soil_parameters(ParSoil.Ground.Psan,ParSoil.Ground.Pcla,ParSoil.Ground.Porg);
-% ParSoil.Roof.dz		=	diff(ParSoil.Roof.Zs);	% [mm]  Thickness of the Layers
-% ParSoil.Ground.dz	=	diff(ParSoil.Ground.Zs);% [mm]  Thickness of the Layers
-
 ParSoil		=	struct('Roof',ParSoilRoof,'Ground',ParSoilGround);
 
 [~,~,~,ParSoil.Roof.Osat,ParSoil.Roof.Ohy,~,~,~,~,~,ParSoil.Roof.O33,...
@@ -67,8 +61,8 @@ ParSoil		=	struct('Roof',ParSoilRoof,'Ground',ParSoilGround);
 	ParVegTree.CASE_ROOT,ParVegGround.CASE_ROOT,ParVegTree.ZR95,ParVegGround.ZR95,...
     ParVegTree.ZR50,ParVegGround.ZR50,ParVegTree.ZRmax,ParVegGround.ZRmax,ParSoilGround.Zs);
 
-ParSoil.Roof.dz		=	diff(ParSoil.Roof.Zs);	% [mm]  Thickness of the Layers
-ParSoil.Ground.dz	=	diff(ParSoil.Ground.Zs);% [mm]  Thickness of the Layers
+ParSoil.Roof.dz		=	diff(ParSoil.Roof.Zs);	% [mm]  Thickness of the soil layers
+ParSoil.Ground.dz	=	diff(ParSoil.Ground.Zs);% [mm]  Thickness of the soil layers
 
 ParSoil.Roof.Osat   = unique(ParSoil.Roof.Osat);
 ParSoil.Roof.Ohy    = unique(ParSoil.Roof.Ohy);
@@ -79,21 +73,23 @@ ParSoil.Ground.Ohy  = unique(ParSoil.Ground.Ohy);
 ParSoil.Ground.O33  = unique(ParSoil.Ground.O33);
 
 %% Initializing vectors %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Temperature
-% TRoofImp		=	Temperature roof impervious area
-% TRoofVeg		=	Temperature roof vegetated area
-% TRoofIntImp	=	Interior temperature roof impervious area
-% TRoofIntVeg	=	Interior temperature roof vegetated area
-% TGroundImp	=	Temperature ground impervious area
-% TGroundBare	=	Temperature ground bare area
-% TGroundVeg	=	Temperature ground vegetated area
-% TTree			=	Temperature tree canopy
-% TWallSun		=	Temperature sunlit area
-% TWallShade	=	Temperature shaded area
-% TWallIntSun	=	Interior temperature sunlit wall
-% TWallIntShade	=	Interior temperature shaded wall
-% TCanyon		=	Temperature canyon
-% Tatm			=	Temperature atmosphere(measured)
+%--------------------------------------------------------------------------
+% Temperature: TempVec
+%--------------------------------------------------------------------------
+% TRoofImp		=	Temperature roof impervious area [K]
+% TRoofVeg		=	Temperature roof vegetated area [K]
+% TRoofIntImp	=	Interior temperature roof impervious area [K]
+% TRoofIntVeg	=	Interior temperature roof vegetated area [K]
+% TGroundImp	=	Temperature ground impervious area [K]
+% TGroundBare	=	Temperature ground bare area [K]
+% TGroundVeg	=	Temperature ground vegetated area [K]
+% TTree			=	Temperature tree canopy [K]
+% TWallSun		=	Temperature sunlit area [K]
+% TWallShade	=	Temperature shaded area [K]
+% TWallIntSun	=	Interior temperature sunlit wall [K]
+% TWallIntShade	=	Interior temperature shaded wall [K]
+% TCanyon		=	Temperature canyon [K]
+% Tatm			=	Temperature atmosphere(measured) [K]
 
 TempVecNames	=	{'TRoofImp';'TRoofVeg';'TRoofIntImp';'TRoofIntVeg';...
 					'TGroundImp';'TGroundBare';'TGroundVeg';'TTree';'TWallSun';...
@@ -106,11 +102,12 @@ end
 
 TempVec.Tatm	=	repmat(MeteoDataRaw.T_atm(:,1),1,1,m); % Temperature atmosphere(measured)
 
-% Dampending temperature
-% TGroundImp	=	Dampening temperature ground impervious area
-% TGroundBare	=	Dampening temperature ground bare area
-% TGroundVeg	=	Dampening temperature ground vegetated area
-% TTree			=	Dampening temperature tree canopy
+% Dampening temperature: TempDamp
+%--------------------------------------------------------------------------
+% TGroundImp	=	Dampening temperature ground impervious area [K]
+% TGroundBare	=	Dampening temperature ground bare area [K]
+% TGroundVeg	=	Dampening temperature ground vegetated area [K]
+% TTree			=	Dampening temperature tree canopy [K]
 
 TempDampNames	=	{'TDampGroundImp';'TDampGroundBare';'TDampGroundVeg';'TDampTree'};
 
@@ -119,7 +116,21 @@ for i=1:size(TempDampNames,1)
 	TempDamp.(cell2mat(TempDampNames(i)))(1,:,:)=	303.16;
 end
 
-%% Humidity
+%% Humidity: Humidity
+%--------------------------------------------------------------------------
+% CanyonRelative: Relative humidity at canyon calculation height (-)
+% CanyonSpecific: Specific humidity at canyon calculation height (kg/kg)
+% CanyonVapourPre: Vapour pressure at canyon calculation height (Pa)
+% CanyonRelativeSat: Saturation relative humidity at canyon calculation height (-), is always 1 
+% CanyonSpecificSat: Specific humidity at saturation at canyon calculation height (kg/kg)
+% CanyonVapourPreSat: Saturation vapor pressure at canyon calculation height (Pa)
+% AtmRelative: Relative humidity at atmospheric forcing height (-)
+% AtmSpecific: Specific humidity at atmospheric forcing height (kg/kg)
+% AtmVapourPre: Vapor pressure at atmospheric forcing height (Pa)
+% AtmRelativeSat: Saturation relative humidity at atmospheric forcing height (-), is always 1 
+% AtmSpecificSat: Specific humidity at saturation at atmospheric forcing height (kg/kg)
+% AtmVapourPreSat: Saturation vapour pressure at atmospheric forcing height (Pa)
+
 HumidityNames	=	{'CanyonRelative';'CanyonSpecific';'CanyonVapourPre';'CanyonRelativeSat';...
 					'CanyonSpecificSat';'CanyonVapourPreSat';'AtmRelative';'AtmSpecific';'AtmVapourPre';...
 					'AtmRelativeSat';'AtmSpecificSat';'AtmVapourPreSat'};
@@ -131,58 +142,66 @@ Humidity.CanyonSpecific(1,:,:)				=	HumidityAtm.AtmSpecific;
 
 %% Energy fluxes %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Shortwave radiation
-% Shortwave radiation absorbed
+%--------------------------------------------------------------------------
+% Shortwave radiation absorbed: SWRabs
+%--------------------------------------------------------------------------
 % SWRabsRoofImp		=	Absorbed shortwave radiation roof impervious area [W/m2 horizontal roof area]
 % SWRabsRoofVeg		=	Absorbed shortwave radiation roof vegetated area [W/m2 horizontal roof area]
 % SWRabsGroundImp	=	Absorbed shortwave radiation ground impervious area [W/m2 horizontal ground area]
 % SWRabsGroundBare	=	Absorbed shortwave radiation ground bare area [W/m2 horizontal ground area]
 % SWRabsGroundVeg	=	Absorbed shortwave radiation ground vegetated area [W/m2 horizontal ground area]
-% SWRabsTree		=	Absorbed shortwave radiation tree canopy [W/m2 tree sphere??]
+% SWRabsTree		=	Absorbed shortwave radiation tree canopy [W/m2 horizontally projected tree area: 4*radius]
 % SWRabsWallSun		=	Absorbed shortwave radiation sunlit area [W/m2 vertical wall area]
 % SWRabsWallShade	=	Absorbed shortwave radiation shaded area [W/m2 vertical wall area]
 % SWRabsTotalRoof	=	Total absorbed shortwave radiation by the roof area [W/m2 horizontal roof area]
-% SWRabsTotalGround	=	Total absorbed shortwave radiation by the canyon ground area [W/m2 horizontal ground area]
-% SWRabsTotalCanyon	=	Total absorbed shortwave radiation by all the canyon facets [W/m2 horizontal canyon area]
-% SWRabsTotalUrban	=	Total absorbed shortwave radiation by all the urban elements (roof plus canyon) [W/m2 horizontal area]
-% Incoming shortwave radiation
+% SWRabsTotalGround	=	Total absorbed shortwave radiation by the canyon ground area [W/m2]
+% SWRabsTotalCanyon	=	Total absorbed shortwave radiation by all the canyon facets [W/m2]
+% SWRabsTotalUrban	=	Total absorbed shortwave radiation by all the urban elements (roof plus canyon) [W/m2]
+%--------------------------------------------------------------------------
+% Incoming shortwave radiation: SWRin
+%--------------------------------------------------------------------------
 % SWRinRoofImp		=	Incoming shortwave radiation roof impervious area [W/m2 horizontal roof area]
 % SWRinRoofVeg		=	Incoming shortwave radiation roof vegetated area [W/m2 horizontal roof area]
 % SWRinGroundImp	=	Incoming shortwave radiation ground impervious area [W/m2 horizontal ground area]
 % SWRinGroundBare	=	Incoming shortwave radiation ground bare area [W/m2 horizontal ground area]
 % SWRinGroundVeg	=	Incoming shortwave radiation ground vegetated area [W/m2 horizontal ground area]
-% SWRinTree			=	Incoming shortwave radiation tree canopy [W/m2 tree sphere??]
+% SWRinTree			=	Incoming shortwave radiation tree canopy [W/m2 horizontally projected tree area: 4*radius]
 % SWRinWallSun		=	Incoming shortwave radiation sunlit area [W/m2 vertical wall area]
 % SWRinWallShade	=	Incoming shortwave radiation shaded area [W/m2 vertical wall area]
 % SWRinTotalRoof	=	Total incoming shortwave radiation by the roof area [W/m2 horizontal roof area]
-% SWRinTotalGround	=	Total incoming shortwave radiation by the canyon ground area [W/m2 horizontal ground area]
-% SWRinTotalCanyon	=	Total incoming shortwave radiation by all the canyon facets [W/m2 horizontal canyon area]
-% SWRinTotalUrban	=	Total incoming shortwave radiation by all the urban elements (roof plus canyon) [W/m2 horizontal area]
-% Outgoing shortwave radiation
+% SWRinTotalGround	=	Total incoming shortwave radiation by the canyon ground area [W/m2]
+% SWRinTotalCanyon	=	Total incoming shortwave radiation by all the canyon facets [W/m2]
+% SWRinTotalUrban	=	Total incoming shortwave radiation by all the urban elements (roof plus canyon) [W/m2]
+%--------------------------------------------------------------------------
+% Outgoing shortwave radiation: SWRout
+%--------------------------------------------------------------------------
 % SWRoutRoofImp		=	Outgoing shortwave radiation roof impervious area [W/m2 horizontal roof area]
 % SWRoutRoofVeg		=	Outgoing shortwave radiation roof vegetated area [W/m2 horizontal roof area]
 % SWRoutGroundImp	=	Outgoing shortwave radiation ground impervious area [W/m2 horizontal ground area]
 % SWRoutGroundBare	=	Outgoing shortwave radiation ground bare area [W/m2 horizontal ground area]
 % SWRoutGroundVeg	=	Outgoing shortwave radiation ground vegetated area [W/m2 horizontal ground area]
-% SWRoutTree		=	Outgoing shortwave radiation tree canopy [W/m2 tree sphere??]
+% SWRoutTree		=	Outgoing shortwave radiation tree canopy [W/m2 horizontally projected tree area: 4*radius]
 % SWRoutWallSun		=	Outgoing shortwave radiation sunlit area [W/m2 vertical wall area]
 % SWRoutWallShade	=	Outgoing shortwave radiation shaded area [W/m2 vertical wall area]
 % SWRoutTotalRoof	=	Total outgoing shortwave radiation by the roof area [W/m2 horizontal roof area]
-% SWRoutTotalGround	=	Total outgoing shortwave radiation by the canyon ground area [W/m2 horizontal ground area]
-% SWRoutTotalCanyon	=	Total outgoing shortwave radiation by all the canyon facets [W/m2 horizontal canyon area]
-% SWRoutTotalUrban	=	Total outgoing shortwave radiation by all the urban elements (roof plus canyon) [W/m2 horizontal area]
-% Shortwave radiation energy balance
+% SWRoutTotalGround	=	Total outgoing shortwave radiation by the canyon ground area [W/m2]
+% SWRoutTotalCanyon	=	Total outgoing shortwave radiation by all the canyon facets [W/m2]
+% SWRoutTotalUrban	=	Total outgoing shortwave radiation by all the urban elements (roof plus canyon) [W/m2]
+%--------------------------------------------------------------------------
+% Shortwave radiation energy balance: SWREB
+%--------------------------------------------------------------------------
 % SWREBRoofImp		=	Energy Balance shortwave radiation roof impervious area [W/m2 horizontal roof area]
 % SWREBRoofVeg		=	Energy Balance shortwave radiation roof vegetated area [W/m2 horizontal roof area]
 % SWREBGroundImp	=	Energy Balance shortwave radiation ground impervious area [W/m2 horizontal ground area]
 % SWREBGroundBare	=	Energy Balance shortwave radiation ground bare area [W/m2 horizontal ground area]
 % SWREBGroundVeg	=	Energy Balance shortwave radiation ground vegetated area [W/m2 horizontal ground area]
-% SWREBTree			=	Energy Balance shortwave radiation tree canopy [W/m2 tree sphere??]
+% SWREBTree			=	Energy Balance shortwave radiation tree canopy [W/m2 horizontally projected tree area: 4*radius]
 % SWREBWallSun		=	Energy Balance shortwave radiation sunlit area [W/m2 vertical wall area]
 % SWREBWallShade	=	Energy Balance shortwave radiation shaded area [W/m2 vertical wall area]
 % SWREBTotalRoof	=	Energy Balance total shortwave radiation by the roof area [W/m2 horizontal roof area]
-% SWREBTotalGround	=	Energy Balance total shortwave radiation by the canyon ground area [W/m2 horizontal ground area]
-% SWREBTotalCanyon	=	Energy Balance total shortwave radiation by all the canyon facets [W/m2 horizontal canyon area]
-% SWREBTotalUrban	=	Energy Balance total outgoing shortwave radiation by all the urban elements (roof plus canyon) [W/m2 horizontal area]
+% SWREBTotalGround	=	Energy Balance total shortwave radiation by the canyon ground area [W/m2]
+% SWREBTotalCanyon	=	Energy Balance total shortwave radiation by all the canyon facets [W/m2]
+% SWREBTotalUrban	=	Energy Balance total outgoing shortwave radiation by all the urban elements (roof plus canyon) [W/m2]
 
 SWRabsNames	=	{'SWRabsRoofImp';'SWRabsRoofVeg';'SWRabsTotalRoof';'SWRabsGroundImp';'SWRabsGroundBare';...
 					'SWRabsGroundVeg';'SWRabsTree';'SWRabsWallSun';'SWRabsWallShade';...
@@ -207,59 +226,67 @@ for i=1:size(SWRabsNames,1)
 	SWREB.(cell2mat(SWREBNames(i)))		=	zeros(n,1,m);
 end
 
-%% Absorbed longwave radiation
-% Absorbed longwave radiation
+%% Longwave radiation
+%--------------------------------------------------------------------------
+% Absorbed longwave radiation: LWRabs
+%--------------------------------------------------------------------------
 % LWRabsRoofImp		=	Absorbed longwave radiation roof impervious area [W/m2 horizontal roof area]
 % LWRabsRoofVeg		=	Absorbed longwave radiation roof vegetated area [W/m2 horizontal roof area]
 % LWRabsGroundImp	=	Absorbed longwave radiation ground impervious area [W/m2 horizontal ground area]
 % LWRabsGroundBare	=	Absorbed longwave radiation ground bare area [W/m2 horizontal ground area]
 % LWRabsGroundVeg	=	Absorbed longwave radiation ground vegetated area [W/m2 horizontal ground area]
-% LWRabsTree		=	Absorbed longwave radiation tree canopy [W/m2 tree sphere??]
+% LWRabsTree		=	Absorbed longwave radiation tree canopy [W/m2 horizontally projected tree area: 4*radius]
 % LWRabsWallSun		=	Absorbed longwave radiation sunlit area [W/m2 vertical wall area]
 % LWRabsWallShade	=	Absorbed longwave radiation shaded area [W/m2 vertical wall area]
 % LWRabsTotalRoof	=	Total absorbed longwave radiation by the roof area [W/m2 horizontal roof area]
-% LWRabsTotalGround	=	Total absorbed longwave radiation by the canyon ground area [W/m2 horizontal ground area]
-% LWRabsTotalCanyon	=	Total absorbed longwave radiation by all the canyon facets [W/m2 horizontal canyon area]
-% LWRabsTotalUrban	=	Total absorbed longwave radiation by all the urban elements (roof plus canyon) [W/m2 horizontal area]
-% Incoming longwave radiation
+% LWRabsTotalGround	=	Total absorbed longwave radiation by the canyon ground area [W/m2]
+% LWRabsTotalCanyon	=	Total absorbed longwave radiation by all the canyon facets [W/m2]
+% LWRabsTotalUrban	=	Total absorbed longwave radiation by all the urban elements (roof plus canyon) [W/m2]
+%--------------------------------------------------------------------------
+% Incoming longwave radiation: LWRin
+%--------------------------------------------------------------------------
 % LWRinRoofImp		=	Incoming longwave radiation roof impervious area [W/m2 horizontal roof area]
 % LWRinRoofVeg		=	Incoming longwave radiation roof vegetated area [W/m2 horizontal roof area]
 % LWRinGroundImp	=	Incoming longwave radiation ground impervious area [W/m2 horizontal ground area]
 % LWRinGroundBare	=	Incoming longwave radiation ground bare area [W/m2 horizontal ground area]
 % LWRinGroundVeg	=	Incoming longwave radiation ground vegetated area [W/m2 horizontal ground area]
-% LWRinTree			=	Incoming longwave radiation tree canopy [W/m2 tree sphere??]
+% LWRinTree			=	Incoming longwave radiation tree canopy [W/m2 horizontally projected tree area: 4*radius]
 % LWRinWallSun		=	Incoming longwave radiation sunlit area [W/m2 vertical wall area]
 % LWRinWallShade	=	Incoming longwave radiation shaded area [W/m2 vertical wall area]
 % LWRinTotalRoof	=	Total incoming longwave radiation by the roof area [W/m2 horizontal roof area]
-% LWRinTotalGround	=	Total incoming longwave radiation by the canyon ground area [W/m2 horizontal ground area]
-% LWRinTotalCanyon	=	Total incoming longwave radiation by all the canyon facets [W/m2 horizontal canyon area]
-% LWRinTotalUrban	=	Total incoming longwave radiation by all the urban elements (roof plus canyon) [W/m2 horizontal area]
-% Outgoing longwave radiation
+% LWRinTotalGround	=	Total incoming longwave radiation by the canyon ground area [W/m2]
+% LWRinTotalCanyon	=	Total incoming longwave radiation by all the canyon facets [W/m2]
+% LWRinTotalUrban	=	Total incoming longwave radiation by all the urban elements (roof plus canyon) [W/m2]
+%--------------------------------------------------------------------------
+% Outgoing longwave radiation: LWRout
+%--------------------------------------------------------------------------
 % LWRoutRoofImp		=	Outgoing longwave radiation roof impervious area [W/m2 horizontal roof area]
 % LWRoutRoofVeg		=	Outgoing longwave radiation roof vegetated area [W/m2 horizontal roof area]
 % LWRoutGroundImp	=	Outgoing longwave radiation ground impervious area [W/m2 horizontal ground area]
 % LWRoutGroundBare	=	Outgoing longwave radiation ground bare area [W/m2 horizontal ground area]
 % LWRoutGroundVeg	=	Outgoing longwave radiation ground vegetated area [W/m2 horizontal ground area]
-% LWRoutTree		=	Outgoing longwave radiation tree canopy [W/m2 tree sphere??]
+% LWRoutTree		=	Outgoing longwave radiation tree canopy [W/m2 horizontally projected tree area: 4*radius]
 % LWRoutWallSun		=	Outgoing longwave radiation sunlit area [W/m2 vertical wall area]
 % LWRoutWallShade	=	Outgoing longwave radiation shaded area [W/m2 vertical wall area]
 % LWRoutTotalRoof	=	Total outgoing longwave radiation by the roof area [W/m2 horizontal roof area]
-% LWRoutTotalGround	=	Total outgoing longwave radiation by the canyon ground area [W/m2 horizontal ground area]
-% LWRoutTotalCanyon	=	Total outgoing longwave radiation by all the canyon facets [W/m2 horizontal canyon area]
-% LWRoutTotalUrban	=	Total outgoing longwave radiation by all the urban elements (roof plus canyon) [W/m2 horizontal area]
-% Energy Balance of longwave radiation
+% LWRoutTotalGround	=	Total outgoing longwave radiation by the canyon ground area [W/m2]
+% LWRoutTotalCanyon	=	Total outgoing longwave radiation by all the canyon facets [W/m2]
+% LWRoutTotalUrban	=	Total outgoing longwave radiation by all the urban elements (roof plus canyon) [W/m2]
+%--------------------------------------------------------------------------
+% Energy Balance of longwave radiation: LWREB
+%--------------------------------------------------------------------------
 % LWREBRoofImp		=	Energy Balance longwave radiation roof impervious area [W/m2 horizontal roof area]
 % LWREBRoofVeg		=	Energy Balance longwave radiation roof vegetated area [W/m2 horizontal roof area]
 % LWREBGroundImp	=	Energy Balance longwave radiation ground impervious area [W/m2 horizontal ground area]
 % LWREBGroundBare	=	Energy Balance longwave radiation ground bare area [W/m2 horizontal ground area]
 % LWREBGroundVeg	=	Energy Balance longwave radiation ground vegetated area [W/m2 horizontal ground area]
-% LWREBTree			=	Energy Balance longwave radiation tree canopy [W/m2 tree sphere??]
+% LWREBTree			=	Energy Balance longwave radiation tree canopy [W/m2 horizontally projected tree area: 4*radius]
 % LWREBWallSun		=	Energy Balance longwave radiation sunlit area [W/m2 vertical wall area]
 % LWREBWallShade	=	Energy Balance longwave radiation shaded area [W/m2 vertical wall area]
 % LWREBTotalRoof	=	Energy Balance total longwave radiation by the roof area [W/m2 horizontal roof area]
-% LWREBTotalGround	=	Energy Balance total longwave radiation by the canyon ground area [W/m2 horizontal ground area]
-% LWREBTotalCanyon	=	Energy Balance total longwave radiation by all the canyon facets [W/m2 horizontal canyon area]
-% LWREBTotalUrban	=	Energy Balance total outgoing longwave radiation by all the urban elements (roof plus canyon) [W/m2 horizontal area]
+% LWREBTotalGround	=	Energy Balance total longwave radiation by the canyon ground area [W/m2]
+% LWREBTotalCanyon	=	Energy Balance total longwave radiation by all the canyon facets [W/m2]
+% LWREBTotalUrban	=	Energy Balance total outgoing longwave radiation by all the urban elements (roof plus canyon) [W/m2]
 
 LWRabsNames	=	{'LWRabsRoofImp';'LWRabsRoofVeg';'LWRabsTotalRoof';'LWRabsGroundImp';'LWRabsGroundBare';...
 					'LWRabsGroundVeg';'LWRabsTree';'LWRabsWallSun';'LWRabsWallShade';...
@@ -284,14 +311,16 @@ for i=1:size(LWRabsNames,1)
 	LWREB.(cell2mat(LWREBNames(i)))		=	zeros(n,1,m);
 end
 
-%% Sensible heat flux
+%--------------------------------------------------------------------------
+%% Sensible heat flux: Hflux
+%--------------------------------------------------------------------------
 % HfluxRoofImp		=	Sensible heat flux of impervious roof area to atmosphere [W/m2 horizontal roof area]
 % HfluxRoofVeg		=	Sensible heat flux of vegetated roof area to atmosphere [W/m2 horizontal roof area]
 % HfluxGroundImp	=	Sensible heat flux of impervious ground area to canyon [W/m2 horizontal ground area]
 % HfluxGroundBare	=	Sensible heat flux of bare ground area to canyon [W/m2 horizontal ground area]
 % HfluxGroundVeg	=	Sensible heat flux of vegetated ground area to canyon [W/m2 horizontal ground area]
 % HfluxGround		=	Sensible heat flux of impground area to canyon [W/m2 horizontal ground area]
-% HfluxTree			=	Sensible heat flux of tree canopy to canyon [W/m2 tree sphere??]
+% HfluxTree			=	Sensible heat flux of tree canopy to canyon [W/m2 horizontally projected tree area: 4*radius]
 % HfluxWallSun		=	Sensible heat flux of sunlit wall to canyon [W/m2 vertical wall area]
 % HfluxWallShade	=	Sensible heat flux of shaded wall to canyon [W/m2 vertical wall area]
 % HfluxCanyon		=	Sensible heat flux of canyon to atmosphere [W/m2 horizontal canyon area]
@@ -306,7 +335,9 @@ for i=1:size(HfluxNames,1)
 	Hflux.(cell2mat(HfluxNames(i)))	=	zeros(n,1,m);
 end
 
-%% Latent heat flux
+%--------------------------------------------------------------------------
+%% Latent heat flux: LEflux
+%--------------------------------------------------------------------------
 % LEfluxRoofImp			=	Latent heat flux of intercepted water from impervious roof area to atmosphere (LEroof_imp_pond) [W/m2 horizontal roof area]
 % LEfluxRoofVegInt		=	Latent heat flux of intercepted water on roof vegetation to atmosphere (LEroof_veg_int) [W/m2 horizontal roof area]
 % LEfluxRoofVegPond		=	Latent heat flux of intercepted water on ground under roof vegetation to atmosphere (LEroof_veg_pond) [W/m2 horizontal roof area]
@@ -324,9 +355,9 @@ end
 % LTEfluxGroundVeg		=	Latent heat flux of transpiration from ground plants to canyon (LTEground_veg) [W/m2 horizontal ground area]
 % LEfluxGroundVeg		=	Total latent heat flux of vegetated ground to canyon [W/m2 horizontal ground area]
 % LEfluxGround			=	Total latent heat flux of ground to canyon [W/m2 horizontal roof area]
-% LEfluxTreeInt			=	Latent heat flux of intercepted water on tree canopy to canyon (LE_tree_int) [W/m2 tree sphere??]
-% LTEfluxTree			=	Latent heat flux of transpiration from tree canopy to canyon (LTE_tree) [W/m2 tree sphere??]
-% LEfluxTree			=	Total latent heat flux of tree canopy to canyon [W/m2 tree sphere??]
+% LEfluxTreeInt			=	Latent heat flux of intercepted water on tree canopy to canyon (LE_tree_int) [W/m2 horizontally projected tree area: 4*radius]
+% LTEfluxTree			=	Latent heat flux of transpiration from tree canopy to canyon (LTE_tree) [W/m2 horizontally projected tree area: 4*radius]
+% LEfluxTree			=	Total latent heat flux of tree canopy to canyon [W/m2 horizontally projected tree area: 4*radius]
 % LEfluxWallSun			=	Latent heat flux of sunlit wall to canyon [W/m2 vertical wall area]
 % LEfluxWallShade		=	Latent heat flux of shaded wall to canyon [W/m2 vertical wall area]
 % LEfluxCanyon			=	Latent heat flux of canyon to atmosphere [W/m2 horizontal canyon area]
@@ -343,19 +374,21 @@ for i=1:size(LEfluxNames,1)
 	LEflux.(cell2mat(LEfluxNames(i)))	=	zeros(n,1,m);
 end
 
-%% Conductive heat fluxes
-% G1RoofImp		=	Conductive heat flux of first layer of impervious roof
-% G1RoofVeg		=	Conductive heat flux of first layer of vegetated roof
-% G2RoofImp		=	Conductive heat flux of second layer of impervious roof
-% G2RoofVeg		=	Conductive heat flux of second layer of vegetated roof
-% G1GroundImp	=	Conductive heat flux of impervious ground (G_groundimp)
-% G1GroundBare	=	Conductive heat flux of bare ground (G_groundbare)
-% G1GroundVeg	=	Conductive heat flux of vegetated ground (G_groundveg)
-% GTree			=	Conductive heat flux tree
-% G1WallSun		=	Conductive heat flux of first layer of sunlit wall (G1_wallsun)
-% G1WallShade	=	Conductive heat flux of first layer of shaded wall (G1_wallshade)
-% G2WallSun		=	Conductive heat flux of second layer of sunlit wall (G2_wallsun)
-% G2WallShade	=	Conductive heat flux of second layer of shaded wall (G2_wallshade)
+%--------------------------------------------------------------------------
+%% Conductive heat fluxes: Gflux
+%--------------------------------------------------------------------------
+% G1RoofImp		=	Conductive heat flux of first layer of impervious roof [W/m2]
+% G1RoofVeg		=	Conductive heat flux of first layer of vegetated roof [W/m2]
+% G2RoofImp		=	Conductive heat flux of second layer of impervious roof [W/m2]
+% G2RoofVeg		=	Conductive heat flux of second layer of vegetated roof [W/m2]
+% G1GroundImp	=	Conductive heat flux of impervious ground (G_groundimp) [W/m2]
+% G1GroundBare	=	Conductive heat flux of bare ground (G_groundbare) [W/m2]
+% G1GroundVeg	=	Conductive heat flux of vegetated ground (G_groundveg) [W/m2]
+% GTree			=	Conductive heat flux tree [W/m2]
+% G1WallSun		=	Conductive heat flux of first layer of sunlit wall (G1_wallsun) [W/m2]
+% G1WallShade	=	Conductive heat flux of first layer of shaded wall (G1_wallshade) [W/m2]
+% G2WallSun		=	Conductive heat flux of second layer of sunlit wall (G2_wallsun) [W/m2]
+% G2WallShade	=	Conductive heat flux of second layer of shaded wall (G2_wallshade) [W/m2]
 	
 GfluxNames	=	{'G1RoofImp';'G1RoofVeg';'G2RoofImp';'G2RoofVeg';'G1Roof';'G2Roof';...
 					'G1GroundImp';'G1GroundBare';'G1GroundVeg';'G1Ground';'GTree';'G1WallSun';...
@@ -365,16 +398,18 @@ for i=1:size(GfluxNames,1)
 	Gflux.(cell2mat(GfluxNames(i)))	=	zeros(n,1,m);
 end
 
-%% Heat storage in surfaces
-% dsRoofImp		=	Storage of energy in impervious roof
-% dsRoofVeg		=	Storage of energy in vegetated roof
-% dsGroundImp	=	Storage of energy in impervious ground
-% dsGroundBare	=	Storage of energy in bare ground
-% dsGroundVeg	=	Storage of energy in vegetated ground
-% dsTree		=	Storage of energy in tree canopy
-% dsWallSun		=	Storage of energy in sunlit wall 
-% dsWallShade	=	Storage of energy in shaded wall
-% dsCanyonAir	=	Storage of energy in canyon air
+%--------------------------------------------------------------------------
+%% Heat storage in surfaces: dStorage
+%--------------------------------------------------------------------------
+% dsRoofImp		=	Storage of energy in impervious roof [W/m2]
+% dsRoofVeg		=	Storage of energy in vegetated roof [W/m2]
+% dsGroundImp	=	Storage of energy in impervious ground [W/m2]
+% dsGroundBare	=	Storage of energy in bare ground [W/m2]
+% dsGroundVeg	=	Storage of energy in vegetated ground [W/m2]
+% dsTree		=	Storage of energy in tree canopy [W/m2]
+% dsWallSun		=	Storage of energy in sunlit wall  [W/m2]
+% dsWallShade	=	Storage of energy in shaded wall [W/m2]
+% dsCanyonAir	=	Storage of energy in canyon air [W/m2]
 
 dStorageNames	=	{'dsRoofImp';'dsRoofVeg';'dsRoof';'dsGroundImp';'dsGroundBare';...
 					'dsGroundVeg';'dsTree';'dsWallSun';'dsWallShade';'dsCanyonAir'};
@@ -383,26 +418,28 @@ for i=1:size(dStorageNames,1)
 	dStorage.(cell2mat(dStorageNames(i)))	=	zeros(n,1,m);
 end
 
-%% Resistances
-% raRooftoAtm	=	Aerodynamic resistance ra from roof to atmosphere
-% rap_LRoof		=	Undercanopy resistance rap_L roof
-% rb_LRoof		=	Leaf boundary resistance rb_L roof
-% r_soilRoof	=	Soil resistance rb_soil roof
-% rs_sunRoof	=	Stomata resistance sunlit vegetation rs_sun_roof
-% rs_shdRoof	=	Stomata resistance shaded vegetation rs_shd_roof
-% raCanyontoAtm	=	Aerodynamic resistance ra from canyon to atmosphere
-% raGroundtoAtm	=	Aerodynamic resistance ra from ground to canyon air
-% raTreetoAtm	=	Aerodynamic resistance ra from tree to canyon air
-% raWalltoAtm	=	Aerodynamic resistance ra from wall to canyon air
-% rap_HGround	=	Undercanopy resistance rap_H ground
-% rap_LGround	=	Undercanopy resistance rap_L ground
-% rb_HGround	=	Leaf boundary resistance rb_H ground
-% rb_LGround	=	Leaf boundary resistance rb_L ground
-% r_soilGround	=	Soil resistance rb_soil ground
-% rs_sunGround	=	Stomata resistance sunlit vegetation rs_sun_ground
-% rs_shdGround	=	Stomata resistance shaded vegetation rs_shd_ground
-% rs_sunTree	=	Stomata resistance sunlit vegetation rs_sun_tree
-% rs_shdTree	=	Stomata resistance shaded vegetation rs_shd_ground
+%--------------------------------------------------------------------------
+%% Resistances: RES
+%--------------------------------------------------------------------------
+% raRooftoAtm	=	Aerodynamic resistance ra from roof to atmosphere [s/m]
+% rap_LRoof		=	Undercanopy resistance rap_L roof [s/m]
+% rb_LRoof		=	Leaf boundary resistance rb_L roof [s/m]
+% r_soilRoof	=	Soil resistance rb_soil roof [s/m]
+% rs_sunRoof	=	Stomata resistance sunlit vegetation rs_sun_roof [s/m]
+% rs_shdRoof	=	Stomata resistance shaded vegetation rs_shd_roof [s/m]
+% raCanyontoAtm	=	Aerodynamic resistance ra from canyon to atmosphere [s/m]
+% raGroundtoAtm	=	Aerodynamic resistance ra from ground to canyon air [s/m]
+% raTreetoAtm	=	Aerodynamic resistance ra from tree to canyon air [s/m]
+% raWalltoAtm	=	Aerodynamic resistance ra from wall to canyon air [s/m]
+% rap_HGround	=	Undercanopy resistance rap_H ground [s/m]
+% rap_LGround	=	Undercanopy resistance rap_L ground [s/m]
+% rb_HGround	=	Leaf boundary resistance rb_H ground [s/m]
+% rb_LGround	=	Leaf boundary resistance rb_L ground [s/m]
+% r_soilGround	=	Soil resistance rb_soil ground [s/m]
+% rs_sunGround	=	Stomata resistance sunlit vegetation rs_sun_ground [s/m]
+% rs_shdGround	=	Stomata resistance shaded vegetation rs_shd_ground [s/m]
+% rs_sunTree	=	Stomata resistance sunlit vegetation rs_sun_tree [s/m]
+% rs_shdTree	=	Stomata resistance shaded vegetation rs_shd_ground [s/m]
 	
 RESNames	=	{'raRooftoAtm';'rap_LRoof';'rb_LRoof';'r_soilRoof';'rs_sunRoof';'rs_shdRoof';...
 					'raCanyontoAtm';'rap_can';'rap_Htree_In';'rb_HGround';'rb_LGround';...
@@ -414,32 +451,35 @@ for i=1:size(RESNames,1)
 	RES.(cell2mat(RESNames(i)))	=	zeros(n,1,m);
 end
 
+%--------------------------------------------------------------------------
 %% Water fluxes %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Evapotranspiration
-% EfluxRoofImp			=	Evaporation flux of intercepted water from impervious roof area to atmosphere (Eroof_imp_pond) [W/m2 horizontal roof area]
-% EfluxRoofVegInt		=	Evaporation flux of intercepted water on roof vegetation to atmosphere (Eroof_veg_int) [W/m2 horizontal roof area]
-% EfluxRoofVegPond		=	Evaporation flux of intercepted water on ground under roof vegetation to atmosphere (Eroof_veg_pond) [W/m2 horizontal roof area]
-% EfluxRoofVegSoil		=	Evaporation flux of water from roof soil under vegetation to atmosphere (Eroof_veg_soil) [W/m2 horizontal roof area]
-% TEfluxRoofVeg			=	Evaporation flux of transpiration from roof plants to atmosphere (TEroof_veg) [W/m2 horizontal roof area]
-% EfluxRoofVeg			=	Total evaporation flux of vegetated roof to atmosphere [W/m2 horizontal roof area]
-% EfluxRoof				=	Total evaporation flux of roof to atmosphere [W/m2 horizontal roof area]
-% EfluxGroundImp		=	Evaporation flux of intercepted water on impervious ground area to canyon (Eground_imp_pond)[W/m2 horizontal ground area]
-% EfluxGroundBarePond	=	Evaporation flux of  water on bare ground to canyon (Eground_bare_pond)[W/m2 horizontal ground area]
-% EfluxGroundBareSoil	=	Evaporation flux of  water from bare ground to canyon (Eground_bare_soil) [W/m2 horizontal ground area]
-% EfluxGroundBare		=	Total evaporation flux of bare ground area to canyon [W/m2 horizontal ground area]
-% EfluxGroundVegInt		=	Evaporation flux of intercepted water on ground vegetation to canyon (Eground_veg_int) [W/m2 horizontal ground area]
-% EfluxGroundVegPond	=	Evaporation flux of intercepted water on ground under vegetation to canyon (Eground_veg_pond) [W/m2 horizontal ground area]
-% EfluxGroundVegSoil	=	Evaporation flux of water from ground soil under vegetation to canyon (Eground_veg_soil) [W/m2 horizontal ground area]
-% TEfluxGroundVeg		=	Evaporation flux of transpiration from ground plants to canyon (TEground_veg) [W/m2 horizontal ground area]
-% EfluxGroundVeg		=	Total evaporation flux of vegetated ground to canyon [W/m2 horizontal ground area]
-% EfluxGround			=	Total evaporation flux of ground to canyon [W/m2 horizontal roof area]
-% EfluxTreeInt			=	Evaporation flux of intercepted water on tree canopy to canyon (E_tree_int) [W/m2 tree sphere??]
-% TEfluxTree			=	Evaporation flux of transpiration from tree canopy to canyon (TE_tree) [W/m2 tree sphere??]
-% EfluxTree				=	Total evaporation flux of tree canopy to canyon [W/m2 tree sphere??]
-% EfluxWallSun			=	Evaporation flux of sunlit wall to canyon [W/m2 vertical wall area]
-% EfluxWallShade		=	Evaporation flux of shaded wall to canyon [W/m2 vertical wall area]
-% EfluxCanyon			=	Evaporation flux of canyon to atmosphere [W/m2 horizontal canyon area]
-% EfluxUrban			=	Total evaporation flux of urban area to atmosphere [W/m2 horizontal area]
+%--------------------------------------------------------------------------
+% Evapotranspiration: Eflux
+%--------------------------------------------------------------------------
+% EfluxRoofImp			=	Evaporation flux of intercepted water from impervious roof area to atmosphere (Eroof_imp_pond) [kg/m^2*s horizontal roof area]
+% EfluxRoofVegInt		=	Evaporation flux of intercepted water on roof vegetation to atmosphere (Eroof_veg_int) [kg/m^2*s horizontal roof area]
+% EfluxRoofVegPond		=	Evaporation flux of intercepted water on ground under roof vegetation to atmosphere (Eroof_veg_pond) [kg/m^2*s horizontal roof area]
+% EfluxRoofVegSoil		=	Evaporation flux of water from roof soil under vegetation to atmosphere (Eroof_veg_soil) [kg/m^2*s horizontal roof area]
+% TEfluxRoofVeg			=	Evaporation flux of transpiration from roof plants to atmosphere (TEroof_veg) [kg/m^2*s horizontal roof area]
+% EfluxRoofVeg			=	Total evaporation flux of vegetated roof to atmosphere [kg/m^2*s horizontal roof area]
+% EfluxRoof				=	Total evaporation flux of roof to atmosphere [kg/m^2*s horizontal roof area]
+% EfluxGroundImp		=	Evaporation flux of intercepted water on impervious ground area to canyon (Eground_imp_pond)[kg/m^2*s horizontal ground area]
+% EfluxGroundBarePond	=	Evaporation flux of  water on bare ground to canyon (Eground_bare_pond)[kg/m^2*s horizontal ground area]
+% EfluxGroundBareSoil	=	Evaporation flux of  water from bare ground to canyon (Eground_bare_soil) [kg/m^2*s horizontal ground area]
+% EfluxGroundBare		=	Total evaporation flux of bare ground area to canyon [kg/m^2*s horizontal ground area]
+% EfluxGroundVegInt		=	Evaporation flux of intercepted water on ground vegetation to canyon (Eground_veg_int) [kg/m^2*s horizontal ground area]
+% EfluxGroundVegPond	=	Evaporation flux of intercepted water on ground under vegetation to canyon (Eground_veg_pond) [kg/m^2*s horizontal ground area]
+% EfluxGroundVegSoil	=	Evaporation flux of water from ground soil under vegetation to canyon (Eground_veg_soil) [kg/m^2*s horizontal ground area]
+% TEfluxGroundVeg		=	Evaporation flux of transpiration from ground plants to canyon (TEground_veg) [kg/m^2*s horizontal ground area]
+% EfluxGroundVeg		=	Total evaporation flux of vegetated ground to canyon [kg/m^2*s horizontal ground area]
+% EfluxGround			=	Total evaporation flux of ground to canyon [kg/m^2*s horizontal roof area]
+% EfluxTreeInt			=	Evaporation flux of intercepted water on tree canopy to canyon (E_tree_int) [kg/m^2*s horizontally projected tree area: 4*radius]
+% TEfluxTree			=	Evaporation flux of transpiration from tree canopy to canyon (TE_tree) [kg/m^2*s horizontally projected tree area: 4*radius]
+% EfluxTree				=	Total evaporation flux of tree canopy to canyon [kg/m^2*s horizontally projected tree area: 4*radius]
+% EfluxWallSun			=	Evaporation flux of sunlit wall to canyon [kg/m^2*s vertical wall area]
+% EfluxWallShade		=	Evaporation flux of shaded wall to canyon [kg/m^2*s vertical wall area]
+% EfluxCanyon			=	Evaporation flux of canyon to atmosphere [kg/m^2*s horizontal canyon area]
+% EfluxUrban			=	Total evaporation flux of urban area to atmosphere kg/m^2*s horizontal area]
 
 EfluxNames	=	{'EfluxRoofImp';'EfluxRoofVegInt';'EfluxRoofVegPond';'EfluxRoofVegSoil';...
 					'TEfluxRoofVeg';'EfluxRoofVeg';'EfluxRoof';'EfluxGroundImp';'EfluxGroundBarePond';...
@@ -452,17 +492,19 @@ for i=1:size(EfluxNames,1)
 	Eflux.(cell2mat(EfluxNames(i)))	=	zeros(n,1,m);
 end
 
-%% Runoff / Runon
-% QRoofImp			=	Runoff of impervious area of roof (q_runon_imp)
-% QRoofVegDrip		=	Runoff, Dripping, etc from ground vegetation to roof ground (q_runon_veg)
-% QRoofVegPond		=	Runoff from roof ground under vegetation due to limitation in infiltration capacity (q_runon_ground_veg)
-% QRoofVegSoil		=	Runoff due to roof soil saturation (Rd_veg)
-% QGroundImp		=	Runoff of impervious area of ground (q_runon_imp)
-% QGroundBarePond	=	Runoff of bare area of ground due to limitation in infiltration capacity(q_runon_bare)
-% QGroundBareSoil	=	Runoff of bare area of ground due to soil saturation (Rd_bare)
-% QTree				=	Runoff, Dripping, etc from tree to ground (q_runon_tree)
-% QGroundVegDrip	=	Runoff, Dripping, etc from ground vegetation to roof ground (q_runon_veg)
-% QGroundVegPond	=	Runoff from roof ground under vegetation due to limitation in infiltration capacity (q_runon_ground_veg)
+%--------------------------------------------------------------------------
+%% Runoff: Runoff and Runon: Runon
+%--------------------------------------------------------------------------
+% QRoofImp			=	Runoff of impervious area of roof (q_runon_imp) [mm/time step] 
+% QRoofVegDrip		=	Runoff, Dripping, etc from ground vegetation to roof ground (q_runon_veg) [mm/time step] 
+% QRoofVegPond		=	Runoff from roof ground under vegetation due to limitation in infiltration capacity (q_runon_ground_veg) [mm/time step] 
+% QRoofVegSoil		=	Runoff due to roof soil saturation (Rd_veg)[mm/time step] 
+% QGroundImp		=	Runoff of impervious area of ground (q_runon_imp)[mm/time step] 
+% QGroundBarePond	=	Runoff of bare area of ground due to limitation in infiltration capacity(q_runon_bare)[mm/time step] 
+% QGroundBareSoil	=	Runoff of bare area of ground due to soil saturation (Rd_bare)[mm/time step] 
+% QTree				=	Runoff, Dripping, etc from tree to ground (q_runon_tree)[mm/time step] 
+% QGroundVegDrip	=	Runoff, Dripping, etc from ground vegetation to roof ground (q_runon_veg)[mm/time step] 
+% QGroundVegPond	=	Runoff from roof ground under vegetation due to limitation in infiltration capacity (q_runon_ground_veg)[mm/time step] 
 % QGroundVegSoil	=	Runoff due to roof soil saturation (Rd_veg)
 
 RunoffNames	=	{'QRoofImp';'QRoofVegDrip';'QRoofVegPond';'QRoofVegSoil';...
@@ -473,10 +515,10 @@ for i=1:size(RunoffNames,1)
 	Runoff.(cell2mat(RunoffNames(i)))	=	zeros(n,1,m);
 end
 
-% RunonRoofTot		=	Total roof runon to the next time step
-% RunoffRoofTot		=	Total roof runoff that is removed from the system
-% RunonGroundTot	=	Total ground runon to the next time step
-% RunoffGroundTot	=	Total ground runoff that is removed from the system
+% RunonRoofTot		=	Total roof runon to the next time step [mm/time step] 
+% RunoffRoofTot		=	Total roof runoff that is removed from the system [mm/time step] 
+% RunonGroundTot	=	Total ground runon to the next time step [mm/time step] 
+% RunoffGroundTot	=	Total ground runoff that is removed from the system [mm/time step] 
 
 RunonNames	=	{'RunonRoofTot';'RunoffRoofTot';'RunonGroundTot';'RunoffGroundTot';'RunonUrban';'RunoffUrban'};
 
@@ -484,14 +526,16 @@ for i=1:size(RunonNames,1)
 	Runon.(cell2mat(RunonNames(i)))	=	zeros(n,1,m);
 end
 
-%% Leakage
-% LkRoofImp		=	Leakage from impervious roof (Lk_imp)
-% LkRoofVeg		=	Leakage from last soil layer of vegetated roof (Lk_soil_veg)
-% LkRoof			=	Total leakage of roof
-% LkGroundImp		=	Leakage from impervious ground (Lk_imp)
-% LkGroundBare	=	Leakage from last soil layer of bare ground (Lk_soil_bare)
-% LkGroundVeg		=	Leakage from last soil layer of vegetated ground (Lk_soil_veg)
-% LkGround		=	Total leakage of ground
+%--------------------------------------------------------------------------
+%% Leakage: Leakage
+%--------------------------------------------------------------------------
+% LkRoofImp		=	Leakage from impervious roof (Lk_imp)[mm/h]
+% LkRoofVeg		=	Leakage from last soil layer of vegetated roof (Lk_soil_veg)[mm/h]
+% LkRoof		=	Total leakage of roof [mm/h]
+% LkGroundImp	=	Leakage from impervious ground (Lk_imp)[mm/h]
+% LkGroundBare	=	Leakage from last soil layer of bare ground (Lk_soil_bare)[mm/h]
+% LkGroundVeg	=	Leakage from last soil layer of vegetated ground (Lk_soil_veg)[mm/h]
+% LkGround		=	Total leakage of ground[mm/h]
 
 LeakageNames	=	{'LkRoofImp';'LkRoofVeg';'LkRoof';'LkGroundImp';...
 					'LkGroundBare';'LkGroundVeg';'LkGround';'LkUrban'};
@@ -500,15 +544,17 @@ for i=1:size(LeakageNames,1)
 	Leakage.(cell2mat(LeakageNames(i)))	=	zeros(n,1,m);
 end
 
-%% Interception / change in interception
-% IntRoofImp		=	Interception on impervious roof area (In_ground_imp)
-% IntRoofVegPlant	=	Interception on plant surfaces (In_ground_veg)
-% IntRoofVegGround	=	Interception on ground (In_ground_underveg)
-% IntGroundImp		=	Interception on impervious ground area (In_ground_imp)
-% IntGroundBare		=	Interception on bare ground area (In_ground_bare)
-% IntGroundVegPlant	=	Interception on plant surfaces (In_ground_veg)
-% IntGroundVegGround=	Interception on ground (In_ground_underveg)
-% IntTree			=	Interception on tree (In_tree)
+%--------------------------------------------------------------------------
+%% Interception: Int
+%--------------------------------------------------------------------------
+% IntRoofImp		=	Interception on impervious roof area(In_ground_imp) [mm]
+% IntRoofVegPlant	=	Interception on plant surfaces (In_ground_veg) [mm]
+% IntRoofVegGround	=	Interception on ground (In_ground_underveg) [mm]
+% IntGroundImp		=	Interception on impervious ground area (In_ground_imp) [mm]
+% IntGroundBare		=	Interception on bare ground area (In_ground_bare) [mm]
+% IntGroundVegPlant	=	Interception on plant surfaces (In_ground_veg) [mm]
+% IntGroundVegGround=	Interception on ground (In_ground_underveg) [mm]
+% IntTree			=	Interception on tree (In_tree) [mm]
 
 IntNames	=	{'IntRoofImp';'IntRoofVegPlant';'IntRoofVegGround';'IntRooftot';'IntGroundImp';...
 					'IntGroundBare';'IntGroundVegPlant';'IntGroundVegGround';'IntTree'};
@@ -517,15 +563,17 @@ for i=1:size(IntNames,1)
 	Int.(cell2mat(IntNames(i)))	=	zeros(n,1,m);
 end
 
-% Change in interception
-% dInt_dtRoofImp		=	Change in interception on impervious roof area (dIn_imp_dt)
-% dInt_dtRoofVegPlant	=	Change in interception on plant surfaces (dIn_veg_dt)
-% dInt_dtRoofVegGround	=	Change in interception on ground (dIn_ground_veg_dt)
-% dInt_dtGroundImp		=	Change in interception on impervious ground area (dIn_imp_dt)
-% dInt_dtGroundBare		=	Change in interception on bare ground area (dIn_bare_dt)
-% dInt_dtGroundVegPlant	=	Change in interception on plant surfaces (dIn_veg_dt)
-% dInt_dtGroundVegGround=	Change in interception on ground (dIn_ground_veg_dt)
-% dInt_dtTree			=	Change in interception on tree (dIn_tree_dt)
+%--------------------------------------------------------------------------
+% Change in interception: dInt_dt
+%--------------------------------------------------------------------------
+% dInt_dtRoofImp		=	Change in interception on impervious roof area (dIn_imp_dt)[mm/h]
+% dInt_dtRoofVegPlant	=	Change in interception on plant surfaces (dIn_veg_dt)[mm/h]
+% dInt_dtRoofVegGround	=	Change in interception on ground (dIn_ground_veg_dt)[mm/h]
+% dInt_dtGroundImp		=	Change in interception on impervious ground area (dIn_imp_dt)[mm/h]
+% dInt_dtGroundBare		=	Change in interception on bare ground area (dIn_bare_dt)[mm/h]
+% dInt_dtGroundVegPlant	=	Change in interception on plant surfaces (dIn_veg_dt)[mm/h]
+% dInt_dtGroundVegGround=	Change in interception on ground (dIn_ground_veg_dt)[mm/h]
+% dInt_dtTree			=	Change in interception on tree (dIn_tree_dt)[mm/h]
 
 dInt_dtNames	=	{'dInt_dtRoofImp';'dInt_dtRoofVegPlant';'dInt_dtRoofVegGround';'dInt_dtRooftot';'dInt_dtGroundImp';...
 					'dInt_dtGroundBare';'dInt_dtGroundVegPlant';'dInt_dtGroundVegGround';'dInt_dtTree'};
@@ -534,10 +582,12 @@ for i=1:size(dInt_dtNames,1)
 	dInt_dt.(cell2mat(dInt_dtNames(i)))	=	zeros(n,1,m);
 end
 
-%% Infiltration
-% fRoofVeg		=	Infiltration in first soil layer of vegetated roof (f_roof_veg)
-% fGroundBare	=	Infiltration in first soil layer of bare ground (f_ground_bare)
-% fGroundVeg	=	Infiltration in first soil layer of vegetated ground (f_ground_veg)	
+%--------------------------------------------------------------------------
+%% Infiltration: Infiltration
+%--------------------------------------------------------------------------
+% fRoofVeg		=	Infiltration in first soil layer of vegetated roof (f_roof_veg)[mm/h]
+% fGroundBare	=	Infiltration in first soil layer of bare ground (f_ground_bare)[mm/h]
+% fGroundVeg	=	Infiltration in first soil layer of vegetated ground (f_ground_veg)	[mm/h]
 
 InfiltrationNames	=	{'fRoofVeg';'fGroundBare';'fGroundVeg';'fGroundImp'};
 
@@ -545,37 +595,40 @@ for i=1:size(InfiltrationNames,1)
 	Infiltration.(cell2mat(InfiltrationNames(i)))	=	zeros(n,1,m);
 end
 
-%% Water volume in soil / change in water volume in soil
+%--------------------------------------------------------------------------
+%% Water volume in soil: dVwater_dt and Change in water volume in soil: dVwater_dt
+%--------------------------------------------------------------------------
 % Initializing soil water content in the first time step.
 % I chose field capacity O33 as a starting point
 Vwater						=	[];
-Vwater.VRoofSoilVeg			=	zeros(n,ParSoil.Roof.ms,m);		%  Water volume in the different soil layers of roof (Vw_soil)
-Vwater.VGroundSoilImp		=	zeros(n,ParSoil.Ground.ms,m);	%  Water volume in the different soil layers of ground (Vw_soil)
-Vwater.VGroundSoilBare		=	zeros(n,ParSoil.Ground.ms,m);	%  Water volume in the different soil layers of ground (Vw_soil)
-Vwater.VGroundSoilVeg		=	zeros(n,ParSoil.Ground.ms,m);	%  Water volume in the different soil layers of ground (Vw_soil)
-Vwater.VGroundSoilTot		=	zeros(n,ParSoil.Ground.ms,m);	%  Water volume in the different soil layers of ground (Vw_soil)
+Vwater.VRoofSoilVeg			=	zeros(n,ParSoil.Roof.ms,m);		%  Water volume in the different soil layers of roof (Vw_soil) [mm]
+Vwater.VGroundSoilImp		=	zeros(n,ParSoil.Ground.ms,m);	%  Water volume in the different soil layers of ground (Vw_soil)[mm]
+Vwater.VGroundSoilBare		=	zeros(n,ParSoil.Ground.ms,m);	%  Water volume in the different soil layers of ground (Vw_soil)[mm]
+Vwater.VGroundSoilVeg		=	zeros(n,ParSoil.Ground.ms,m);	%  Water volume in the different soil layers of ground (Vw_soil)[mm]
+Vwater.VGroundSoilTot		=	zeros(n,ParSoil.Ground.ms,m);	%  Water volume in the different soil layers of ground (Vw_soil)[mm]
 
-Vwater.VRoofSoilVeg(1,:,:)	=	repmat(ParSoil.Roof.O33.*ParSoil.Roof.dz,1,1,m);		% Starting point at field capacity
-Vwater.VGroundSoilImp(1,:,:)=	repmat(ParSoil.Ground.O33.*ParSoil.Ground.dz,1,1,m);	% Starting point at field capacity
-Vwater.VGroundSoilBare(1,:,:)=	repmat(ParSoil.Ground.O33.*ParSoil.Ground.dz,1,1,m);	% Starting point at field capacity
-Vwater.VGroundSoilVeg(1,:,:)=	repmat(ParSoil.Ground.O33.*ParSoil.Ground.dz,1,1,m);	% Starting point at field capacity
-Vwater.VGroundSoilTot(1,:,:)=	repmat(ParSoil.Ground.O33.*ParSoil.Ground.dz,1,1,m);	% Starting point at field capacity
+Vwater.VRoofSoilVeg(1,:,:)	=	repmat(ParSoil.Roof.O33.*ParSoil.Roof.dz,1,1,m);		% Starting point at field capacity[mm]
+Vwater.VGroundSoilImp(1,:,:)=	repmat(ParSoil.Ground.O33.*ParSoil.Ground.dz,1,1,m);	% Starting point at field capacity[mm]
+Vwater.VGroundSoilBare(1,:,:)=	repmat(ParSoil.Ground.O33.*ParSoil.Ground.dz,1,1,m);	% Starting point at field capacity[mm]
+Vwater.VGroundSoilVeg(1,:,:)=	repmat(ParSoil.Ground.O33.*ParSoil.Ground.dz,1,1,m);	% Starting point at field capacity[mm]
+Vwater.VGroundSoilTot(1,:,:)=	repmat(ParSoil.Ground.O33.*ParSoil.Ground.dz,1,1,m);	% Starting point at field capacity[mm]
 
 dVwater_dt						=	[];
-dVwater_dt.dVRoofSoilVeg_dt		=	zeros(n,1,m);	% Maybe only total? I should check zeros(n,1);
-dVwater_dt.dVGroundSoilImp_dt	=	zeros(n,1,m); % Maybe only total? I should check zeros(n,1);
-dVwater_dt.dVGroundSoilBare_dt	=	zeros(n,1,m); % Maybe only total? I should check zeros(n,1);
-dVwater_dt.dVGroundSoilVeg_dt	=	zeros(n,1,m); % Maybe only total? I should check zeros(n,1);
-dVwater_dt.dVGroundSoilTot_dt	=	zeros(n,1,m); % Maybe only total? I should check zeros(n,1);
+dVwater_dt.dVRoofSoilVeg_dt		=	zeros(n,1,m);	% Maybe only total? I should check zeros(n,1);[mm]
+dVwater_dt.dVGroundSoilImp_dt	=	zeros(n,1,m); % Maybe only total? I should check zeros(n,1);[mm]
+dVwater_dt.dVGroundSoilBare_dt	=	zeros(n,1,m); % Maybe only total? I should check zeros(n,1);[mm]
+dVwater_dt.dVGroundSoilVeg_dt	=	zeros(n,1,m); % Maybe only total? I should check zeros(n,1);[mm]
+dVwater_dt.dVGroundSoilTot_dt	=	zeros(n,1,m); % Maybe only total? I should check zeros(n,1);[mm]
 
-
-%% Soil moisture
+%--------------------------------------------------------------------------
+%% Soil moisture: Owater
+%--------------------------------------------------------------------------
 Owater						=	[];
-Owater.OwRoofSoilVeg		=	zeros(n,ParSoil.Roof.ms,m);			%  Soil moisture in the different soil layers of roof
-Owater.OwGroundSoilImp		=	zeros(n,ParSoil.Ground.ms,m);		%  Soil moisture in the different soil layers of ground
-Owater.OwGroundSoilBare		=	zeros(n,ParSoil.Ground.ms,m);		%  Soil moisture in the different soil layers of ground
-Owater.OwGroundSoilVeg		=	zeros(n,ParSoil.Ground.ms,m);		%  Soil moisture in the different soil layers of ground
-Owater.OwGroundSoilTot		=	zeros(n,ParSoil.Ground.ms,m);		%  Soil moisture in the different soil layers of ground
+Owater.OwRoofSoilVeg		=	zeros(n,ParSoil.Roof.ms,m);			%  Soil moisture in the different soil layers of roof [-]
+Owater.OwGroundSoilImp		=	zeros(n,ParSoil.Ground.ms,m);		%  Soil moisture in the different soil layers of ground [-]
+Owater.OwGroundSoilBare		=	zeros(n,ParSoil.Ground.ms,m);		%  Soil moisture in the different soil layers of ground [-]
+Owater.OwGroundSoilVeg		=	zeros(n,ParSoil.Ground.ms,m);		%  Soil moisture in the different soil layers of ground [-]
+Owater.OwGroundSoilTot		=	zeros(n,ParSoil.Ground.ms,m);		%  Soil moisture in the different soil layers of ground [-]
 
 Owater.OwRoofSoilVeg(1,:,:)	=	ParSoil.Roof.O33;				% Starting point at field capacity
 Owater.OwGroundSoilImp(1,:,:)=	ParSoil.Ground.O33;				% Starting point at field capacity
@@ -592,7 +645,9 @@ OSwater.OSwGroundSoilBare	=	zeros(n,ParSoil.Ground.ms,m);
 OSwater.OSwGroundSoilVeg	=	zeros(n,ParSoil.Ground.ms,m);
 OSwater.OSwGroundSoilTot	=	zeros(n,ParSoil.Ground.ms,m);
 
+%--------------------------------------------------------------------------
 % Lateral soil water flux
+%--------------------------------------------------------------------------
 Qinlat				=	[];
 Qinlat.Qin_bare2imp	=	zeros(n,ParSoil.Ground.ms,m);
 Qinlat.Qin_veg2imp	=	zeros(n,ParSoil.Ground.ms,m);
@@ -605,8 +660,10 @@ Qinlat.Qin_bare		=	zeros(n,ParSoil.Ground.ms,m);
 Qinlat.Qin_veg		=	zeros(n,ParSoil.Ground.ms,m);
 
 %% Max extractable water and soil water potential for plants in soil
-% Max extractable water
-% Extractable water: Soil moisture in the different soil layers (Exwat)
+%--------------------------------------------------------------------------
+% Max extractable water: ExWater
+%--------------------------------------------------------------------------
+% Extractable water: Soil moisture in the different soil layers (Exwat) [mm m2 / m2 ground h ]
 ExWaterNames	=	{'ExWaterRoofVeg_H';'ExWaterRoofVeg_L';...
 					'ExWaterGroundImp_H';'ExWaterGroundImp_L';...
 					'ExWaterGroundBare_H';'ExWaterGroundBare_L';...
@@ -620,11 +677,13 @@ for i=3:size(ExWaterNames,1)
 	ExWater.(cell2mat(ExWaterNames(i)))	=	zeros(n,ParSoil.Ground.ms,m);
 end
 
-% Soil water potential for plants in soil
-% SoilPotWRoof_H	=	soil water potential for plants (Psi_s_H)
-% SoilPotWRoof_L	=	soil water potential for plants (Psi_s_L)
-% SoilPotWGround_H	=	soil water potential for plants (Psi_s_H)
-% SoilPotWGround_L	=	soil water potential for plants (Psi_s_L)
+%--------------------------------------------------------------------------
+% Soil water potential for plants in soil: SoilPotW
+%--------------------------------------------------------------------------
+% SoilPotWRoof_H	=	soil water potential for plants (Psi_s_H)[MPa]
+% SoilPotWRoof_L	=	soil water potential for plants (Psi_s_L)[MPa]
+% SoilPotWGround_H	=	soil water potential for plants (Psi_s_H)[MPa]
+% SoilPotWGround_L	=	soil water potential for plants (Psi_s_L)[MPa]
 SoilPotWNames	=	{'SoilPotWRoofVeg_H';'SoilPotWRoofVeg_L';...
 					'SoilPotWGroundImp_H';'SoilPotWGroundImp_L';...
 					'SoilPotWGroundBare_H';'SoilPotWGroundBare_L';...
@@ -635,11 +694,13 @@ for i=1:size(SoilPotWNames,1)
 	SoilPotW.(cell2mat(SoilPotWNames(i)))	=	zeros(n,1,m);
 end
 
-%% Ci = Leaf Interior  CO2 concentration [umolCO2/mol]
-% CiCO2LeafGroundVegSun	=	Ci_sun_veg
-% CiCO2LeafGroundVegShd	=	Ci_shd_veg
-% CiCO2LeafTreeSun		=	Ci_sun_tree
-% CiCO2LeafTreeShd		=	Ci_shd_tree
+%--------------------------------------------------------------------------
+%% Ci = Leaf Interior  CO2 concentration: CiCO2Leaf 
+%--------------------------------------------------------------------------
+% CiCO2LeafGroundVegSun	=	Ci_sun_veg [umolCO2/mol]
+% CiCO2LeafGroundVegShd	=	Ci_shd_veg [umolCO2/mol]
+% CiCO2LeafTreeSun		=	Ci_sun_tree [umolCO2/mol]
+% CiCO2LeafTreeShd		=	Ci_shd_tree [umolCO2/mol]
 
 CiCO2LeafNames	=	{'CiCO2LeafRoofVegSun';'CiCO2LeafRoofVegShd';...
 					'CiCO2LeafGroundVegSun';'CiCO2LeafGroundVegShd';...
@@ -650,7 +711,9 @@ for i=1:size(CiCO2LeafNames,1)
 	CiCO2Leaf.(cell2mat(CiCO2LeafNames(i)))(1,:,:)	=	400;
 end
 
+%--------------------------------------------------------------------------
 %% Energy and Water Balance
+%--------------------------------------------------------------------------
 WBRoofNames	=	{'WBRoofImp';'WBRoofVegInVeg';'WBRoofVegInGround';'WBRoofVegSoil';...
 				'WBRoofVeg';'WBRoofTot'};
 
@@ -675,18 +738,19 @@ for i=1:size(WBCanyonTotNames,1)
 	WBCanyonTot.(cell2mat(WBCanyonTotNames(i)))	=	zeros(n,1,m);
 end
 
-
+%--------------------------------------------------------------------------
 % Energy Balance
-% EBGroundImp	=	EBalance_groundimp
-% EBGroundBare	=	EBalance_groundbare
-% EBGroundVeg	=	EBalance_groundveg
-% EBTree		=	EBalance_tree
-% EBWallSun		=	EBalance_wallsun
-% EBWallShade	=	EBalance_wallshade
-% EBWallSunInt	=	EBalance_wallsun_interior
-% EBWallShadeInt=	EBalance_wallshade_interior
-% EBCanyonT		=	EBalance_canyon_temp
-% EBCanyonQ		=	EBalance_canyon_humid
+%--------------------------------------------------------------------------
+% EBGroundImp	=	EBalance_groundimp [W/m^2]
+% EBGroundBare	=	EBalance_groundbare [W/m^2]
+% EBGroundVeg	=	EBalance_groundveg [W/m^2]
+% EBTree		=	EBalance_tree [W/m^2]
+% EBWallSun		=	EBalance_wallsun [W/m^2]
+% EBWallShade	=	EBalance_wallshade [W/m^2]
+% EBWallSunInt	=	EBalance_wallsun_interior [W/m^2]
+% EBWallShadeInt=	EBalance_wallshade_interior [W/m^2]
+% EBCanyonT		=	EBalance_canyon_temp [W/m^2]
+% EBCanyonQ		=	EBalance_canyon_humid [kg/kg]
 
 EBNames	=	{'EBRoofImp';'EBRoofVeg';'EBGroundImp';'EBGroundBare';...
 					'EBGroundVeg';'EBTree';'EBWallSun';'EBWallShade';'EBWallSunInt';...
@@ -696,14 +760,30 @@ for i=1:size(EBNames,1)
 	EB.(cell2mat(EBNames(i)))	=	zeros(n,1,m);
 end
 
-%% Wind speed
+%--------------------------------------------------------------------------
+%% Wind speed: Wind
+%--------------------------------------------------------------------------
+% u_Hcan: Wind speed at canyon calculation height (hdisp + canyon roughness height) (m/s)
+% u_Zref_und: Wind speed at undercanopy reference height (m/s)
+% u_ZPerson: Wind speed at person height (or point which was specified by the user (m/s)
+
 WindNames	=	{'u_Hcan';'u_Zref_und';'u_ZPerson'};
 
 for i=1:size(WindNames,1)
 	Wind.(cell2mat(WindNames(i)))	=	zeros(n,1,m);
 end
 
-%% Success of energy balance solver
+%--------------------------------------------------------------------------
+%% Success of energy balance solver: Solver
+%--------------------------------------------------------------------------
+% SuccessRoof: Bolean indicateing convergence of solution for roof
+% SuccessCanyon: Bolean indicateing convergence of solution for canyon
+% ValuesRoof: Energy balance closure for the different roof facets (W/m^2)
+% ValuesCanyon: Energy balance closure for the different canyon facets (W/m^2)
+% TsolverRoof: Temperatures of different roof facets (K)
+% TsolverCanyon: Temperatures and humidity of different canyon factes and air (K), (kg/kg)
+
+
 Solver				=	[];
 Solver.SuccessRoof	=	zeros(n,1,m);
 Solver.SuccessCanyon=	zeros(n,1,m);
@@ -712,7 +792,14 @@ Solver.ValuesCanyon	=	zeros(n,10,m);
 Solver.TsolverRoof	=	zeros(n,4,m);
 Solver.TsolverCanyon=	zeros(n,10,m);
 
-%% Temperature and humidity at 2m canyon height
+%--------------------------------------------------------------------------
+%% Temperature and humidity at 2m canyon height: Results2m
+%--------------------------------------------------------------------------
+% T2m: 2m air temperature (K)
+% q2m: 2m specific humidity (kg/kg)
+% e_T2m: 2m vapor pressure (Pa)
+% RH_T2m: 2m relative humidity (-)
+
 Results2m		=	[];
 Results2m.T2m	=	zeros(n,1,m);
 Results2m.q2m	=	zeros(n,1,m);
@@ -722,7 +809,9 @@ Results2m.qcan	=	zeros(n,1,m);
 Results2m.e_Tcan=	zeros(n,1,m);
 Results2m.RH_Tcan=	zeros(n,1,m);
 
-%% Energy fluxes at 2m canyon height
+%--------------------------------------------------------------------------
+%% Energy fluxes at 2m canyon height: Results2mEnergyFlux
+%--------------------------------------------------------------------------
 Results2mEnergyFlux				=	[];
 Results2mEnergyFlux.DHi			=	zeros(n,1,m);
 Results2mEnergyFlux.Himp_2m		=	zeros(n,1,m);
@@ -740,7 +829,21 @@ Results2mEnergyFlux.Eveg_soil_2m=	zeros(n,1,m);
 Results2mEnergyFlux.TEveg_2m	=	zeros(n,1,m);
 Results2mEnergyFlux.Ecan_2m		=	zeros(n,1,m);
 
-%% Mean radiant temperature variables
+%--------------------------------------------------------------------------
+%% Mean radiant temperature variables: MeanRadiantTemperature
+%--------------------------------------------------------------------------
+% Tmrt: Mean radiant temperature (deg C)
+% BoleanInSun: Point of Tmrt calculation is in sun or in shade
+% SWRdir_Person: Direct shortwave radiation the person receives (W/m^2)
+% SWRdir_in_top: Direct shortwave radiation the person receives from the top (W/m^2)
+% SWRdir_in_bottom: Direct shortwave radiation the person receives from the bottom (W/m^2)
+% SWRdir_in_east: Direct shortwave radiation the person receives from the east (W/m^2)
+% SWRdir_in_south: Direct shortwave radiation the person receives from the south (W/m^2)
+% SWRdir_in_west: Direct shortwave radiation the person receives from the west (W/m^2)
+% SWRdir_in_north: Direct shortwave radiation the person receives from the north (W/m^2)
+% SWRdiff_Person: Diffuse shortwave radiation the person receives (W/m^2)
+% LWR_Person: Longwave radiation the person receives (W/m^2)
+
 MeanRadiantTemperature					=	[];
 MeanRadiantTemperature.Tmrt				=	zeros(n,1,m);
 MeanRadiantTemperature.BoleanInSun		=	zeros(n,1,m);
@@ -757,24 +860,39 @@ MeanRadiantTemperature.LWR_Person		=	zeros(n,1,m);
 MeanRadiantTemperatureNames	=	{'Tmrt';'BoleanInSun';'SWRdir_Person';'SWRdir_in_top';'SWRdir_in_bottom';...
 	'SWRdir_in_east';'SWRdir_in_south';'SWRdir_in_west';'SWRdir_in_north';'SWRdiff_Person';'LWR_Person';};
 
-% Albedo
+%--------------------------------------------------------------------------
+% Albedo: AlbedoOutput
+%--------------------------------------------------------------------------
+% TotalUrban: Albedo of the total urban area (-)
+% TotalCanyon: Albedo of the total canyon area (-)
+% Roof: Albedo of the total roof area (-)
+
 AlbedoOutput			=	[];
 AlbedoOutput.TotalUrban	=	zeros(n,1,m);
 AlbedoOutput.TotalCanyon=	zeros(n,1,m);
 AlbedoOutput.Roof		=	zeros(n,1,m);
 
-%% Outdoor thermal comfort: UTCI
+%--------------------------------------------------------------------------
+%% Outdoor thermal comfort: UTCI (degC)
+%--------------------------------------------------------------------------
 UTCI	=	zeros(n,1,m);
 
-%% LAI output for varying LAI
+%--------------------------------------------------------------------------
+%% LAI output for varying LAI: LAI_ts
+%--------------------------------------------------------------------------
+% LAI_R = LAI of roof vegetation (-)
+% LAI_G = LAI of ground vegetation (-)
+% LAI_T = LAI of tree vegetation (-)
+
 LAI_ts          =	[];
 LAI_ts.LAI_R	=	zeros(n,1,m);
 LAI_ts.LAI_G	=	zeros(n,1,m);
 LAI_ts.LAI_T	=	zeros(n,1,m);
 
 
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Start calculation
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 tic
 Opt_Solv = optimoptions('lsqnonlin','Display','off');
 
@@ -1396,13 +1514,17 @@ end
 Zatm = MeteoData.Zatm;
 
 % Plot and calculate radiation and energy balance
+[WaterFluxRoof,WaterFluxCan,WaterFluxUrban]=WaterBalanceComponents(MeteoDataRaw,...
+    Runon,Leakage,LEflux,dVwater_dt,OwaterInitial,Owater,dInt_dt,Int,Anthropo,...
+    ParSoil,ParCalculation_Out,FractionsRoof_Out,FractionsGround_Out,geometry_Out,1);
+
+UrbanClimateVariables(TempVec,UTCI,Results2m,MeteoDataRaw,MeanRadiantTemperature,...
+    FractionsGround_Out,FractionsRoof_Out,ParTree_Out,1);
+
 [EnergyFluxUrban,EnergyFluxCan,EnergyFluxRoof]=PlanAreaEnergyBalanceCalculation(ViewFactor,MeteoDataRaw,...
     SWRin,SWRout,SWRabs,LWRin,LWRout,LWRabs,LEflux,Hflux,Gflux,...
     geometry_Out,FractionsGround_Out,PropOpticalRoof_Out,Anthropo,1);
 
-[WaterFluxRoof,WaterFluxCan,WaterFluxUrban]=WaterBalanceComponents(MeteoDataRaw,...
-    Runon,Leakage,LEflux,dVwater_dt,OwaterInitial,Owater,dInt_dt,Int,Anthropo,...
-    ParSoil,ParCalculation_Out,FractionsRoof_Out,FractionsGround_Out,geometry_Out,1);
 
 
 save(['Calculation',NameOutput],'Solver','TempVec','Humidity','SWRabs','SWRin','SWRout','SWREB','LWRabs','LWRin','LWRout',...

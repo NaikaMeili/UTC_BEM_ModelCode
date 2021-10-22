@@ -182,73 +182,87 @@ TTUrban.Properties.VariableNames = {'Hour','Month','Rain','Runoff','Leakage',...
 TTUrbanDiurnal = varfun(@nanmean,TTUrban,'GroupingVariables','Hour');
 TTUrbanSeasonal = varfun(@nanmean,TTUrban,'GroupingVariables','Month');
 
-% Water fluxes
-figure
-subplot(1,2,1)
-plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_Rain,'k','DisplayName','Rain')
-hold on
-plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_IrrTot,'k--','DisplayName','Irrigation')
-plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_Runoff,'b','DisplayName','Runoff')
-plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_ET,'g','DisplayName','ET')
-plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_dVdt,'r','DisplayName','dVdt')
-plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_dIdt,'m','DisplayName','dIdt')
-plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_Leakage,'c','DisplayName','Leakage')
-xlim([0 23]); xlabel('hour'); ylabel('mm/time step'); title('Water fluxes');
-
-subplot(1,2,2)
-plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_Rain,'k','DisplayName','Rain')
-hold on
-plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_IrrTot,'k--','DisplayName','Irrigation')
-plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_Runoff,'b','DisplayName','Runoff')
-plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_ET,'g','DisplayName','ET')
-plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_dVdt,'r','DisplayName','dVdt')
-plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_dIdt,'m','DisplayName','dIdt')
-plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_Leakage,'c','DisplayName','Leakage')
-xlim([1 12]); xlabel('Month'); ylabel('mm/time step'); title('Water fluxes');
-legend
-
-
-% Evapotranspiration and interception
-figure
-subplot(1,3,1)
-plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_ET,'k','DisplayName','ET_{tot}')
-hold on
-plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_ETEvaporationFromSurface,'r','DisplayName','E_{surface}')
-plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_ETEvaporationFromSoil,'b','DisplayName','E_{soil}')
-plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_ETTranspiration,'g','DisplayName','T_{vegetation}')
-xlim([0 23]); xlabel('hour'); ylabel('mm/time step'); title('ET fluxes');
-
-subplot(1,3,2)
-plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_ET,'k','DisplayName','ET_{tot}')
-hold on
-plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_ETEvaporationFromSurface,'r','DisplayName','E_{surface}')
-plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_ETEvaporationFromSoil,'b','DisplayName','E_{soil}')
-plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_ETTranspiration,'g','DisplayName','T_{vegetation}')
-xlim([1 12]); xlabel('Month'); ylabel('mm/time step'); title('ET fluxes');
-legend
-
-subplot(1,3,3)
-plot(MeteoDataRaw.Date,WaterFluxUrban.Int,'k','DisplayName','Int')
-xlabel('time'); ylabel('mm'); title('Intercepted water');
-%legend
-
 
 % Water budget WB
-figure
-subplot(1,3,1)
+f1 = figure;
+set(f1, 'Units','centimeters','Position', [10 10 20 7])
+
+t = tiledlayout(1,3);
+t.Padding = 'compact'; %t.TileSpacing = 'compact';
+
+nexttile
 plot(MeteoDataRaw.Date,WaterFluxUrban.WB,'k','DisplayName','WB')
-xlabel('time'); ylabel('mm/time step'); title('WB');
+xlabel('time'); ylabel('WB mm/time step'); title('Time series');
 %legend
 
-subplot(1,3,2)
-plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_WB,'k','DisplayName','WB')
-xlim([0 23]); xlabel('hour'); ylabel('mm/time step'); title('WB');
+nexttile
+plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_WB,'k','LineWidth',1.5,'DisplayName','WB')
+xlim([0 23]); xlabel('hour'); ylabel('WB mm/time step'); title('Diurnal');
 %legend
 
-subplot(1,3,3)
-plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_WB,'k','DisplayName','WB')
-xlim([1 12]); xlabel('Month'); ylabel('mm/time step'); title('WB');
+nexttile
+plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_WB,'k','LineWidth',1.5,'DisplayName','WB')
+xlim([1 12]); xlabel('Month'); ylabel('WB mm/time step'); title('Seasonal');
 %legend
+sgtitle('Water budget closure')
+
+% Evapotranspiration and interception
+f1 = figure;
+set(f1, 'Units','centimeters','Position', [10 10 15 7])
+
+t = tiledlayout(1,2);
+t.Padding = 'compact'; %t.TileSpacing = 'compact';
+
+nexttile
+plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_ET,'k','LineWidth',1.5,'DisplayName','ET_{tot}')
+hold on
+plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_ETEvaporationFromSurface,'r','LineWidth',1.5,'DisplayName','E_{surface}')
+plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_ETEvaporationFromSoil,'b','LineWidth',1.5,'DisplayName','E_{soil}')
+plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_ETTranspiration,'g','LineWidth',1.5,'DisplayName','T_{vegetation}')
+xlim([0 23]); xlabel('hour'); ylabel('ET mm/time step'); subtitle('Diurnal');
+
+nexttile
+plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_ET,'k','LineWidth',1.5,'DisplayName','ET_{tot}')
+hold on
+plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_ETEvaporationFromSurface,'r','LineWidth',1.5,'DisplayName','E_{surface}')
+plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_ETEvaporationFromSoil,'b','LineWidth',1.5,'DisplayName','E_{soil}')
+plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_ETTranspiration,'g','LineWidth',1.5,'DisplayName','T_{vegetation}')
+xlim([1 12]); xlabel('Month'); ylabel('ET mm/time step'); subtitle('Seasonal');
+legend('Location','NorthEastOutside')
+sgtitle('Evapotranspiration flux partitioning')
+
+% Water fluxes
+f1 = figure;
+set(f1, 'Units','centimeters','Position', [10 10 20 8])
+
+t = tiledlayout(1,2);
+t.Padding = 'compact'; %t.TileSpacing = 'compact';
+
+nexttile
+plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_Rain,'k','LineWidth',1.5,'DisplayName','Rain')
+hold on
+plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_IrrTot,'k--','LineWidth',1.5,'DisplayName','Irrigation')
+plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_Runoff,'b','LineWidth',1.5,'DisplayName','Runoff')
+plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_ET,'g','LineWidth',1.5,'DisplayName','ET')
+plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_dVdt,'r','LineWidth',1.5,'DisplayName','dVdt')
+plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_dIdt,'m','LineWidth',1.5,'DisplayName','dIdt')
+plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_Leakage,'c','LineWidth',1.5,'DisplayName','Leakage')
+xlim([0 23]); xlabel('hour'); ylabel('Water fluxes mm/time step'); subtitle('Diurnal');
+
+nexttile
+plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_Rain,'k','LineWidth',1.5,'DisplayName','Rain')
+hold on
+plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_IrrTot,'k--','LineWidth',1.5,'DisplayName','Irrigation')
+plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_Runoff,'b','LineWidth',1.5,'DisplayName','Runoff')
+plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_ET,'g','LineWidth',1.5,'DisplayName','ET')
+plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_dVdt,'r','LineWidth',1.5,'DisplayName','dVdt')
+plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_dIdt,'m','LineWidth',1.5,'DisplayName','dIdt')
+plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_Leakage,'c','LineWidth',1.5,'DisplayName','Leakage')
+xlim([1 12]); xlabel('Month'); ylabel('Water fluxes mm/time step'); subtitle('Seasonal');
+legend('Location','NorthEastOutside')
+sgtitle('Water fluxes')
+
+
 end
 
 

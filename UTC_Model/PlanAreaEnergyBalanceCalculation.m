@@ -200,100 +200,122 @@ TTUrban.Properties.VariableNames = {'Hour','Month','SWRin','SWRabs','SWRout','LW
 TTUrbanDiurnal = varfun(@nanmean,TTUrban,'GroupingVariables','Hour');
 TTUrbanSeasonal = varfun(@nanmean,TTUrban,'GroupingVariables','Month');
 
-% Energy Fluxes
-figure
-subplot(2,3,1)
-plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_SWRin,'k','DisplayName','SWR_{in}')
-hold on
-plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_SWRabs,'r','DisplayName','SWR_{abs}')
-plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_SWRout,'b','DisplayName','SWR_{out}')
-xlim([0 23]); xlabel('hour'); ylabel('W/m^{2}'); title('SWR');
-legend
-
-subplot(2,3,2)
-plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_LWRin,'k','DisplayName','LWR_{in}')
-hold on
-plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_LWRabs,'r','DisplayName','LWR_{abs}')
-plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_LWRout,'b','DisplayName','LWR_{out}')
-xlim([0 23]); xlabel('hour'); ylabel('W/m^{2}'); title('LWR');
-legend
-
-subplot(2,3,3)
-plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_SWRabs,'k','DisplayName','SWR_{abs}')
-hold on
-plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_H,'r','DisplayName','H')
-plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_LE,'g','DisplayName','LE')
-plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_G,'b','DisplayName','G')
-plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_LWRabs,'m','DisplayName','LWR_{abs}')
-plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_Qanth,'k:','DisplayName','Q_{f}')
-xlim([0 23]); xlabel('hour'); ylabel('W/m^{2}'); title('EB');
-legend
-
-subplot(2,3,4)
-plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_SWRin,'k','DisplayName','SWR_{in}')
-hold on
-plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_SWRabs,'r','DisplayName','SWR_{abs}')
-plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_SWRout,'b','DisplayName','SWR_{out}')
-xlim([1 12]); xlabel('month'); ylabel('W/m^{2}'); title('SWR');
-%legend
-
-subplot(2,3,5)
-plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_LWRin,'k','DisplayName','LWR_{in}')
-hold on
-plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_LWRabs,'r','DisplayName','LWR_{abs}')
-plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_LWRout,'b','DisplayName','LWR_{out}')
-xlim([1 12]); xlabel('month'); ylabel('W/m^{2}'); title('LWR');
-%legend
-
-subplot(2,3,6)
-plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_SWRabs,'k','DisplayName','SWR_{abs}')
-hold on
-plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_H,'r','DisplayName','H')
-plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_LE,'g','DisplayName','LE')
-plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_G,'b','DisplayName','G')
-plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_LWRabs,'m','DisplayName','LWR_{abs}')
-plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_Qanth,'k:','DisplayName','Q_{f}')
-xlim([1 12]); xlabel('month'); ylabel('W/m^{2}'); title('EB');
-%legend
-
+TTUrbanDiurnalMedian = varfun(@median,TTUrban,'GroupingVariables','Hour');
+TTUrbanSeasonalMedian = varfun(@median,TTUrban,'GroupingVariables','Month');
 
 
 % Energy budget
-figure
-subplot(1,3,1)
+f1 = figure;
+set(f1, 'Units','centimeters','Position', [10 10 20 7])
+
+t = tiledlayout(1,3);
+t.Padding = 'compact'; %t.TileSpacing = 'compact';
+
+nexttile
 plot(MeteoDataRaw.Date,EnergyFluxUrban.EB,'k','DisplayName','EB')
-xlabel('time'); ylabel('W/m^{2}'); title('EB');
+xlabel('time'); ylabel('EB W/m^{2}'); title('Time series');
 %legend
 
-subplot(1,3,2)
-plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_EB,'k','DisplayName','EB')
-xlim([0 23]); xlabel('hour'); ylabel('W/m^{2}'); title('EB');
+nexttile
+plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_EB,'k','LineWidth',1.5,'DisplayName','EB')
+xlim([0 23]); xlabel('hour'); ylabel('EB W/m^{2}'); title('Diurnal');
 %legend
 
-subplot(1,3,3)
-plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_EB,'k','DisplayName','EB')
-xlim([1 12]); xlabel('Month'); ylabel('W/m^{2}'); title('EB');
+nexttile
+plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_EB,'k','LineWidth',1.5,'DisplayName','EB')
+xlim([1 12]); xlabel('Month'); ylabel('EB W/m^{2}'); title('Seasonal');
 %legend
+sgtitle('Energy budget closure')
 
 % Albedo und Bowen ratio
-figure
-subplot(2,2,1)
-plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_Albedo,'k','DisplayName','albedo')
-xlim([0 23]); xlabel('hour'); ylabel('(-)'); title('albedo');
+f1 = figure;
+set(f1, 'Units','centimeters','Position', [10 10 15 10])
+
+t = tiledlayout(2,2);
+t.Padding = 'compact'; %t.TileSpacing = 'compact';
+
+nexttile
+plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_Albedo,'k','LineWidth',1.5,'DisplayName','albedo')
+xlim([0 23]); xlabel('hour'); ylabel('Albedo (-)'); title('Albedo = SWR_{out}/SWR_{in}');
+subtitle('Diurnal');
 %legend
 
-subplot(2,2,2)
-plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_BowenRatio,'k','DisplayName','Bowen ratio')
-xlim([0 23]); xlabel('hour'); ylabel('(-)'); title('Bowen ratio');
+nexttile
+plot(TTUrbanDiurnal.Hour,TTUrbanDiurnalMedian.median_BowenRatio,'k','LineWidth',1.5,'DisplayName','Bowen ratio')
+xlim([0 23]); xlabel('hour'); ylabel('Bowen Ratio (-)'); title('Bowen ratio = H/LE, median');
+subtitle('Diurnal');
 %legend
 
-subplot(2,2,3)
-plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_Albedo,'k','DisplayName','albedo')
-xlim([1 12]); xlabel('month'); ylabel('(-)'); title('albedo');
+nexttile
+plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_Albedo,'k','LineWidth',1.5,'DisplayName','albedo')
+xlim([1 12]); xlabel('month'); ylabel('Albedo (-)'); subtitle('Seasonal');
 %legend
 
-subplot(2,2,4)
-plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_BowenRatio,'k','DisplayName','Bowen ratio')
-xlim([1 12]); xlabel('month'); ylabel('(-)'); title('Bowen ratio');
+nexttile
+plot(TTUrbanSeasonal.Month,TTUrbanSeasonalMedian.median_BowenRatio,'k','LineWidth',1.5,'DisplayName','Bowen ratio')
+xlim([1 12]); xlabel('month'); ylabel('Bowen Ratio (-)'); subtitle('Seasonal');
 %legend
+
+% Energy Fluxes
+f1 = figure;
+set(f1, 'Units','centimeters','Position', [10 10 20 15])
+
+t = tiledlayout(2,3);
+t.Padding = 'compact'; %t.TileSpacing = 'compact';
+
+nexttile
+plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_SWRin,'k','LineWidth',1.5,'DisplayName','SWR_{in}')
+hold on
+plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_SWRabs,'r','LineWidth',1.5,'DisplayName','SWR_{abs}')
+plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_SWRout,'b','LineWidth',1.5,'DisplayName','SWR_{out}')
+xlim([0 23]); xlabel('hour'); ylabel('SWR W/m^{2}'); title('SWR'); subtitle('Diurnal');
+legend('Location','southoutside','NumColumns',2)
+
+nexttile
+plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_LWRin,'k','LineWidth',1.5,'DisplayName','LWR_{in}')
+hold on
+plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_LWRabs,'r','LineWidth',1.5,'DisplayName','LWR_{abs}')
+plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_LWRout,'b','LineWidth',1.5,'DisplayName','LWR_{out}')
+xlim([0 23]); xlabel('hour'); ylabel('LWR W/m^{2}'); title('LWR'); subtitle('Diurnal');
+legend('Location','southoutside','NumColumns',2)
+
+nexttile
+plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_SWRabs,'k','LineWidth',1.5,'DisplayName','SWR_{abs}')
+hold on
+plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_H,'r','LineWidth',1.5,'DisplayName','H')
+plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_LE,'g','LineWidth',1.5,'DisplayName','LE')
+plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_G,'b','LineWidth',1.5,'DisplayName','G')
+plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_LWRabs,'m','LineWidth',1.5,'DisplayName','LWR_{abs}')
+plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_Qanth,'k:','LineWidth',1.5,'DisplayName','Q_{f}')
+xlim([0 23]); xlabel('hour'); ylabel('EB W/m^{2}'); title('Energy fluxes'); subtitle('Diurnal');
+legend('Location','southoutside','NumColumns',2)
+
+nexttile
+plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_SWRin,'k','LineWidth',1.5,'DisplayName','SWR_{in}')
+hold on
+plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_SWRabs,'r','LineWidth',1.5,'DisplayName','SWR_{abs}')
+plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_SWRout,'b','LineWidth',1.5,'DisplayName','SWR_{out}')
+xlim([1 12]); xlabel('month'); ylabel('SWR W/m^{2}'); subtitle('Seasonal'); %title('SWR'); 
+%legend
+
+nexttile
+plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_LWRin,'k','LineWidth',1.5,'DisplayName','LWR_{in}')
+hold on
+plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_LWRabs,'r','LineWidth',1.5,'DisplayName','LWR_{abs}')
+plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_LWRout,'b','LineWidth',1.5,'DisplayName','LWR_{out}')
+xlim([1 12]); xlabel('month'); ylabel('LWR W/m^{2}');  subtitle('Seasonal'); %title('LWR');
+%legend
+
+nexttile
+plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_SWRabs,'k','LineWidth',1.5,'DisplayName','SWR_{abs}')
+hold on
+plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_H,'r','LineWidth',1.5,'DisplayName','H')
+plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_LE,'g','LineWidth',1.5,'DisplayName','LE')
+plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_G,'b','LineWidth',1.5,'DisplayName','G')
+plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_LWRabs,'m','LineWidth',1.5,'DisplayName','LWR_{abs}')
+plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_Qanth,'k:','LineWidth',1.5,'DisplayName','Q_{f}')
+xlim([1 12]); xlabel('month'); ylabel('EB W/m^{2}'); subtitle('Seasonal'); %title('EB');
+%legend
+sgtitle('Energy fluxes')
+
 end
