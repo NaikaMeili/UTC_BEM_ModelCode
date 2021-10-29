@@ -206,7 +206,7 @@ TTUrbanSeasonalMedian = varfun(@median,TTUrban,'GroupingVariables','Month');
 
 % Energy budget
 f1 = figure;
-set(f1, 'Units','centimeters','Position', [10 10 20 7])
+set(f1, 'Units','centimeters','Position', [1 1 19 7])
 
 t = tiledlayout(1,3);
 t.Padding = 'compact'; %t.TileSpacing = 'compact';
@@ -229,7 +229,7 @@ sgtitle('Energy budget closure')
 
 % Albedo und Bowen ratio
 f1 = figure;
-set(f1, 'Units','centimeters','Position', [10 10 15 10])
+set(f1, 'Units','centimeters','Position', [1 1 14 10])
 
 t = tiledlayout(2,2);
 t.Padding = 'compact'; %t.TileSpacing = 'compact';
@@ -258,7 +258,7 @@ xlim([1 12]); xlabel('month'); ylabel('Bowen Ratio (-)'); subtitle('Seasonal');
 
 % Energy Fluxes
 f1 = figure;
-set(f1, 'Units','centimeters','Position', [10 10 20 15])
+set(f1, 'Units','centimeters','Position', [1 1 19 14])
 
 t = tiledlayout(2,3);
 t.Padding = 'compact'; %t.TileSpacing = 'compact';

@@ -31,7 +31,7 @@ if Figure==1
 %--------------------------------------------------------------------------
 % Plot figures
 f1 = figure;
-set(f1, 'Units','centimeters','Position', [10 10 15 15])
+set(f1, 'Units','centimeters','Position', [1 1 14 14])
 
 t = tiledlayout(2,2);
 t.Padding = 'compact'; %t.TileSpacing = 'compact';
@@ -69,7 +69,7 @@ xlim([1 12]); xlabel('hour'); ylabel('T (\circC)'); subtitle('Seasonal');
 % Plot figures
 %--------------------------------------------------------------------------
 f1 = figure;
-set(f1, 'Units','centimeters','Position', [10 10 20 15])
+set(f1, 'Units','centimeters','Position', [1 1 19 14])
 
 t = tiledlayout(2,3);
 t.Padding = 'compact'; %t.TileSpacing = 'compact';

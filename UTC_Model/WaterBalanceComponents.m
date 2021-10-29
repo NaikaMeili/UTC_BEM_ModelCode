@@ -185,7 +185,7 @@ TTUrbanSeasonal = varfun(@nanmean,TTUrban,'GroupingVariables','Month');
 
 % Water budget WB
 f1 = figure;
-set(f1, 'Units','centimeters','Position', [10 10 20 7])
+set(f1, 'Units','centimeters','Position', [1 1 19 7])
 
 t = tiledlayout(1,3);
 t.Padding = 'compact'; %t.TileSpacing = 'compact';
@@ -208,7 +208,7 @@ sgtitle('Water budget closure')
 
 % Evapotranspiration and interception
 f1 = figure;
-set(f1, 'Units','centimeters','Position', [10 10 15 7])
+set(f1, 'Units','centimeters','Position', [1 1 14 7])
 
 t = tiledlayout(1,2);
 t.Padding = 'compact'; %t.TileSpacing = 'compact';
@@ -233,7 +233,7 @@ sgtitle('Evapotranspiration flux partitioning')
 
 % Water fluxes
 f1 = figure;
-set(f1, 'Units','centimeters','Position', [10 10 20 8])
+set(f1, 'Units','centimeters','Position', [1 1 19 8])
 
 t = tiledlayout(1,2);
 t.Padding = 'compact'; %t.TileSpacing = 'compact';
