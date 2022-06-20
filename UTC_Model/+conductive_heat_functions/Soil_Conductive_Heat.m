@@ -30,7 +30,7 @@ function[G1,G2,dS]=Soil_Conductive_Heat(TemperatureR,TempVec,Anthropogenic,Owate
 
 Troof		=	TemperatureR(1,2);
 Tint		=	TemperatureR(1,4);
-Tint_tm1	=	TempVec.TRoofIntImp(itt,1);
+Tint_tm1	=	TempVec.TRoofIntVeg(itt,1);
 Tb			=	Anthropogenic.Tb;
 Otm1		=	Owater.OwRoofSoilVeg(itt,:);
 Rrootl		=	ParVegRoof.Rrootl;

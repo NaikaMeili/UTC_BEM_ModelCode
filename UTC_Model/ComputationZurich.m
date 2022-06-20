@@ -1,5 +1,5 @@
 %%%%%%%%%% RUN TIME SERIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-load(fullfile('+data_functions', 'ForcingData_ZH.mat'));
+load(fullfile('+data_functions', 'ForcingData_ZH2010.mat'));
 
 % Decide if a varying LAI timeseries is provided [1] or not [0]
 [LAI_TimeSeries]=data_functions.VaryingLAIInput(0,'LAI_Zurich_Area'); 
@@ -11,7 +11,7 @@ Name_Site	=	'ZH';	% Name for Data_UEHM_site
 Name_SiteFD	=	'ZH';		% Name for UEHMForcingData
 OPTION_RAY	=	1; % Load precalculated view factors [1], Recalculate view factors [0]
 
-NameOutput	=	'ZH';
+NameOutput	=	'ZH_2010';
 
 
 %% Meteo data
