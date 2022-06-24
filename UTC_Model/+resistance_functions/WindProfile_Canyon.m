@@ -63,8 +63,8 @@ H_tot		=	(Hcan*Ap_build + (Htree+R_tree)*(1-P3D)*Ap_tree)/(Ap_build + (1-P3D)*Ap
 % 1998)
 dcan_MacD	=	H_tot*(1+a^(-Lp_tot)*(Lp_tot-1));	% displacement height of canyon [m], eq. 23
 
-Af_build=	H_tot/(H_tot-dcan_MacD)*Af_build_s;
-Af_veg	=	H_tot/(H_tot-dcan_MacD)*Af_veg_s;
+Af_build=	Af_build_s;
+Af_veg	=	Af_veg_s;
 
 zomcan_MacD	=	H_tot*(1-dcan_MacD/H_tot)*exp(-(1/k^2*0.5*b*CDb*(1-dcan_MacD/H_tot)*(Af_build+Pv*Af_veg)/Ap_urb)^(-0.5));
 
