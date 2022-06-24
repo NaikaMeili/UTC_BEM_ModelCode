@@ -90,8 +90,8 @@ Hwshade1	=	cp_atm*rho_atm*(Twshade-T_canyon)/(RES_w1+rap_Zp1_In);
 Hwsun2		=	cp_atm*rho_atm*(Twsun-T_canyon)/(RES_w2+rap_Zp2_In);
 Hwshade2	=	cp_atm*rho_atm*(Twshade-T_canyon)/(RES_w2+rap_Zp2_In);
 
-Hwsun		=	max(2*Zp1/H,1)*Hwsun1 + min((H-2*Zp1)/H,0)*Hwsun2;
-Hwshade		=	max(2*Zp1/H,1)*Hwshade1 + min((H-2*Zp1)/H,0)*Hwshade2;
+Hwsun		=	min(2*Zp1/H,1)*Hwsun1 + max((H-2*Zp1)/H,0)*Hwsun2;
+Hwshade		=	min(2*Zp1/H,1)*Hwshade1 + max((H-2*Zp1)/H,0)*Hwshade2;
 
 Ewsun		=	0;
 Ewshade		=	0;
