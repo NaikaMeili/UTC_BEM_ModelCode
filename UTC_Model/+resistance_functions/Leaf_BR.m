@@ -21,7 +21,7 @@ function[rb]=Leaf_BR(u_hc,Ts,Ta,d_leaf,alpha)
 %%% PARAMETERS
 d_leaf = d_leaf/100; %% [m]
 %k= 0.4; %% Von Karman Constant
-a = 0.01; %% [m/s^0.5] --  Chodhury and Monteith 1988
+a = 0.005; %% [m/s^0.5] --  Chodhury and Monteith 1988
 %d = disp_h; %% Zero plane displacement [m]
 %z= zatm ; %% Measurement Height [m]
 %%% Hypothesis Logaritmic distribution of wind speed
