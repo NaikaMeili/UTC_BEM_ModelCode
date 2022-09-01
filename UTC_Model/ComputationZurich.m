@@ -97,7 +97,7 @@ TempVecNames	=	{'TRoofImp';'TRoofVeg';'TRoofIntImp';'TRoofIntVeg';...
 
 for i=1:size(TempVecNames,1)
 	TempVec.(cell2mat(TempVecNames(i)))			=	zeros(n,1,m);
-	TempVec.(cell2mat(TempVecNames(i)))(1,:,:)	=	303.16;
+	TempVec.(cell2mat(TempVecNames(i)))(1,:,:)	=	MeteoDataRaw.T_atm(i);
 end
 
 TempVec.Tatm	=	repmat(MeteoDataRaw.T_atm(:,1),1,1,m); % Temperature atmosphere(measured)
@@ -113,7 +113,7 @@ TempDampNames	=	{'TDampGroundImp';'TDampGroundBare';'TDampGroundVeg';'TDampTree'
 
 for i=1:size(TempDampNames,1)
 	TempDamp.(cell2mat(TempDampNames(i)))		=	zeros(n,1,m);
-	TempDamp.(cell2mat(TempDampNames(i)))(1,:,:)=	303.16;
+	TempDamp.(cell2mat(TempDampNames(i)))(1,:,:)=	nanmean(MeteoDataRaw.T_atm);
 end
 
 %% Humidity: Humidity
