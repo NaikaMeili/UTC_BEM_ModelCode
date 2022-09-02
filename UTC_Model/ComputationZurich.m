@@ -75,7 +75,7 @@ ParSoil.Ground.O33  = unique(ParSoil.Ground.O33);
 %% Initializing vectors %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %--------------------------------------------------------------------------
 % Temperature: TempVec
-%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------Psi_soil_gveg
 % TRoofImp		=	Temperature roof impervious area [K]
 % TRoofVeg		=	Temperature roof vegetated area [K]
 % TRoofIntImp	=	Interior temperature roof impervious area [K]

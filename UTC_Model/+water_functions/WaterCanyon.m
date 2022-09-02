@@ -488,7 +488,7 @@ WBcanyon_level	=	Rain + Runon_tm1....
 V_gimp					=	V_gimp2;
 O_gimp					=	O_gimp2;
 V_gimp(isnan(V_gimp))	=	0;
-O_gimp(isnan(O_gimp))	=	Ohy(isnan(O_gimp));
+O_gimp(isnan(O_gimp))	=	0;%Ohy(isnan(O_gimp));
 OS_gimp			=	OS_gimp2;
 Lk_gimp			=	Lk_gimp1;
 Psi_s_H_gimp	=	Psi_s_H_gimp2;
@@ -552,7 +552,7 @@ dV_dt=	nansum([fimp.*dV_dt_gimp;fbare.*dV_dt_gbare;fveg.*dV_dt_gveg],1);
 V(1,1:2)=	V(1,1:2)./(fbare+fveg);
 O(1,1:2)=	O(1,1:2)./(fbare+fveg);
 V(isnan(V))	=	0;
-O(isnan(O))	=	Ohy(isnan(O));
+O(isnan(O))	=	0;%Ohy(isnan(O));
 
 Psi_s_L		=	Psi_s_L_gveg;
 Exwat_L		=	Exwat_L_gveg;
