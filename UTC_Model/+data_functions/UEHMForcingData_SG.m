@@ -17,10 +17,10 @@ date_time		=	MeteoDataRaw.Date;
 
 %% Location properties of the urban area
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-phi				=	47.38;			% latitude positive north (degrees)
-lambda			=	8.56;			% longitude positive east (degrees)
-theta_canyon	=	deg2rad(180);	% canyon orientation (rad)
-DeltaGMT		=	1;				% difference with Greenwich Meridian Time [h]
+phi				=	dms2degrees([1,18,51.46]);		% latitude positive north (degrees)
+lambda			=	dms2degrees([103,54,40.31]);	% longitude positive east (degrees)
+theta_canyon	=	deg2rad(90);					% canyon orientation (rad)
+DeltaGMT		=	8;								% difference with Greenwich Meridian Time [h]
 		
 location		=	struct('phi',phi,'lambda',lambda,'theta_canyon',theta_canyon,...
 					'DeltaGMT',DeltaGMT);
