@@ -11,7 +11,7 @@ Name_Site	=	'SG';	% Name for Data_UEHM_site
 Name_SiteFD	=	'SG';		% Name for UEHMForcingData
 OPTION_RAY	=	1; % Load precalculated view factors [1], Recalculate view factors [0]
 
-NameOutput	=	'SG';
+NameOutput	=	'SGTest';
 
 
 %% Meteo data
@@ -97,7 +97,7 @@ TempVecNames	=	{'TRoofImp';'TRoofVeg';'TRoofIntImp';'TRoofIntVeg';...
 
 for i=1:size(TempVecNames,1)
 	TempVec.(cell2mat(TempVecNames(i)))			=	zeros(n,1,m);
-	TempVec.(cell2mat(TempVecNames(i)))(1,:,:)	=	MeteoDataRaw.T_atm(i);
+	TempVec.(cell2mat(TempVecNames(i)))(1,:,:)	=	MeteoData.Tatm;
 end
 
 TempVec.Tatm	=	repmat(MeteoDataRaw.T_atm(:,1),1,1,m); % Temperature atmosphere(measured)
@@ -890,6 +890,64 @@ LAI_ts.LAI_G	=	zeros(n,1,m);
 LAI_ts.LAI_T	=	zeros(n,1,m);
 
 
+%% Initialize variables for building energy model
+%--------------------------------------------------------------------------
+% Initialize temperature calculation vector
+TempVecBNames	=	{'Tceiling';'Tinwallsun';'Tinwallshd';'Tinground';'Tbin';'qbin'};
+
+for i=1:size(TempVecBNames,1)
+	TempVecB.(cell2mat(TempVecBNames(i)))			=	zeros(n,1,m);
+	TempVecB.(cell2mat(TempVecBNames(i)))(1:3,:,:)	=	MeteoData.Tatm;
+end
+
+TempVecB.qbin(1:3,1,1) = HumidityAtm.AtmSpecific;
+
+
+% Initialize energy flux outputs
+HbuildIntNames	=	{'HBinRoof';'HbinWallSun';'HbinWallshd';'HBinGround';...
+    'HbuildInSurf';'Hvent';'Hequip';'Hpeople';'H_AC';'H_air'};
+
+for i=1:size(HbuildIntNames,1)
+	HbuildInt.(cell2mat(HbuildIntNames(i)))			=	zeros(n,1,m);
+end
+
+LEbuildIntNames	=	{'LEvent';'LEequip';'LEpeople';'LE_AC';'LE_air'};
+
+for i=1:size(LEbuildIntNames,1)
+	LEbuildInt.(cell2mat(LEbuildIntNames(i)))			=	zeros(n,1,m);
+end
+
+GbuildIntNames	=	{'G2Roof';'G2WallSun';'G2WallShade';'Gfloor'};
+
+for i=1:size(GbuildIntNames,1)
+	GbuildInt.(cell2mat(GbuildIntNames(i)))			=	zeros(n,1,m);
+end
+
+SWRabsBNames	=	{'SWRabsCeiling';'SWRabsWallsun';'SWRabsWallshade';'SWRabsGround'};
+
+for i=1:size(SWRabsBNames,1)
+	SWRabsB.(cell2mat(SWRabsBNames(i)))			=	zeros(n,1,m);
+end
+
+LWRabsBNames	=	{'LWRabsCeiling';'LWRabsWallsun';'LWRabsWallshade';'LWRabsGround'};
+
+for i=1:size(LWRabsBNames,1)
+	LWRabsB.(cell2mat(LWRabsBNames(i)))			=	zeros(n,1,m);
+end
+
+TBdamp.TingroundDamp		=	zeros(n,1,m);
+TBdamp.TingroundDamp(1,1,1)	=	mean(MeteoDataRaw.T_atm);
+
+BEMWasteHeat =	zeros(n,1,m);
+BEMEnergyUse =	zeros(n,1,m);
+
+%--------------------------------------------------------------------------
+
+
+
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Start calculation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1033,6 +1091,52 @@ for ittn	= 1:n
 			Qinlat_ittm.(cell2mat(QinlatNames(i)))	=	Qinlat.(cell2mat(QinlatNames(i)))(ittn-1,:,ittm); 
 		end
     end
+
+    %---------------------------------------------------------
+    for i=1:size(TempVecBNames,1)
+		if ittn==1
+			TempVecB_ittm.(cell2mat(TempVecBNames(i)))	=	TempVecB.(cell2mat(TempVecBNames(i)))(1,:,ittm); 
+		else
+			TempVecB_ittm.(cell2mat(TempVecBNames(i)))	=	TempVecB.(cell2mat(TempVecBNames(i)))(ittn-1,:,ittm);
+		end
+    end
+
+    if ittn==1
+        TBdamp_ittm.TingroundDamp = TBdamp.TingroundDamp(1,:,ittm);
+    else
+        TBdamp_ittm.TingroundDamp = TBdamp.TingroundDamp(ittn-1,:,ittm);
+    end
+
+    % Anthropogenic building energy factors are updated according to the
+    % building energy model
+%     if ittn==1 || ittn==2 || ittn==3
+%         Anthropogenic.Tceiling      = TempVecB.Tceiling(1:3,1,ittm);
+%         Anthropogenic.Tinwallsun    = TempVecB.Tinwallsun(1:3,1,ittm);
+%         Anthropogenic.Tinwallshd    = TempVecB.Tinwallshd(1:3,1,ittm);
+%         Anthropogenic.Tbin          = TempVecB.Tbin(1:3,1,ittm);
+%         Anthropogenic.BEMWasteHeat  = BEMWasteHeat(1:3,1,ittm);
+%     else
+%         Anthropogenic.Tceiling      = TempVecB.Tceiling(ittn-3:ittn-1,1,ittm);
+%         Anthropogenic.Tinwallsun    = TempVecB.Tinwallsun(ittn-3:ittn-1,1,ittm);
+%         Anthropogenic.Tinwallshd    = TempVecB.Tinwallshd(ittn-3:ittn-1,1,ittm);
+%         Anthropogenic.Tbin          = TempVecB.Tbin(ittn-3:ittn-1,1,ittm);
+%         Anthropogenic.BEMWasteHeat  = BEMWasteHeat(ittn-3:ittn-1,1,ittm);
+%     end
+
+    if ittn==1
+        Anthropogenic.Tceiling      = TempVecB.Tceiling(1,1,ittm);
+        Anthropogenic.Tinwallsun    = TempVecB.Tinwallsun(1,1,ittm);
+        Anthropogenic.Tinwallshd    = TempVecB.Tinwallshd(1,1,ittm);
+        Anthropogenic.Tbin          = TempVecB.Tbin(1,1,ittm);
+        Anthropogenic.BEMWasteHeat  = BEMWasteHeat(1,1,ittm);
+    else
+        Anthropogenic.Tceiling      = TempVecB.Tceiling(ittn-1,1,ittm);
+        Anthropogenic.Tinwallsun    = TempVecB.Tinwallsun(ittn-1,1,ittm);
+        Anthropogenic.Tinwallshd    = TempVecB.Tinwallshd(ittn-1,1,ittm);
+        Anthropogenic.Tbin          = TempVecB.Tbin(ittn-1,1,ittm);
+        Anthropogenic.BEMWasteHeat  = BEMWasteHeat(ittn-1,1,ittm);
+    end
+
     	
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%	
 % Calculate Energy Budget of Roof
@@ -1166,6 +1270,75 @@ for ittn	= 1:n
 	Gemeotry_m,ParVegTree,ParTree,MeteoData,FractionsGround,ParVegGround);	
 
 [UTCI_approx]=OTC.UTCI_approx(T2m-273.15,RH_T2m.*100,Tmrt,u_ZPerson);
+
+% Building energy model
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% albedo/emissivities
+PropOpticalIndoors.abc = 0.1;
+PropOpticalIndoors.abw = 0.2;
+PropOpticalIndoors.abg = 0.3;
+PropOpticalIndoors.ec = 0.95;
+PropOpticalIndoors.eg = 0.95;
+PropOpticalIndoors.ew = 0.95;
+
+ParThermalBulidFloor.lan_dry_imp = 1.2;		% Thermal conductivity dry solid [W/m K]
+ParThermalBulidFloor.cv_s_imp = 1.5*10^6;	% Volumetric heat capacity solid [J/m^3 K]
+
+% Aircon parameters
+ParHVAC.ACon = 0;
+ParHVAC.ACH = 1; % air changes per hour (1/h)
+ParHVAC.Tsetpoint = 273.15+18;
+ParHVAC.COP = 2.5;
+
+%------------------------------------------------------------
+SWRinWsunB = 0; SWRinWshdB = 0; 
+Tairout = TempVec.TCanyon(ittn,1,ittm);
+qairout = Humidity.CanyonSpecific(ittn,1,ittm);
+
+[TB,~,~]=BuildingEnergyModel.fSolver_buildingint(TempVecB_ittm,MeteoData,HumidityAtm,SWRinWsunB,SWRinWshdB,...
+    Tairout,qairout,G2Roof,G2WallSun,G2WallShade,TBdamp_ittm,...
+    Gemeotry_m,PropOpticalIndoors,ParHVAC,ParCalculation,ParThermalBulidFloor);
+
+TempVecB.Tceiling(ittn,1,ittm)	=	TB(1,1);
+TempVecB.Tinwallsun(ittn,1,ittm) =	TB(1,2);
+TempVecB.Tinwallshd(ittn,1,ittm) =	TB(1,3);
+TempVecB.Tinground(ittn,1,ittm)  =	TB(1,4);
+TempVecB.Tbin(ittn,1,ittm)		=	TB(1,5);
+TempVecB.qbin(ittn,1,ittm)		=	TB(1,6);
+
+[HbuildIntc,LEbuildIntc,GbuildIntc,SWRabsBc,LWRabsBc,Tdpfloor,WasteHeat,EnergyUse]=...
+    BuildingEnergyModel.EBSolver_BuildingIntOUTPUT(TB,MeteoData,SWRinWsunB,SWRinWshdB,...
+    TempVecB_ittm,Tairout,qairout,G2Roof,G2WallSun,G2WallShade,TBdamp_ittm,...
+    Gemeotry_m,PropOpticalIndoors,ParHVAC,ParCalculation,ParThermalBulidFloor,...
+    TC,G1Roof,G1WallSun,G1WallShade,dsWallSun,dsWallShade);
+
+%--------------------------------------------------------------------------
+% Assign outputs
+TBdamp.TingroundDamp(ittn,:,ittm) = Tdpfloor;
+BEMWasteHeat(ittn,:,ittm) = WasteHeat;
+BEMEnergyUse(ittn,:,ittm) = EnergyUse;
+
+for i=1:length(HbuildIntNames)
+	HbuildInt.(cell2mat(HbuildIntNames(i)))(ittn,1,ittm)=	HbuildIntc.(cell2mat(HbuildIntNames(i)));
+end
+
+for i=1:length(LEbuildIntNames)
+	LEbuildInt.(cell2mat(LEbuildIntNames(i)))(ittn,1,ittm)=	LEbuildIntc.(cell2mat(LEbuildIntNames(i)));
+end
+
+for i=1:length(GbuildIntNames)
+	GbuildInt.(cell2mat(GbuildIntNames(i)))(ittn,1,ittm)=	GbuildIntc.(cell2mat(GbuildIntNames(i)));
+end
+
+for i=1:length(SWRabsBNames)
+	SWRabsB.(cell2mat(SWRabsBNames(i)))(ittn,1,ittm)=	SWRabsBc.(cell2mat(SWRabsBNames(i)));
+end
+
+for i=1:length(LWRabsBNames)
+	LWRabsB.(cell2mat(LWRabsBNames(i)))(ittn,1,ittm)=	LWRabsBc.(cell2mat(LWRabsBNames(i)));
+end
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 SWRabs_t.SWRabsTotalUrban	=	geometry.wroof_norm*SWRabsTotalRoof + geometry.wcanyon_norm*SWRabs_t.SWRabsTotalCanyon;
@@ -1513,33 +1686,19 @@ end
 
 Zatm = MeteoData.Zatm;
 
-% % Plot and calculate radiation and energy balance
-% [WaterFluxRoof,WaterFluxCan,WaterFluxUrban]=WaterBalanceComponents(MeteoDataRaw,...
-%     Runon,Leakage,LEflux,dVwater_dt,OwaterInitial,Owater,dInt_dt,Int,Anthropo,...
-%     ParSoil,ParCalculation_Out,FractionsRoof_Out,FractionsGround_Out,geometry_Out,1);
-% 
-% UrbanClimateVariables(TempVec,UTCI,Results2m,MeteoDataRaw,MeanRadiantTemperature,...
-%     FractionsGround_Out,FractionsRoof_Out,ParTree_Out,1);
-% 
-% [EnergyFluxUrban,EnergyFluxCan,EnergyFluxRoof]=PlanAreaEnergyBalanceCalculation(ViewFactor,MeteoDataRaw,...
-%     SWRin,SWRout,SWRabs,LWRin,LWRout,LWRabs,LEflux,Hflux,Gflux,...
-%     geometry_Out,FractionsGround_Out,PropOpticalRoof_Out,Anthropo,1);
+% Plot and calculate radiation and energy balance
+[WaterFluxRoof,WaterFluxCan,WaterFluxUrban]=WaterBalanceComponents(MeteoDataRaw,...
+    Runon,Leakage,LEflux,dVwater_dt,OwaterInitial,Owater,dInt_dt,Int,Anthropo,...
+    ParSoil,ParCalculation_Out,FractionsRoof_Out,FractionsGround_Out,geometry_Out,1);
+
+UrbanClimateVariables(TempVec,UTCI,Results2m,MeteoDataRaw,MeanRadiantTemperature,...
+    FractionsGround_Out,FractionsRoof_Out,ParTree_Out,1);
+
+[EnergyFluxUrban,EnergyFluxCan,EnergyFluxRoof]=PlanAreaEnergyBalanceCalculation(ViewFactor,MeteoDataRaw,...
+    SWRin,SWRout,SWRabs,LWRin,LWRout,LWRabs,LEflux,Hflux,Gflux,...
+    geometry_Out,FractionsGround_Out,PropOpticalRoof_Out,Anthropo,1);
 
 
-
-% save(['Calculation',NameOutput],'Solver','TempVec','Humidity','SWRabs','SWRin','SWRout','SWREB','LWRabs','LWRin','LWRout',...
-% 	'LWREB','Hflux','LEflux','Gflux','dStorage','RES','Eflux','Runoff','Runon','Leakage',...
-% 	'Int','dInt_dt','Infiltration','Vwater','dVwater_dt','Owater',...
-%     'OwaterInitial','OSwater','ExWater','SoilPotW',...
-% 	'CiCO2Leaf','WBRoof','WBCanyonIndv','WBCanyonTot','EB','Wind','TempDamp','Qinlat','Results2m',...
-% 	'n','m','Name_Site','MeteoDataRaw','Anthropo',...
-% 	'Gemeotry_m_Out','ParTree_Out','geometry_Out','FractionsRoof_Out','FractionsGround_Out',...
-% 	'WallLayers_Out','ParSoilRoof_Out','ParSoilGround_Out','ParInterceptionTree_Out',...
-% 	'PropOpticalRoof_Out','PropOpticalGround_Out','PropOpticalWall_Out','PropOpticalTree_Out',...
-% 	'ParThermalRoof_Out','ParThermalGround_Out','ParThermalWall_Out','ParThermalTree_Out','ParCalculation_Out',...
-% 	'ParVegRoof_Out','ParVegGround_Out','ParVegTree_Out','LAI_ts','Results2mEnergyFlux','MeanRadiantTemperature','Zatm','UTCI',...
-%     'AlbedoOutput','ViewFactor','EnergyFluxUrban','EnergyFluxCan','EnergyFluxRoof',...
-%     'WaterFluxRoof','WaterFluxCan','WaterFluxUrban','ParSoil')
 
 save(['Calculation',NameOutput],'Solver','TempVec','Humidity','SWRabs','SWRin','SWRout','SWREB','LWRabs','LWRin','LWRout',...
 	'LWREB','Hflux','LEflux','Gflux','dStorage','RES','Eflux','Runoff','Runon','Leakage',...
@@ -1552,12 +1711,15 @@ save(['Calculation',NameOutput],'Solver','TempVec','Humidity','SWRabs','SWRin','
 	'PropOpticalRoof_Out','PropOpticalGround_Out','PropOpticalWall_Out','PropOpticalTree_Out',...
 	'ParThermalRoof_Out','ParThermalGround_Out','ParThermalWall_Out','ParThermalTree_Out','ParCalculation_Out',...
 	'ParVegRoof_Out','ParVegGround_Out','ParVegTree_Out','LAI_ts','Results2mEnergyFlux','MeanRadiantTemperature','Zatm','UTCI',...
-    'AlbedoOutput','ViewFactor','ParSoil')
+    'AlbedoOutput','ViewFactor','EnergyFluxUrban','EnergyFluxCan','EnergyFluxRoof',...
+    'WaterFluxRoof','WaterFluxCan','WaterFluxUrban','ParSoil',...
+     'TempVecB','TBdamp','HbuildInt','LEbuildInt','GbuildInt','SWRabsB','LWRabsB');
 
 
 
 %% Check the energy balance and calculation
 EnergyBalanceCheck
+
 
 
 

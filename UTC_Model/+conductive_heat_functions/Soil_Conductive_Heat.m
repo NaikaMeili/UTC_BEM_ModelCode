@@ -31,7 +31,8 @@ function[G1,G2,dS]=Soil_Conductive_Heat(TemperatureR,TempVec,Anthropogenic,Owate
 Troof		=	TemperatureR(1,2);
 Tint		=	TemperatureR(1,4);
 Tint_tm1	=	TempVec.TRoofIntVeg(itt,1);
-Tb			=	Anthropogenic.Tb;
+%Tb			=	Anthropogenic.Tb;
+Tb			=	mean(Anthropogenic.Tceiling);
 Otm1		=	Owater.OwRoofSoilVeg(itt,:);
 Rrootl		=	ParVegRoof.Rrootl;
 PsiL50		=	ParVegRoof.PsiL50;
@@ -90,4 +91,14 @@ G2			=	lan_dry2*(Tint-Tb)/dz2;
 dS			=	cv_roof*(dz1+dz2)/dts*(Tint-Tint_tm1);
 
 
+
+% dS = 0;
+% G1 = lan_dry2*(Troof-Tb)/(dz1+dz2);
+% G2 = lan_dry2*(Troof-Tb)/(dz1+dz2);
+
+% if Troof>Tint
+%     Tint>Tb;
+% elseif Troof<Tint
+%     Tint<Tb;
+% end
 

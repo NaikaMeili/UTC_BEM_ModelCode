@@ -27,7 +27,8 @@ function[G1,G2,dS]=Impervious_Conductive_Heat(TemperatureC,TempVec,Anthropogenic
 
 if type == 1 % sun
 Ts			=	TemperatureC(1,4);
-Tb			=	Anthropogenic.Tb;
+%Tb			=	Anthropogenic.Tb;
+Tb			=	mean(Anthropogenic.Tinwallsun);
 Tint		=	TemperatureC(1,7);
 Tint_tm1	=	TempVec.TWallIntSun(itt,1);
 lan_dry1	=	ParThermalWall.lan_dry;
@@ -39,7 +40,8 @@ cv_s2		=	ParThermalWall.cv_s;
 dts			=	ParCalculation.dts;
 elseif type == 0 % shade
 Ts			=	TemperatureC(1,5);
-Tb			=	Anthropogenic.Tb;
+%Tb			=	Anthropogenic.Tb;
+Tb			=	mean(Anthropogenic.Tinwallshd);
 Tint		=	TemperatureC(1,8);
 Tint_tm1	=	TempVec.TWallIntShade(itt,1);
 lan_dry1	=	ParThermalWall.lan_dry;
@@ -58,5 +60,18 @@ end
 G1			=	lan_dry1*(Ts-Tint)/dz1; % Soil Heat Flux [W/m^2];
 G2			=	lan_dry2*(Tint-Tb)/dz2;
 dS			=	(cv_s1+cv_s2)/2*(dz1+dz2)/dts*(Tint-Tint_tm1);
+
+% 
+% dS = 0;
+% G1 = lan_dry1*(Ts-Tb)/(dz1+dz2);
+% G2 = lan_dry1*(Ts-Tb)/(dz1+dz2);
+
+% if Ts>Tint
+%     Tint>Tb;
+% elseif Ts<Tint
+%     Tint<Tb;
+% end
+
+
 
 end

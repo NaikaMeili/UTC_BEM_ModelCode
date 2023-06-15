@@ -27,7 +27,8 @@ function[G1,G2,dS]=Impervious_Conductive_HeatRoof(TemperatureR,TempVec,Anthropog
 
 Ts			=	TemperatureR(1,1);
 Tint		=	TemperatureR(1,3);
-Tb			=	Anthropogenic.Tb;
+%Tb			=	Anthropogenic.Tb;
+Tb			=	mean(Anthropogenic.Tceiling);
 Tint_tm1	=	TempVec.TRoofIntImp(itt,1);
 lan_dry1	=	ParThermalRoof.lan_dry_imp;
 lan_dry2	=	ParThermalRoof.lan_dry_imp;
@@ -43,5 +44,17 @@ dts			=	ParCalculation.dts;
 G1			=	lan_dry1*(Ts-Tint)/dz1; % Soil Heat Flux [W/m^2];
 G2			=	lan_dry2*(Tint-Tb)/dz2;
 dS			=	(cv_s1+cv_s2)/2*(dz1+dz2)/dts*(Tint-Tint_tm1);
+
+
+% dS = 0;
+% G1 = lan_dry1*(Ts-Tb)/(dz1+dz2);
+% G2 = lan_dry1*(Ts-Tb)/(dz1+dz2);
+
+
+% if Ts>Tint
+%     Tint>Tb;
+% elseif Ts<Tint
+%     Tint<Tb;
+% end
 
 end
