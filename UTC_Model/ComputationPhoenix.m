@@ -1,30 +1,30 @@
 %%%%%%%%%% RUN TIME SERIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-load(fullfile('+data_functions', 'FTDataSingapore_gapfilled2019.mat'))
+load(fullfile('+data_functions', 'FTDataPhoenix1year.mat'))
 
 % Decide if a varying LAI timeseries is provided [1] or not [0]
 [LAI_TimeSeries]=data_functions.VaryingLAIInput(0,'LAI_Zurich_Area'); 
 
 
-n			=	300;%8760; % size(MeteoDataSG_h,1);% Calculation length, there is no need to change this
+n			=	size(MeteoData_h,1);% Calculation length, there is no need to change this
 m			=	1;					% Length for sensitivity analysis
-Name_Site	=	'SG';	% Name for Data_UEHM_site
-Name_SiteFD	=	'SG';		% Name for UEHMForcingData
+Name_Site	=	'AZ';	% Name for Data_UEHM_site
+Name_SiteFD	=	'AZ';		% Name for UEHMForcingData
 OPTION_RAY	=	1; % Load precalculated view factors [1], Recalculate view factors [0]
 
-NameOutput	=	'SG_AC';
+NameOutput	=	'AZ_LCZ6_TreeAC';
 
 
 %% Meteo data
 % LWR_in [W/m2], SAB1_in [W/m2], SAB2_in [W/m2], SAD1_in [W/m2], SAD2_in [W/m2]
 % T_atm	[K], windspeed_u[m/s, pressure_atm [Pa], rain [mm/h], rel_humidity [-]
-MeteoDataSG_h.Windspeed(MeteoDataSG_h.Windspeed(1:n,:)==0) = 0.01;	% Wind speed cannot be 0 otherwise the resistance function fails
-
-MeteoDataRaw	=	struct('LWR_in',MeteoDataSG_h.LWRin(1:n,:),'SAB1_in',MeteoDataSG_h.SAB1(1:n,:),...
-					'SAB2_in',MeteoDataSG_h.SAB2(1:n,:),'SAD1_in',MeteoDataSG_h.SAD1(1:n,:),...
-					'SAD2_in',MeteoDataSG_h.SAD2(1:n,:),'T_atm',MeteoDataSG_h.Tatm(1:n,:),...
-					'windspeed_u',MeteoDataSG_h.Windspeed(1:n,:),'pressure_atm',MeteoDataSG_h.Pressure(1:n,:),...
-					'rain',MeteoDataSG_h.Precipitation(1:n,:),'rel_humidity',...
-					MeteoDataSG_h.RelativeHumidity(1:n,:)./100,'Date',MeteoDataSG_h.date_time(1:n,:));
+MeteoData_h.Windspeed(MeteoData_h.windspeed_u(1:n,:)==0) = 0.01;	% Wind speed cannot be 0 otherwise the resistance function fails
+			
+MeteoDataRaw	=	struct('LWR_in',MeteoData_h.LWR_in(1:n,:),'SAB1_in',MeteoData_h.SAB1(1:n,:),...
+					'SAB2_in',MeteoData_h.SAB2(1:n,:),'SAD1_in',MeteoData_h.SAD1(1:n,:),...
+					'SAD2_in',MeteoData_h.SAD2(1:n,:),'T_atm',MeteoData_h.T_atm(1:n,:)+273.15,...
+					'windspeed_u',MeteoData_h.windspeed_u(1:n,:),'pressure_atm',MeteoData_h.pressure_atm(1:n,:),...
+					'rain',MeteoData_h.rain(1:n,:),'rel_humidity',MeteoData_h.rel_humidity(1:n,:)./100,...
+					'Date',MeteoData_h.date_time(1:n,:));	
 
 
 %% Calculation starts here. No need to change anything after this point
@@ -440,6 +440,14 @@ end
 	Gemeotry_m,ParVegTree,ParTree,MeteoData,FractionsGround,ParVegGround);	
 
 [UTCI_approx]=OTC.UTCI_approx(T2m-273.15,RH_T2m.*100,Tmrt,u_ZPerson);
+
+% if EnergyUse.EnergyForAC_LE<0
+%     test=1;
+% end
+% 
+% if ittn==15
+%     test=1;
+% end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

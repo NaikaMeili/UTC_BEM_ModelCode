@@ -1,9 +1,11 @@
 function[Hroof_imp,Hroof_veg,Eroof_imp,Eroof_veg,Eroof_ground,Eroof_soil,TEroof_veg,...
 	LEroof_imp,LEroof_veg,LEroof_ground,LEroof_soil,LTEroof_veg,...
 	Ci_sun_roof,Ci_shd_roof,ra,rb,rap_L,r_soil,rs_sun,rs_shd]...
-	=HeatFlux_roof(TemperatureR,MeteoData,HumidityAtm,ParVegRoof,FractionsRoof,Gemeotry_m,...
-	ParSoilRoof,ParCalculation,SoilPotW,Owater,Vwater,ExWater,Int,CiCO2Leaf,...
-	itt,SWRabs_dir,SWRabs_diff)
+	=HeatFlux_roof(TemperatureR,TempVec_ittm,MeteoData,HumidityAtm,ParVegRoof,FractionsRoof,Gemeotry_m,...
+	ParSoilRoof,ParCalculation,SoilPotW_ittm,Owater_ittm,Vwater_ittm,ExWater_ittm,Int_ittm,CiCO2Leaf_ittm,...
+	SWRabs_dir,SWRabs_diff,RESPreCalc,rsRoofPreCalc)
+
+
 % OUTPUT
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Hroof_imp			=	sensible heat from impervious area [W/m^2]
@@ -96,6 +98,7 @@ function[Hroof_imp,Hroof_veg,Eroof_imp,Eroof_veg,Eroof_ground,Eroof_soil,TEroof_
 
 Troof_imp		=	TemperatureR(1,1);
 Troof_veg		=	TemperatureR(1,2);
+Troof_veg_tm1   =	TempVec_ittm.TRoofVeg;
 Tatm			=	MeteoData.Tatm;
 Pre				=	MeteoData.Pre;
 ea				=	MeteoData.ea;
@@ -145,15 +148,15 @@ Zs				=	ParSoilRoof.Zs;
 dth				=	ParCalculation.dth;
 row				=	ParCalculation.row;
 
-Psi_ltm1		=	SoilPotW.SoilPotWRoofVeg_L(itt,1);
-Otm1			=	Owater.OwRoofSoilVeg(itt,:);
-Vtm1			=	Vwater.VRoofSoilVeg(itt,:);
-Exwat_tm1		=	ExWater.ExWaterRoofVeg_L(itt,:);
-In_imp_tm1		=	Int.IntRoofImp(itt,:);
-In_veg_tm1		=	Int.IntRoofVegPlant(itt,:);
-In_ground_tm1	=	Int.IntRoofVegGround(itt,:);
-Ci_sun_tm1		=	CiCO2Leaf.CiCO2LeafRoofVegSun(itt,:);
-Ci_shd_tm1		=	CiCO2Leaf.CiCO2LeafRoofVegShd(itt,:);
+Psi_ltm1		=	SoilPotW_ittm.SoilPotWRoofVeg_L;
+Otm1			=	Owater_ittm.OwRoofSoilVeg;
+Vtm1			=	Vwater_ittm.VRoofSoilVeg;
+Exwat_tm1		=	ExWater_ittm.ExWaterRoofVeg_L;
+In_imp_tm1		=	Int_ittm.IntRoofImp;
+In_veg_tm1		=	Int_ittm.IntRoofVegPlant;
+In_ground_tm1	=	Int_ittm.IntRoofVegGround;
+Ci_sun_tm1		=	CiCO2Leaf_ittm.CiCO2LeafRoofVegSun;
+Ci_shd_tm1		=	CiCO2Leaf_ittm.CiCO2LeafRoofVegShd;
 
 
 %% Parameters
@@ -215,22 +218,25 @@ end
 [rb]=resistance_functions.Leaf_Boundary_Resistence(u_Hveg,Troof_veg-273.15,Tatm-273,hc_roof,d_leaf_roof,LAI_roof,Zatm,disp_h,zom);
 % [rb]=Leaf_Boundary_Resistence(Ws,Ts,Ta,hc,d_leaf,LAI,zatm,disp_h,zom)
 
-% [~,rap_L,~,rb_L,Ws_und]=resistance_functions.Undercanopy_Leaf_Resistence2(Uatm,Tatm-273.15,Troof-273.15,1,0,hc_roof,0,LAI_roof,0,d_leaf_roof,...
-%     Zatm-H,disp_h,zom,zom_H,0,0,0,d_H,zom_H);
-% [rap_H,rap_L,rb_H,rb_L,Ws_und]=Undercanopy_Leaf_Resistence2(Ws,Ta,Ts,Ccrown,hc_H,hc_L,LAI_H,LAI_L,d_leaf_H,d_leaf_L,...
-%     zatm,disp_h,zom,zom_under,SND,disp_h_H,zom_H,disp_h_L,zom_L)
 
-% Stomatal resistance,roughly 200-300 during the day and ca 3000 during the night
-Opt_CR	=	optimset('TolFun',1); % [ppm] Numerical tolerance for internal CO2 computation
-if (LAI_roof > 0) 
-    [rs_sun,rs_shd,Ci_sun,Ci_shd,~,~,~,~]=resistance_functions.Canopy_Resistence_An_Evolution(PAR_sun,PAR_shd,LAI_roof,...
-        Kopt_roof,Knit_roof,Fsun,Fshd,Citm1_sun,Citm1_shd,...
-        Catm_CO2,ra,rb,Troof_veg-273.15,Tatm-273.15,Pre/100,Ds_atm,...
-        Psi_ltm1,Psi_sto_50_roof,Psi_sto_00_roof,...
-        CT_roof,Vmax_roof,DSE_roof,Ha_roof,FI_roof,Oa,Do_roof,a1_roof,go_roof,e_rel_roof,...
-        e_relN_roof,gmes_roof,rjv_roof,mSl_roof,Sl_roof,Opt_CR);
+if RESPreCalc==1
+    rs_sun=rsRoofPreCalc.rs_sun;  
+    rs_shd=rsRoofPreCalc.rs_shd; 
+    Ci_sun=rsRoofPreCalc.Ci_sun; 
+    Ci_shd=rsRoofPreCalc.Ci_shd;
 else
-    rs_sun=Inf;  rs_shd=Inf; Ci_sun=0; Ci_shd=0;
+    % Stomatal resistance,roughly 200-300 during the day and ca 3000 during the night
+    Opt_CR	=	optimset('TolFun',1); % [ppm] Numerical tolerance for internal CO2 computation
+    if (LAI_roof > 0) 
+        [rs_sun,rs_shd,Ci_sun,Ci_shd,~,~,~,~]=resistance_functions.Canopy_Resistence_An_Evolution(PAR_sun,PAR_shd,LAI_roof,...
+            Kopt_roof,Knit_roof,Fsun,Fshd,Citm1_sun,Citm1_shd,...
+            Catm_CO2,ra,rb,Troof_veg_tm1-273.15,Tatm-273.15,Pre/100,Ds_atm,...
+            Psi_ltm1,Psi_sto_50_roof,Psi_sto_00_roof,...
+            CT_roof,Vmax_roof,DSE_roof,Ha_roof,FI_roof,Oa,Do_roof,a1_roof,go_roof,e_rel_roof,...
+            e_relN_roof,gmes_roof,rjv_roof,mSl_roof,Sl_roof,Opt_CR);
+    else
+        rs_sun=Inf;  rs_shd=Inf; Ci_sun=0; Ci_shd=0;
+    end
 end
 
 Ci_sun_roof		=	Ci_sun;	% Ci = Leaf Interior  CO2 concentration [umolCO2/mol]

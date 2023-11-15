@@ -17,10 +17,10 @@ function[F_gc,F_gw,F_ww,F_wg,F_wc,F_cg,F_cw,ViewFactor]=ViewFactorInternal(Hbuil
 % CALCULATING ACCRODING TO %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Sky view factors without trees: Harman et al. 2004
 
-ratio=Hbuild/Wroof;
+ratio=Hbuild/(Wroof);
 
 F_gc=sqrt(1+(ratio)^2)-ratio;
-F_gw=0.5*(1-F_gc);      % factor 0.5 because there are 2 walls that are seen by the ground
+F_gw=0.5*(1-F_gc);      % factor 0.5 because there are 4 walls that are seen by the ground (2 external and 2 internal)
     
 F_ww=sqrt(1+(1/ratio)^2)-1/ratio;
 F_wg=0.5*(1-F_ww);
@@ -28,10 +28,11 @@ F_wc=0.5*(1-F_ww);
        
 F_cg=F_gc;
 F_cw=ratio*F_wc;
+
     
 % Check for unity of the sum of the view factors
-h=Hbuild/Wroof;
-w=Wroof/Wroof;
+h=Hbuild/(Wroof);
+w=(Wroof)/(Wroof);
 
 Sum_g=F_gc+F_gw*2;
 Sum_w=F_ww+F_wg+F_wc;

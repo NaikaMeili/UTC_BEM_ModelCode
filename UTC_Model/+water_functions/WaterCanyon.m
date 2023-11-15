@@ -17,28 +17,27 @@ function[q_tree_dwn,In_tree,dIn_tree_dt,q_gveg_dwn,In_gveg,dIn_gveg_dt,...
 	Qin_imp,Qin_bare,Qin_veg,Qin_bare2imp,Qin_bare2veg,Qin_imp2bare,Qin_imp2veg,Qin_veg2imp,Qin_veg2bare,...
 	V,O,OS,Lk,Rd,dV_dt,Psi_s_L,Exwat_L,TEgveg_tot,Psi_s_H_tot,Exwat_H,...
 	TEtree_tot,EB_TEtree,EB_TEgveg,WBIndv,WBTot,...
-	Runoff,Runon,Etot,DeepGLk,StorageTot]=...
-	WaterCanyon(MeteoData,Int,Owater,Runon,Qinlat,...
+	Runoff,Runon_ittm,Etot,DeepGLk,StorageTot]=...
+	WaterCanyon(MeteoData,Int_ittm,Owater_ittm,Runon_ittm,Qinlat_ittm,...
 	Etree_In,Egveg_In,Egimp_Pond,Egbare_Pond,Egveg_Pond,Egbare_soil,Egveg_soil,TEgveg,TEtree,...
 	ParSoilGround,ParInterceptionTree,ParCalculation,ParVegGround,ParVegTree,...
-	FractionsGround,geometry,ParTree,Gemeotry_m,Anthropogenic,itt)
-
+	FractionsGround,geometry,ParTree,Gemeotry_m,Anthropogenic)
 
 
 %% Assigning input
 Rain				=	MeteoData.Rain;
-In_gimp_tm1			=	Int.IntGroundImp(itt,:);
-In_gbare_tm1		=	Int.IntGroundBare(itt,:);
-In_gveg_tm1			=	Int.IntGroundVegPlant(itt,:);
-In_gvegpond_tm1		=	Int.IntGroundVegGround(itt,:);
-In_tree_tm1			=	Int.IntTree(itt,:);
-Otm1_imp			=	Owater.OwGroundSoilImp(itt,:);
-Otm1_bare			=	Owater.OwGroundSoilBare(itt,:);
-Otm1_veg			=	Owater.OwGroundSoilVeg(itt,:);
-Qin_imp_tm1			=	Qinlat.Qin_imp(itt,:);
-Qin_bare_tm1		=	Qinlat.Qin_bare(itt,:);
-Qin_veg_tm1			=	Qinlat.Qin_veg(itt,:);
-Runon_tm1			=	Runon.RunonGroundTot(itt,:);
+In_gimp_tm1			=	Int_ittm.IntGroundImp;
+In_gbare_tm1		=	Int_ittm.IntGroundBare;
+In_gveg_tm1			=	Int_ittm.IntGroundVegPlant;
+In_gvegpond_tm1		=	Int_ittm.IntGroundVegGround;
+In_tree_tm1			=	Int_ittm.IntTree;
+Otm1_imp			=	Owater_ittm.OwGroundSoilImp;
+Otm1_bare			=	Owater_ittm.OwGroundSoilBare;
+Otm1_veg			=	Owater_ittm.OwGroundSoilVeg;
+Qin_imp_tm1			=	Qinlat_ittm.Qin_imp;
+Qin_bare_tm1		=	Qinlat_ittm.Qin_bare;
+Qin_veg_tm1			=	Qinlat_ittm.Qin_veg;
+Runon_tm1			=	Runon_ittm.RunonGroundTot;
 Wcan				=	Gemeotry_m.Width_canyon;
 LAI_g				=	ParVegGround.LAI;
 SAI_g				=	ParVegGround.SAI;
@@ -446,7 +445,7 @@ WBveg_tot	=	Cveg*Rain_ground + Cveg*Runon_tm1 + nansum(Qin_veg) + Anthropogenic.
 Runoff		=	Per_runoff*(fimp*(q_gimp_runoff + Rd_gimp1) + fbare*(q_gbare_runoff + Rd_gbare1)...
 				+ fveg*(q_gveg_runoff + Rd_gveg1)); 	% [mm/dth]
 					
-Runon		=	(1 - Per_runoff)*(fimp*(q_gimp_runoff + Rd_gimp1) + fbare*(q_gbare_runoff + Rd_gbare1)...
+Runon_ittm		=	(1 - Per_runoff)*(fimp*(q_gimp_runoff + Rd_gimp1) + fbare*(q_gbare_runoff + Rd_gbare1)...
 				+ fveg*(q_gveg_runoff + Rd_gveg1)); 	% [mm/dth]
 
 Etot		=	(fimp*(Egimp_Pond + TEgveg_imp1 + TEtree_imp1 + Egimp_soil1)...
@@ -461,7 +460,7 @@ StorageTot	=	fimp*(dIn_gimp_dt+dV_dt_gimpTot) + fbare*(dIn_gbare_dt+dV_dt_gbareT
 				(4*r_tree)*dIn_tree_dt; 	% [mm/dth]
 
 WBcanyon_flux	=	Rain + Runon_tm1 + fveg*Anthropogenic.Waterf_canyonVeg + fbare*Anthropogenic.Waterf_canyonBare...
-					- Etot - DeepGLk - Runoff - Runon - StorageTot; %[mm]
+					- Etot - DeepGLk - Runoff - Runon_ittm - StorageTot; %[mm]
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%	

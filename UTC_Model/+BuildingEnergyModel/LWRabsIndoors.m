@@ -1,4 +1,4 @@
-function[LWRinB,LWRoutB,LWRabsB,LWREBB]=LWRabsIndoors(Tinwallsun,Tinwallshd,Tceiling,Tground,Hbuild,Wroof,ec,eg,ew)
+function[LWRinB,LWRoutB,LWRabsB]=LWRabsIndoors(Tinwallsun,Tinwallshd,Tceiling,Tground,Tintmass,Hbuild,Wroof,ec,eg,em,ew)
 
 
 % OUTPUT
@@ -8,16 +8,19 @@ function[LWRinB,LWRoutB,LWRabsB,LWREBB]=LWRabsIndoors(Tinwallsun,Tinwallshd,Tcei
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
+% Due to internal wall in the middle of the building, the roof area is
+% halfed for the calculation of diffuse radiation reflection
+Wroofint = Wroof./2;
+
 
 % Calcluate view factors in the building interior
-[F_gc,F_gw,F_ww,F_wg,F_wc,F_cg,F_cw,~]=BuildingEnergyModel.ViewFactorInternal(Hbuild,Wroof);
+[F_gc,F_gw,F_ww,F_wg,F_wc,F_cg,F_cw,~]=BuildingEnergyModel.ViewFactorInternal(Hbuild,Wroofint);
 
 
 % normalized surface areas
-A_c		=	Wroof./Wroof;
-A_g		=	Wroof./Wroof;
-A_h		=	Hbuild./Wroof;
-bolzm	=	5.67*10^(-8);	% Stefan-Boltzmann constant [W*m^-2*K-4]
+A_c		=	Wroofint./Wroofint;
+A_g		=	Wroofint./Wroofint;
+A_h		=	Hbuild./Wroofint;
 
 % Check if view factors add up to 1
 SVF(1) = F_gc + 2*F_gw; SVF(2) = F_ww + F_wg + F_wc; SVF(3) = F_cg + 2*F_cw;
@@ -29,136 +32,35 @@ for i=length(SVF)
 	end
 end
 
-% Calculations for infinite reflections
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Sequence in Vectors :
-% Ceiling
-% Sunlit wall
-% Shaded wall
-% Ground
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% View factor matrix to solve for infinite reflections equation
-% Omega_i = Tij*Bj
-% B_i		=	[Bceiling; Bwallsun; Bwallshade; Bground];
-Tij	=	[1, -(1-ec)*F_cw, -(1-ec)*F_cw, -(1-ec)*F_cg;...
-         -(1-ew)*F_wc, 1, -(1-ew)*F_ww, -(1-ew)*F_wg;...
-         -(1-ew)*F_wc, -(1-ew)*F_ww, 1, -(1-ew)*F_wg;...
-         -(1-eg)*F_gc, -(1-eg)*F_gw, -(1-eg)*F_gw, 1];
-	
-% Emitted radiation per surface
-Omega_i	=	[(ec*bolzm*(Tceiling)^4);...
-			(ew*bolzm*(Tinwallsun)^4);...
-			(ew*bolzm*(Tinwallshd)^4);...
-			(eg*bolzm*(Tground)^4)];
-		
-% How to solve the set of equations
-% The outgoing and emitted radiation should be the same
-% B_i				=	[Bceiling; Bwallsun; Bwallshade; Bground];
-% Omega_i			=	Tij*B_i
-% Tij^-1*Omega_i	=	Tij^-1*Tij*B_i
-% Tij^-1*Omega_i	=	B_i
 
-% Outgoing radiation per surface
-B_i		=	Tij^-1*Omega_i;	% Outgoing radiation [W/m^2] per m^2 surface area
+[LWRinB_wsun,LWRoutB_wsun,LWRabsB_wsun]=BuildingEnergyModel.LWRabsBuildingHalf(Tceiling,Tinwallsun,Tintmass,Tground,...
+    A_c,A_g,A_h,F_gc,F_gw,F_ww,F_wg,F_wc,F_cg,F_cw,ec,eg,ew,em);
 
-% Incoming longwave radiation at each surface A_i
-Tij2	=	[0, F_cw, F_cw, F_cg;...
-         F_wc, 0, F_ww, F_wg;...
-         F_wc, F_ww, 0, F_wg;...
-         F_gc, F_gw, F_gw, 0];
-
-A_i		=	Tij2*B_i;
-e_i		=	[ec; ew; ew; eg];
-A_i2	=	(B_i-Omega_i)./(1-e_i);
-Qnet_i2	=	A_i-B_i;
-
-
-% Absorbed longwave radiation (Harman et al 2004)
-e_i		=	[ec; ew; ew; eg];
-
-Qnet_i			=	(e_i.*B_i - Omega_i)./(1-e_i);
-Qnet_i(e_i==1)	=	A_i(e_i==1) - Omega_i(e_i==1);
-
-
-% Difference between emitted and outgoing
-% Delta_out		=	B_i-Omega_i;
-
-% Assignment
-LWRout_i		=	B_i;	% Outgoing radiation [W/m^2] per m^2 surface area
-LWRemit_i		=	Omega_i;% Emitted radiation [W/m^2] per m^2 surface area
-LWRin_i			=	A_i;	% Incoming radiation [W/m^2] per m^2 surface area
-LWRnet_i		=	Qnet_i;	% Net absorbed radiation [W/m^2] per m^2 surface area
-
-% Energy balance
-TotalLWRSurface_in	=	LWRin_i(1)*A_c/A_g + LWRin_i(2)*A_h/A_g + LWRin_i(3)*A_h/A_g + LWRin_i(4)*A_g/A_g;
-
-TotalLWRSurface_abs	=	LWRnet_i(1)*A_c/A_g + LWRnet_i(2)*A_h/A_g + LWRnet_i(3)*A_h/A_g + LWRnet_i(4)*A_g/A_g;
-      
-TotalLWRSurface_out	=	LWRout_i(1)*A_c/A_g + LWRout_i(2)*A_h/A_g + LWRout_i(3)*A_h/A_g + LWRout_i(4)*A_g/A_g;
-
-EBSurface			=	TotalLWRSurface_in - TotalLWRSurface_abs - TotalLWRSurface_out;
-
-% Energy balance
-if abs(EBSurface)>=10^-6
-	disp('EBSurface is not 0. Please check LWRabsIndoors.m')
-end
+[LWRinB_wshd,LWRoutB_wshd,LWRabsB_wshd]=BuildingEnergyModel.LWRabsBuildingHalf(Tceiling,Tinwallshd,Tintmass,Tground,...
+    A_c,A_g,A_h,F_gc,F_gw,F_ww,F_wg,F_wc,F_cg,F_cw,ec,eg,ew,em);
 
 
 % Longwave radiation by each surface per m^2 surface area
-% Incoming longwave radiation
-LWRinB           =	[];			
-LWRinB.LWRinCeiling     =	LWRin_i(1);
-LWRinB.LWRinWallsun     =	LWRin_i(2);
-LWRinB.LWRinWallshade   =	LWRin_i(3);
-LWRinB.LWRinGround      =	LWRin_i(4);
-
+% Incoming longwave radiation		
+LWRinB.LWRinCeiling     = (LWRinB_wsun.LWRinCeiling + LWRinB_wshd.LWRinCeiling)./2;
+LWRinB.LWRinWallsun     = LWRinB_wsun.LWRinWall;
+LWRinB.LWRinWallshd     = LWRinB_wshd.LWRinWall;
+LWRinB.LWRinInternalMass= LWRinB_wsun.LWRinInternalMass + LWRinB_wsun.LWRinInternalMass;
+LWRinB.LWRinGround      = (LWRinB_wsun.LWRinGround + LWRinB_wshd.LWRinGround)./2;
 								
-% Outgoing longwave radiation
-LWRoutB						=	[];			
-LWRoutB.LWRoutCeiling		=	LWRout_i(1);
-LWRoutB.LWRoutWallsun		=	LWRout_i(2);
-LWRoutB.LWRoutWallshade		=	LWRout_i(3);
-LWRoutB.LWRoutGround		=	LWRout_i(4);
+% Outgoing longwave radiation	
+LWRoutB.LWRoutCeiling       = (LWRoutB_wsun.LWRoutCeiling + LWRoutB_wshd.LWRoutCeiling)./2;
+LWRoutB.LWRoutWallsun       = LWRoutB_wsun.LWRoutWall;
+LWRoutB.LWRoutWallshd       = LWRoutB_wshd.LWRoutWall;
+LWRoutB.LWRoutInternalMass  = LWRoutB_wsun.LWRoutInternalMass + LWRoutB_wshd.LWRoutInternalMass;
+LWRoutB.LWRoutGround		= (LWRoutB_wsun.LWRoutGround + LWRoutB_wshd.LWRoutGround)./2;
 
-
-% Absorbed longwave radiation
-LWRabsB						=	[];			
-LWRabsB.LWRabsCeiling		=	LWRnet_i(1);
-LWRabsB.LWRabsWallsun		=	LWRnet_i(2);
-LWRabsB.LWRabsWallshade		=	LWRnet_i(3);
-LWRabsB.LWRabsGround       =	LWRnet_i(4);
-
-% LWRabsB.LWRabsCeiling		=	0;
-% LWRabsB.LWRabsWallsun		=	0;
-% LWRabsB.LWRabsWallshade		=	0;
-% LWRabsB.LWRabsGround       =	0;
-
-
-% Energy Balance of longwave radiation								
-LWREBB				    =	[];			
-LWREBB.LWREBCeiling     =	LWRinB.LWRinCeiling - LWRoutB.LWRoutCeiling - LWRabsB.LWRabsCeiling;
-LWREBB.LWREBWallsun		=	LWRinB.LWRinWallsun - LWRoutB.LWRoutWallsun - LWRabsB.LWRabsWallsun;
-LWREBB.LWREBWallshade   =	LWRinB.LWRinWallshade - LWRoutB.LWRoutWallshade - LWRabsB.LWRabsWallshade;
-LWREBB.LWREBGround      =	LWRinB.LWRinGround - LWRoutB.LWRoutGround - LWRabsB.LWRabsGround;
-
-
-
-if abs(LWREBB.LWREBCeiling)>=10^-6 
-	disp('LWREBB.LWREBCeiling is not 0. Please check LWRabsIndoors.m')
-end
-if abs(LWREBB.LWREBWallsun)>=10^-6
-	disp('LWREBB.LWREBWallsun is not 0. Please check LWRabsIndoors.m')
-end
-if abs(LWREBB.LWREBWallshade )>=10^-6
-	disp('LWREBB.LWREBWallshade	 is not 0. Please check LWRabsIndoors.m')
-end
-if abs(LWREBB.LWREBGround)>=10^-6
-	disp('LWREBB.LWREBGround is not 0. Please check LWRabsIndoors.m')
-end
-
-
-
-
+% Absorbed longwave radiation	
+LWRabsB.LWRabsCeiling		= (LWRabsB_wsun.LWRabsCeiling + LWRabsB_wshd.LWRabsCeiling)./2;
+LWRabsB.LWRabsWallsun       = LWRabsB_wsun.LWRabsWall;
+LWRabsB.LWRabsWallshd       = LWRabsB_wshd.LWRabsWall;
+LWRabsB.LWRabsInternalMass  = LWRabsB_wsun.LWRabsInternalMass + LWRabsB_wshd.LWRabsInternalMass;
+LWRabsB.LWRabsGround        = (LWRabsB_wsun.LWRabsGround + LWRabsB_wshd.LWRabsGround)./2;
 
 
 

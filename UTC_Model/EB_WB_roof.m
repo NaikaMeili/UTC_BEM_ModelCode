@@ -20,9 +20,11 @@ function[SWRabsRoofImp,SWRabsRoofVeg,SWRabsTotalRoof,...
 		CiCO2LeafRoofVegSun,CiCO2LeafRoofVegShd,...
 		WBRoofVegInVeg,WBRoofVegInGround,WBRoofVegSoil,...
 		EBRoofImp,EBRoofVeg,Yroof,WBRoofImp,WBRoofVeg,WBRoofTot]...
-		=EB_WB_roof(TemperatureR,TempVec,MeteoData,itt,Int,ExWater,Vwater,Owater,SoilPotW,CiCO2Leaf,Runon,...
+		=EB_WB_roof(TemperatureR,TemperatureB,TempVec_ittm,MeteoData,...
+        Int_ittm,ExWater_ittm,Vwater_ittm,Owater_ittm,SoilPotW_ittm,CiCO2Leaf_ittm,Runon_ittm,...
 		Gemeotry_m,FractionsRoof,ParSoilRoof,PropOpticalRoof,ParThermalRoof,ParVegRoof,...
-		HumidityAtm,Anthropogenic,ParCalculation)
+		HumidityAtm,Anthropogenic,ParCalculation,BEM_on,RESPreCalc,rsRoofPreCalc)
+
 
 % TemperatureR(1,1) = Troof_imp
 % TemperatureR(1,2) = Troof_veg
@@ -74,9 +76,9 @@ LWREBTotalRoof		=	LWRinTotalRoof - LWRoutTotalRoof - LWRabsTotalRoof;
 [HfluxRoofImp,HfluxRoofVeg,EfluxRoofImp,EfluxRoofVegInt,EfluxRoofVegPond,EfluxRoofVegSoil,TEfluxRoofVeg,...
 	LEfluxRoofImp,LEfluxRoofVegInt,LEfluxRoofVegPond,LEfluxRoofVegSoil,LTEfluxRoofVeg,...
 	CiCO2LeafRoofVegSun,CiCO2LeafRoofVegShd,raRooftoAtm,rb_LRoof,rap_LRoof,r_soilRoof,rs_sunRoof,rs_shdRoof]...
-	=turbulent_heat_function.HeatFlux_roof(TemperatureR,MeteoData,HumidityAtm,ParVegRoof,FractionsRoof,Gemeotry_m,...
-	ParSoilRoof,ParCalculation,SoilPotW,Owater,Vwater,ExWater,Int,CiCO2Leaf,...
-	itt,SWRabs_dir_veg,SWRabs_diff_veg);
+	=turbulent_heat_function.HeatFlux_roof(TemperatureR,TempVec_ittm,MeteoData,HumidityAtm,ParVegRoof,FractionsRoof,Gemeotry_m,...
+	ParSoilRoof,ParCalculation,SoilPotW_ittm,Owater_ittm,Vwater_ittm,ExWater_ittm,Int_ittm,CiCO2Leaf_ittm,...
+	SWRabs_dir_veg,SWRabs_diff_veg,RESPreCalc,rsRoofPreCalc);
 
 HfluxRoof		=	HfluxRoofImp*FractionsRoof.fimp + HfluxRoofVeg*FractionsRoof.fveg;
 LEfluxRoofVeg	=	LEfluxRoofVegInt + LEfluxRoofVegPond + LEfluxRoofVegSoil + LTEfluxRoofVeg;
@@ -87,12 +89,12 @@ EfluxRoof		=	EfluxRoofImp*FractionsRoof.fimp + EfluxRoofVeg*FractionsRoof.fveg;
 %% Ground heat flux
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Impervious conductive heat flux
-[G1RoofImp,G2RoofImp,dsRoofImp]=conductive_heat_functions.Impervious_Conductive_HeatRoof...
-	(TemperatureR,TempVec,Anthropogenic,ParThermalRoof,ParSoilRoof,ParCalculation,itt);
+[G1RoofImp,G2RoofImp,dsRoofImp]=conductive_heat_functions.ConductiveHeatFlux_RoofImp...
+	(TemperatureR,TemperatureB,TempVec_ittm,Anthropogenic,ParThermalRoof,ParSoilRoof,ParCalculation,BEM_on);
 
-% Vegetated ground heat flux
-[G1RoofVeg,G2RoofVeg,dsRoofVeg]=conductive_heat_functions.Soil_Conductive_Heat...
-	(TemperatureR,TempVec,Anthropogenic,Owater,ParVegRoof,ParSoilRoof,ParThermalRoof,ParCalculation,itt);
+% Conductive heat flux of green roof
+[G1RoofVeg,G2RoofVeg,dsRoofVeg]=conductive_heat_functions.ConductiveHeatFlux_GreenRoof...
+	(TemperatureR,TemperatureB,TempVec_ittm,Anthropogenic,Owater_ittm,ParVegRoof,ParSoilRoof,ParThermalRoof,ParCalculation,BEM_on);
 
 G1Roof		=	G1RoofImp*FractionsRoof.fimp + G1RoofVeg*FractionsRoof.fveg;
 G2Roof		=	G2RoofImp*FractionsRoof.fimp + G2RoofVeg*FractionsRoof.fveg;
@@ -100,10 +102,22 @@ dsRoof		=	dsRoofImp*FractionsRoof.fimp + dsRoofVeg*FractionsRoof.fveg;
 
 %% Energy balance
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Yroof(1)	=	SWRabsRoofImp+LWRabsRoofImp-HfluxRoofImp-G1RoofImp-LEfluxRoofImp;  % Energy budget impervious roof
-Yroof(2)	=	SWRabsRoofVeg+LWRabsRoofVeg-HfluxRoofVeg-G1RoofVeg-LEfluxRoofVegInt-LEfluxRoofVegPond-LEfluxRoofVegSoil-LTEfluxRoofVeg;  % Energy budget vegetated roof
-Yroof(3)	=	G1RoofImp-G2RoofImp-dsRoofImp; % Energy budget concrete mass roof
-Yroof(4)	=	G1RoofVeg-G2RoofVeg-dsRoofVeg; % Energy budget concrete mass roof
+if FractionsRoof.fimp>0
+	Yroof(1)	=	SWRabsRoofImp+LWRabsRoofImp-HfluxRoofImp-G1RoofImp-LEfluxRoofImp;  % Energy budget impervious roof
+    Yroof(3)	=	G1RoofImp-G2RoofImp-dsRoofImp; % Energy budget concrete mass roof
+else
+	Yroof(1)	=	TemperatureR(1)-273.15;
+    Yroof(3)	=	TemperatureR(3)-273.15;
+end
+
+if FractionsRoof.fveg>0
+	Yroof(2)	=	SWRabsRoofVeg+LWRabsRoofVeg-HfluxRoofVeg-G1RoofVeg-LEfluxRoofVegInt-LEfluxRoofVegPond-LEfluxRoofVegSoil-LTEfluxRoofVeg;  % Energy budget vegetated roof
+    Yroof(4)	=	G1RoofVeg-G2RoofVeg-dsRoofVeg; % Energy budget concrete mass roof
+else
+	Yroof(2)	=	TemperatureR(2)-273.15;
+    Yroof(4)	=	TemperatureR(4)-273.15;
+end
+
 
 EBRoofImp	=	SWRabsRoofImp+LWRabsRoofImp-HfluxRoofImp-G2RoofImp-dsRoofImp-LEfluxRoofImp;
 EBRoofVeg	=	SWRabsRoofVeg+LWRabsRoofVeg-HfluxRoofVeg-G2RoofVeg-dsRoofVeg-LEfluxRoofVegInt-LEfluxRoofVegPond-LEfluxRoofVegSoil-LTEfluxRoofVeg;
@@ -117,7 +131,7 @@ EBRoofVeg	=	SWRabsRoofVeg+LWRabsRoofVeg-HfluxRoofVeg-G2RoofVeg-dsRoofVeg-LEfluxR
 	~,WBRoofVegInVeg,WBRoofVegInGround,WBRoofVegSoil,...
 	WBRoofImp,WBRoofVeg,WBRoofTot]=...
 	water_functions.WaterRoof(EfluxRoofImp,EfluxRoofVegInt,EfluxRoofVegPond,EfluxRoofVegSoil,TEfluxRoofVeg,...
-	MeteoData,Int,Owater,Runon,FractionsRoof,ParSoilRoof,ParCalculation,ParVegRoof,Anthropogenic,itt);
+	MeteoData,Int_ittm,Owater_ittm,Runon_ittm,FractionsRoof,ParSoilRoof,ParCalculation,ParVegRoof,Anthropogenic);
 
 LkRoof			=	LkRoofImp*FractionsRoof.fimp + LkRoofVeg*FractionsRoof.fveg;
 IntRooftot		=	IntRoofImp*FractionsRoof.fimp + (IntRoofVegPlant+IntRoofVegGround)*FractionsRoof.fveg;

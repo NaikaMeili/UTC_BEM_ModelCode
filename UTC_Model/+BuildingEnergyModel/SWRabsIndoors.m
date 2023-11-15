@@ -1,4 +1,4 @@
-function[SWRinB,SWRoutB,SWRabsB,SWREBB]=SWRabsIndoors(SWRinWsun,SWRinWshd,Hbuild,Wroof,abc,abw,abg)
+function[SWRinB,SWRoutB,SWRabsB]=SWRabsIndoors(SWRinWsun,SWRinWshd,Hbuild,Wroof,abc,abw,abg,abm)
 
 
 % OUTPUT
@@ -7,16 +7,18 @@ function[SWRinB,SWRoutB,SWRabsB,SWREBB]=SWRabsIndoors(SWRinWsun,SWRinWshd,Hbuild
 % INPUT
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
+% Due to internal wall in the middle of the building, the roof area is
+% halfed for the calculation of diffuse radiation reflection
+Wroofint = Wroof./2;
 
 % Calcluate view factors in the building interior
-[F_gc,F_gw,F_ww,F_wg,F_wc,F_cg,F_cw,~]=BuildingEnergyModel.ViewFactorInternal(Hbuild,Wroof);
+[F_gc,F_gw,F_ww,F_wg,F_wc,F_cg,F_cw,~]=BuildingEnergyModel.ViewFactorInternal(Hbuild,Wroofint);
 
 
 % normalized surface areas
-A_c		=	Wroof./Wroof;
-A_g		=	Wroof./Wroof;
-A_h		=	Hbuild./Wroof;
+A_c		=	Wroofint./Wroofint;
+A_g		=	Wroofint./Wroofint;
+A_h		=	Hbuild./Wroofint;
 
 % Check if view factors add up to 1
 SVF(1) = F_gc + 2*F_gw; SVF(2) = F_ww + F_wg + F_wc; SVF(3) = F_cg + 2*F_cw;
@@ -29,128 +31,46 @@ for i=length(SVF)
 end
 
 
-% Calculations for infinite reflections
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Sequence in Vectors :
-% Ceiling
-% Sunlit wall
-% Shaded wall
-% Ground
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Albedos
-ai	=	[abc;abw;abw;abg];
 
-% View factor matrix to solve for infinite reflections equation
-% Omega_i = Tij*Bj
-% B_i		=	[Bceiling; Bwallsun; Bwallshade; Bground];
-Tij	=	[1, -abc*F_cw, -abc*F_cw, -abc*F_cg;...
-		 -abw*F_wc, 1, -abw*F_ww, -abw*F_wg;...
-         -abw*F_wc, -abw*F_ww, 1, -abw*F_wc;...
-         -abg*F_gc, -abg*F_gw, -abg*F_gw, 1];
-	
-% Incoming shortwave radiation from sky
-Omega_i	=	[abc*(F_cw*SWRinWsun + F_cw*SWRinWshd);...
-			abw*F_ww*SWRinWshd;...
-			abw*F_ww*SWRinWsun;...
-			abg*(F_gw*SWRinWsun + F_gw*SWRinWshd)];
-	
-% How to solve the set of equations
-% The outgoing and emitted radiation should be the same
-% B_i				=	[Bceiling; Bwallsun; Bwallshade; Bground];
-% Omega_i			=	Tij*B_i
-% Tij^-1*Omega_i	=	Tij^-1*Tij*B_i
-% Tij^-1*Omega_i	=	B_i
+% Calculate SWR absorbed in both parts of the building
+[SWRinB_wsun,SWRoutB_wsun,SWRabsB_wsun]=BuildingEnergyModel.SWRabsBuildingHalf(A_c,A_g,A_h,SWRinWsun,...
+    F_gc,F_gw,F_ww,F_wg,F_wc,F_cg,F_cw,abc,abw,abm,abg);
 
-% Outgoing radiation per surface
-B_i		=	Tij^-1*Omega_i;	% Outgoing radiation [W/m^2] per m^2 surface area
-
-
-% Incoming shortwave radiation at each surface A_i
-Tij2	=	[0, F_cw, F_cw, F_cg;...
-		    F_wc, 0, F_ww, F_wg;...
-            F_wc, F_ww, 0, F_wc;...
-            F_gc, F_gw, F_gw, 0];
-		
-SWRdir_i=	[F_cw*SWRinWsun + F_cw*SWRinWshd;...
-			F_ww*SWRinWshd;...
-			F_ww*SWRinWsun;...
-			F_gw*SWRinWsun + F_gw*SWRinWshd];
-
-A_i1	=	Tij2*B_i+SWRdir_i;	% Incoming radiation [W/m^2] per m^2 surface area
-
-A_i			=	B_i./ai;		% Incoming radiation [W/m^2] per m^2 surface area
-A_i(ai==0)	=	A_i1(ai==0);
-
-% Absorbed shortwave radiation at ech surface Qnet_i
-Qnet_i		=	A_i-B_i;
-
-% Assignment
-SWRout_i		=	B_i;	% Outgoing radiation [W/m^2] per m^2 surface area
-SWRin_i			=	A_i;	% Incoming radiation [W/m^2] per m^2 surface area
-SWRnet_i		=	Qnet_i;	% Net absorbed radiation [W/m^2] per m^2 surface area
-
-% % Energy balance
-TotalSWRSurface_in	=	SWRin_i(1)*A_c/A_g + SWRin_i(2)*A_h/A_g + SWRin_i(3)*A_h/A_g + SWRin_i(4)*A_g/A_g;
-
-TotalSWRSurface_abs	=	SWRnet_i(1)*A_c/A_g + SWRnet_i(2)*A_h/A_g + SWRnet_i(3)*A_h/A_g + SWRnet_i(4)*A_g/A_g;
-      
-TotalSWRSurface_out	=	SWRout_i(1)*A_c/A_g+SWRout_i(2)*A_h/A_g+SWRout_i(3)*A_h/A_g + SWRout_i(4)*A_g/A_g;
-					
-EBSurface			=	TotalSWRSurface_in - TotalSWRSurface_abs - TotalSWRSurface_out;
-
-
-% Energy balance
-if abs(EBSurface)>=10^-6
-	disp('EBSurface is not 0. Please check SWRabsIndoors.m')
-end
-
+[SWRinB_wshd,SWRoutB_wshd,SWRabsB_wshd]=BuildingEnergyModel.SWRabsBuildingHalf(A_c,A_g,A_h,SWRinWshd,...
+    F_gc,F_gw,F_ww,F_wg,F_wc,F_cg,F_cw,abc,abw,abm,abg);
 
 
 % Shortwave radiation by each surface per m^2 surface area
-% Incoming shortwave radiation
-SWRinB           =	[];			
-SWRinB.SWRinCeiling     =	SWRin_i(1);
-SWRinB.SWRinWallsun     =	SWRin_i(2);
-SWRinB.SWRinWallshade   =	SWRin_i(3);
-SWRinB.SWRinGround      =	SWRin_i(4);
-
+% Incoming shortwave radiation		
+SWRinB.SWRinCeiling     = (SWRinB_wsun.SWRinCeiling + SWRinB_wshd.SWRinCeiling)./2;
+SWRinB.SWRinWallsun     = SWRinB_wsun.SWRinWall;
+SWRinB.SWRinWallshd     = SWRinB_wshd.SWRinWall;
+SWRinB.SWRinInternalMass= SWRinB_wsun.SWRinInternalMass + SWRinB_wsun.SWRinInternalMass;
+SWRinB.SWRinGround      = (SWRinB_wsun.SWRinGround + SWRinB_wshd.SWRinGround)./2;
 								
-% Outgoing shortwave radiation
-SWRoutB						=	[];			
-SWRoutB.SWRoutCeiling		=	SWRout_i(1);
-SWRoutB.SWRoutWallsun		=	SWRout_i(2);
-SWRoutB.SWRoutWallshade		=	SWRout_i(3);
-SWRoutB.SWRoutGround		=	SWRout_i(4);
+% Outgoing shortwave radiation	
+SWRoutB.SWRoutCeiling       = (SWRoutB_wsun.SWRoutCeiling + SWRoutB_wshd.SWRoutCeiling)./2;
+SWRoutB.SWRoutWallsun       = SWRoutB_wsun.SWRoutWall;
+SWRoutB.SWRoutWallshd       = SWRoutB_wshd.SWRoutWall;
+SWRoutB.SWRoutInternalMass  = SWRoutB_wsun.SWRoutInternalMass + SWRoutB_wshd.SWRoutInternalMass;
+SWRoutB.SWRoutGround		= (SWRoutB_wsun.SWRoutGround + SWRoutB_wshd.SWRoutGround)./2;
+
+% Absorbed shortwave radiation	
+SWRabsB.SWRabsCeiling		= (SWRabsB_wsun.SWRabsCeiling + SWRabsB_wshd.SWRabsCeiling)./2;
+SWRabsB.SWRabsWallsun       = SWRabsB_wsun.SWRabsWall;
+SWRabsB.SWRabsWallshd       = SWRabsB_wshd.SWRabsWall;
+SWRabsB.SWRabsInternalMass  = SWRabsB_wsun.SWRabsInternalMass + SWRabsB_wshd.SWRabsInternalMass;
+SWRabsB.SWRabsGround        = (SWRabsB_wsun.SWRabsGround + SWRabsB_wshd.SWRabsGround)./2;
 
 
-% Absorbed shortwave radiation
-SWRabsB						=	[];			
-SWRabsB.SWRabsCeiling		=	SWRnet_i(1);
-SWRabsB.SWRabsWallsun		=	SWRnet_i(2);
-SWRabsB.SWRabsWallshade		=	SWRnet_i(3);
-SWRabsB.SWRabsGround       =	SWRnet_i(4);
+% Energy blanace check
+SWREBinternal = Hbuild.*(SWRinWsun+SWRinWshd) - Wroof.*SWRabsB.SWRabsCeiling...
+    - Hbuild.*(SWRabsB.SWRabsWallsun+SWRabsB.SWRabsWallshd+SWRabsB.SWRabsInternalMass)...
+    - Wroof.*SWRabsB.SWRabsGround;
 
 
-% Energy Balance of shortwave radiation								
-SWREBB				    =	[];			
-SWREBB.SWREBCeiling     =	SWRinB.SWRinCeiling - SWRoutB.SWRoutCeiling - SWRabsB.SWRabsCeiling;
-SWREBB.SWREBWallsun		=	SWRinB.SWRinWallsun - SWRoutB.SWRoutWallsun - SWRabsB.SWRabsWallsun;
-SWREBB.SWREBWallshade   =	SWRinB.SWRinWallshade - SWRoutB.SWRoutWallshade - SWRabsB.SWRabsWallshade;
-SWREBB.SWREBGround      =	SWRinB.SWRinGround - SWRoutB.SWRoutGround - SWRabsB.SWRabsGround;
-
-
-if abs(SWREBB.SWREBCeiling)>=10^-6 
-	disp('SWREBB.SWREBCeiling is not 0. Please check SWRabsIndoors.m')
+if abs(SWREBinternal)>=10^-6 
+	disp('Building interior shortwave radiation balance is not 0. Please check SWRabsIndoors.m')
 end
-if abs(SWREBB.SWREBWallsun)>=10^-6
-	disp('SWREBB.SWREBWallsun is not 0. Please check SWRabsIndoors.m')
-end
-if abs(SWREBB.SWREBWallshade )>=10^-6
-	disp('SWREBB.SWREBWallshade	 is not 0. Please check SWRabsIndoors.m')
-end
-if abs(SWREBB.SWREBGround)>=10^-6
-	disp('SWREBB.SWREBGround is not 0. Please check SWRabsIndoors.m')
-end
-
 
 

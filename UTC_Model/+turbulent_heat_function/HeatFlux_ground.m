@@ -10,9 +10,10 @@ function[Himp,Hbare,Hveg,Htree,...
 	r_soil_bare,r_soil_veg,alp_soil_bare,alp_soil_veg,...
 	rs_sun_L,rs_shd_L,rs_sun_H,rs_shd_H,...
 	u_Hcan,u_Zref_und,Fsun_L,Fshd_L,dw_L]...
-    =HeatFlux_ground(TemperatureC,MeteoData,Gemeotry_m,geometry,FractionsGround,ParTree,...
-	ParVegGround,ParVegTree,ParSoilGround,SoilPotW,Owater,Vwater,ExWater,Int,CiCO2Leaf,...
-	ParInterceptionTree,ParCalculation,itt,SWRdir_abs_tree,SWRdiff_abs_tree,SWRdir_abs_groundveg,SWRdiff_abs_groundveg)
+    =HeatFlux_ground(TemperatureC,TempVec_ittm,MeteoData,Gemeotry_m,geometry,FractionsGround,ParTree,...
+	ParVegGround,ParVegTree,ParSoilGround,SoilPotW_ittm,Owater_ittm,Vwater_ittm,ExWater_ittm,Int_ittm,CiCO2Leaf_ittm,...
+	ParInterceptionTree,ParCalculation,SWRdir_abs_tree,SWRdiff_abs_tree,SWRdir_abs_groundveg,SWRdiff_abs_groundveg,...
+    RESPreCalc,rsGroundPreCalc,rsTreePreCalc)
 
 
 %% Parameter specification
@@ -24,6 +25,9 @@ Tcanyon			=	TemperatureC(1,9);
 Twsun			=	TemperatureC(1,4);
 Twshade			=	TemperatureC(1,5);
 qcanyon			=	TemperatureC(1,10);
+Tveg_tm1		=	TempVec_ittm.TGroundVeg;
+Ttree_tm1		=	TempVec_ittm.TTree;
+Tcanyon_tm1     =   TempVec_ittm.TCanyon;
 Tatm			=	MeteoData.Tatm;
 Pre				=	MeteoData.Pre;
 ea				=	MeteoData.ea;
@@ -106,31 +110,31 @@ ZR50_L			=	ParVegGround.ZR50;
 ZRmax_H			=	ParVegTree.ZRmax;
 ZRmax_L			=	ParVegGround.ZRmax;
 Zs				=	ParSoilGround.Zs;
-Psi_L_tm1		=	SoilPotW.SoilPotWGroundVeg_L(itt,1);
-Psi_H_tm1		=	SoilPotW.SoilPotWGroundTot_H(itt,1);
-Otm1Imp			=	Owater.OwGroundSoilImp(itt,:);
-Otm1Bare		=	Owater.OwGroundSoilBare(itt,:);
-Otm1Veg			=	Owater.OwGroundSoilVeg(itt,:);
-Vtm1Imp			=	Vwater.VGroundSoilImp(itt,:);
-Vtm1Bare		=	Vwater.VGroundSoilBare(itt,:);
-Vtm1Veg			=	Vwater.VGroundSoilVeg(itt,:);
+Psi_L_tm1		=	SoilPotW_ittm.SoilPotWGroundVeg_L;
+Psi_H_tm1		=	SoilPotW_ittm.SoilPotWGroundTot_H;
+Otm1Imp			=	Owater_ittm.OwGroundSoilImp;
+Otm1Bare		=	Owater_ittm.OwGroundSoilBare;
+Otm1Veg			=	Owater_ittm.OwGroundSoilVeg;
+Vtm1Imp			=	Vwater_ittm.VGroundSoilImp;
+Vtm1Bare		=	Vwater_ittm.VGroundSoilBare;
+Vtm1Veg			=	Vwater_ittm.VGroundSoilVeg;
 dth				=	ParCalculation.dth;
 row				=	ParCalculation.row;
-ExwatImp_tm1_H	=	ExWater.ExWaterGroundImp_H(itt,:);
-ExwatBare_tm1_H	=	ExWater.ExWaterGroundBare_H(itt,:);
-ExwatVeg_tm1_H	=	ExWater.ExWaterGroundVeg_H(itt,:);
-ExwatVeg_tm1_L	=	ExWater.ExWaterGroundVeg_L(itt,:);
+ExwatImp_tm1_H	=	ExWater_ittm.ExWaterGroundImp_H;
+ExwatBare_tm1_H	=	ExWater_ittm.ExWaterGroundBare_H;
+ExwatVeg_tm1_H	=	ExWater_ittm.ExWaterGroundVeg_H;
+ExwatVeg_tm1_L	=	ExWater_ittm.ExWaterGroundVeg_L;
 Sp_In_H			=	ParInterceptionTree.Sp_In;
 Sp_In_L			=	ParSoilGround.Sp_In;
-In_imp_tm1		=	Int.IntGroundImp(itt,:);
-In_bare_tm1		=	Int.IntGroundBare(itt,:);
-In_veg_tm1		=	Int.IntGroundVegPlant(itt,:);
-In_underveg_tm1	=	Int.IntGroundVegGround(itt,:);
-In_tree_tm1		=	Int.IntTree(itt,:);
-Ci_sun_H_tm1	=	CiCO2Leaf.CiCO2LeafTreeSun(itt,:);
-Ci_shd_H_tm1	=	CiCO2Leaf.CiCO2LeafTreeShd(itt,:);
-Ci_sun_L_tm1	=	CiCO2Leaf.CiCO2LeafGroundVegSun(itt,:);
-Ci_shd_L_tm1	=	CiCO2Leaf.CiCO2LeafGroundVegShd(itt,:);
+In_imp_tm1		=	Int_ittm.IntGroundImp;
+In_bare_tm1		=	Int_ittm.IntGroundBare;
+In_veg_tm1		=	Int_ittm.IntGroundVegPlant;
+In_underveg_tm1	=	Int_ittm.IntGroundVegGround;
+In_tree_tm1		=	Int_ittm.IntTree;
+Ci_sun_H_tm1	=	CiCO2Leaf_ittm.CiCO2LeafTreeSun;
+Ci_shd_H_tm1	=	CiCO2Leaf_ittm.CiCO2LeafTreeShd;
+Ci_sun_L_tm1	=	CiCO2Leaf_ittm.CiCO2LeafGroundVegSun;
+Ci_shd_L_tm1	=	CiCO2Leaf_ittm.CiCO2LeafGroundVegShd;
 
 
 %% OUTPUT
@@ -295,12 +299,19 @@ if Ctree==1 && LAI_H>0
 	[rb_H]=resistance_functions.Leaf_BR(u_tree,Ttree-273.15,Tcanyon-273.15,d_leaf_H,alpha);
 	% [rb]=Leaf_BR(u_hc,Ts,Ta,d_leaf,alpha)
 
-	[rs_sun_H,rs_shd_H,Ci_sun_H,Ci_shd_H,~,~,~,~]=resistance_functions.Canopy_Resistence_An_Evolution(PAR_sun_H,PAR_shd_H,LAI_H,...
-		Kopt_H,Knit_H,Fsun_H,Fshd_H,Citm1_sun_H,Citm1_shd_H,...
-		Catm_CO2,rap_Htree_In,rb_H,Ttree-273.15,Tcanyon-273.15,Pre/100,Ds_canyon,...
-		Psi_H_tm1,Psi_sto_50_H,Psi_sto_00_H,...
-		CT_H,Vmax_H,DSE_H,Ha_H,FI_H,Oa,Do_H,a1_H,go_H,e_rel_H,...
-		e_relN_H,gmes_H,rjv_H,mSl_H,Sl_H,Opt_CR);
+    if RESPreCalc==1
+        rs_sun_H = rsTreePreCalc.rs_sun_H;  
+        rs_shd_H = rsTreePreCalc.rs_shd_H; 
+        Ci_sun_H = rsTreePreCalc.Ci_sun_H; 
+        Ci_shd_H = rsTreePreCalc.Ci_shd_H;
+    else
+	    [rs_sun_H,rs_shd_H,Ci_sun_H,Ci_shd_H,~,~,~,~]=resistance_functions.Canopy_Resistence_An_Evolution(PAR_sun_H,PAR_shd_H,LAI_H,...
+		    Kopt_H,Knit_H,Fsun_H,Fshd_H,Citm1_sun_H,Citm1_shd_H,...
+		    Catm_CO2,rap_Htree_In,rb_H,Ttree_tm1-273.15,Tcanyon_tm1-273.15,Pre/100,Ds_canyon,...
+		    Psi_H_tm1,Psi_sto_50_H,Psi_sto_00_H,...
+		    CT_H,Vmax_H,DSE_H,Ha_H,FI_H,Oa,Do_H,a1_H,go_H,e_rel_H,...
+		    e_relN_H,gmes_H,rjv_H,mSl_H,Sl_H,Opt_CR);
+    end
 else
 	rb_H=Inf;	rs_sun_H=Inf;  rs_shd_H=Inf; Ci_sun_H=0; Ci_shd_H=0;
 end
@@ -311,13 +322,20 @@ if Cveg==1 && LAI_L>0
 	
 % 	[~,rap_L,~,~,~]=resistance_functions.Undercanopy_Leaf_Resistence2(u_Zref_und,Tcanyon-273.15,Tground-273.15,1,0,Cveg*hc_L,0,LAI_L,0,d_leaf_L,...
 %     1.5,d_L,zom_L,zoh_ground,0,0,0,d_L,zom_L);
-	
-	[rs_sun_L,rs_shd_L,Ci_sun_L,Ci_shd_L,~,~,~,~]=resistance_functions.Canopy_Resistence_An_Evolution(PAR_sun_L,PAR_shd_L,LAI_L,...
-		Kopt_L,Knit_L,Fsun_L,Fshd_L,Citm1_sun_L,Citm1_shd_L,...
-		Catm_CO2,rap_can,rb_L,Tveg-273.15,Tcanyon-273.15,Pre/100,Ds_canyon,...
-		Psi_L_tm1,Psi_sto_50_L,Psi_sto_00_L,...
-		CT_L,Vmax_L,DSE_L,Ha_L,FI_L,Oa,Do_L,a1_L,go_L,e_rel_L,...
-		e_relN_L,gmes_L,rjv_L,mSl_L,Sl_L,Opt_CR);
+
+    if RESPreCalc==1
+        rs_sun_L = rsGroundPreCalc.rs_sun_L;  
+        rs_shd_L = rsGroundPreCalc.rs_shd_L; 
+        Ci_sun_L = rsGroundPreCalc.Ci_sun_L; 
+        Ci_shd_L = rsGroundPreCalc.Ci_shd_L;
+    else
+	    [rs_sun_L,rs_shd_L,Ci_sun_L,Ci_shd_L,~,~,~,~]=resistance_functions.Canopy_Resistence_An_Evolution(PAR_sun_L,PAR_shd_L,LAI_L,...
+		    Kopt_L,Knit_L,Fsun_L,Fshd_L,Citm1_sun_L,Citm1_shd_L,...
+		    Catm_CO2,rap_can,rb_L,Tveg_tm1-273.15,Tcanyon_tm1-273.15,Pre/100,Ds_canyon,...
+		    Psi_L_tm1,Psi_sto_50_L,Psi_sto_00_L,...
+		    CT_L,Vmax_L,DSE_L,Ha_L,FI_L,Oa,Do_L,a1_L,go_L,e_rel_L,...
+		    e_relN_L,gmes_L,rjv_L,mSl_L,Sl_L,Opt_CR);
+    end
 else
 	rb_L=Inf;	rs_sun_L=Inf;  rs_shd_L=Inf; Ci_sun_L=0; Ci_shd_L=0;
 end

@@ -1,7 +1,7 @@
 function[SWRin_T,SWRout_T,SWRabs_T,SWRabsDir_T,SWRabsDiff_T,SWREB_T,albedo_canyon]...
          =SWRabsorbedWithTrees(h_can,w_can,h_tree,r_tree,d_tree,...
-         fgveg,fgbare,fgimp,aw,agveg,agbare,agimp,at,...
-         LAIt,SWR_dir,SWR_diff,theta_Z,theta_n,ViewFactor,ParVegTree)
+         fgveg,fgbare,fgimp,awraw,agveg,agbare,agimp,at,...
+         LAIt,SWR_dir,SWR_diff,theta_Z,theta_n,ViewFactor,ParVegTree,ParWindows,BEM_on)
 	 
      
 % OUTPUT
@@ -101,6 +101,12 @@ end
 Cimp	=	fgimp>0;
 Cbare	=	fgbare>0;
 Cveg	=	fgveg>0;
+
+if BEM_on==1
+    aw = awraw.*(1-ParWindows.GlazingRatio) + ParWindows.SolarAlbedo.*ParWindows.GlazingRatio;
+else
+    aw = awraw;
+end
 
 % Albedos
 ai=[agveg;agbare;agimp;aw;aw;at;0];

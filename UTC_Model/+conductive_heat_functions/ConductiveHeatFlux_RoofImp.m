@@ -1,4 +1,4 @@
-function[G1,G2,dS]=Impervious_Conductive_HeatRoof(TemperatureR,TempVec,Anthropogenic,ParThermalRoof,ParSoilRoof,ParCalculation,itt)
+function[G1,G2,dS]=ConductiveHeatFlux_RoofImp(TemperatureR,TemperatureB,TempVec_ittm,Anthropogenic,ParThermalRoof,ParSoilRoof,ParCalculation,BEM_on)
 
 %%% INPUTS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % dts		=	time step [s] = 1 h = 3600 s
@@ -14,22 +14,14 @@ function[G1,G2,dS]=Impervious_Conductive_HeatRoof(TemperatureR,TempVec,Anthropog
 % G2		=	Heat flux from concrete interior to building interior [W/m^2]
 % dS		=	Energy storage in the roof
 
-% TemperatureC(:,1)		=	Temperature ground impervious area
-% TemperatureC(:,2)		=	Temperature ground bare area
-% TemperatureC(:,3)		=	Temperature ground vegetated area
-% TemperatureC(:,4)		=	Temperature sunlit area
-% TemperatureC(:,5)		=	Temperature shaded area
-% TemperatureC(:,6)		=	Temperature tree canopy
-% TemperatureC(:,7)		=	Interior temperature sunlit wall
-% TemperatureC(:,8)		=	Interior temperature shaded wall
-% TemperatureC(:,9)		=	Temperature canyon
-% TemperatureC(:,10)	=	specific humidity canyon
-
 Ts			=	TemperatureR(1,1);
 Tint		=	TemperatureR(1,3);
-%Tb			=	Anthropogenic.Tb;
-Tb			=	mean(Anthropogenic.Tceiling);
-Tint_tm1	=	TempVec.TRoofIntImp(itt,1);
+if BEM_on ==1
+    Tb      =	TemperatureB(1); % Ceiling temperature
+else
+    Tb      =   Anthropogenic.Tb;
+end
+Tint_tm1	=	TempVec_ittm.TRoofIntImp;
 lan_dry1	=	ParThermalRoof.lan_dry_imp;
 lan_dry2	=	ParThermalRoof.lan_dry_imp;
 dz1			=	ParSoilRoof.dz1;
@@ -45,16 +37,3 @@ G1			=	lan_dry1*(Ts-Tint)/dz1; % Soil Heat Flux [W/m^2];
 G2			=	lan_dry2*(Tint-Tb)/dz2;
 dS			=	(cv_s1+cv_s2)/2*(dz1+dz2)/dts*(Tint-Tint_tm1);
 
-
-% dS = 0;
-% G1 = lan_dry1*(Ts-Tb)/(dz1+dz2);
-% G2 = lan_dry1*(Ts-Tb)/(dz1+dz2);
-
-
-% if Ts>Tint
-%     Tint>Tb;
-% elseif Ts<Tint
-%     Tint<Tb;
-% end
-
-end

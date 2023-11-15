@@ -1,11 +1,11 @@
-function[G,Tdp]=ForceRestore_conductive_heat_soil(TemperatureC,TempDamp,Owater,TempVec,...
-	ParCalculation,ParSoilGround,ParVegGround,ParVegTree,FractionsGround,itt,type)
+function[G,Tdp]=ConductiveHeatFluxFR_GroundVegBare(TemperatureC,TempDamp_ittm,Owater_ittm,TempVec_ittm,...
+	ParCalculation,ParSoilGround,ParVegGround,ParVegTree,FractionsGround,type)
 
 if type == 0 % bare soil
 	Ts			=	TemperatureC(1,2);
-	Tdptm1		=	TempDamp.TDampGroundBare(itt,1);
-	Otm1		=	Owater.OwGroundSoilBare(itt,1);
-	Tstm1		=	TempVec.TGroundBare(itt,1);
+	Tdptm1		=	TempDamp_ittm.TDampGroundBare;
+	Otm1		=	Owater_ittm.OwGroundSoilBare;
+	Tstm1		=	TempVec_ittm.TGroundBare;
 	dts			=	ParCalculation.dts;
 	Pcla		=	ParSoilGround.Pcla;
 	Psan		=	ParSoilGround.Psan;
@@ -26,9 +26,9 @@ if type == 0 % bare soil
 	Csoil		=	(FractionsGround.fbare>0);
 elseif type ==1 % vegetated ground
 	Ts			=	TemperatureC(1,3);
-	Tdptm1		=	TempDamp.TDampGroundVeg(itt,1);
-	Otm1		=	Owater.OwGroundSoilVeg(itt,1);
-	Tstm1		=	TempVec.TGroundVeg(itt,1);
+	Tdptm1		=	TempDamp_ittm.TDampGroundVeg;
+	Otm1		=	Owater_ittm.OwGroundSoilVeg;
+	Tstm1		=	TempVec_ittm.TGroundVeg;
 	dts			=	ParCalculation.dts;
 	Pcla		=	ParSoilGround.Pcla;
 	Psan		=	ParSoilGround.Psan;

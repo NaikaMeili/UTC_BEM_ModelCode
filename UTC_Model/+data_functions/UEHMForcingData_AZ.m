@@ -17,10 +17,10 @@ date_time		=	MeteoDataRaw.Date;
 
 %% Location properties of the urban area
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-phi				=	dms2degrees([1,18,51.46]);		% latitude positive north (degrees)
-lambda			=	dms2degrees([103,54,40.31]);	% longitude positive east (degrees)
+phi				=	33.483847;		% latitude positive north (degrees)
+lambda			=	-112.142609;	% longitude positive east (degrees)
 theta_canyon	=	deg2rad(90);					% canyon orientation (rad)
-DeltaGMT		=	8;								% difference with Greenwich Meridian Time [h]
+DeltaGMT		=	-7;								% difference with Greenwich Meridian Time [h]
 		
 location		=	struct('phi',phi,'lambda',lambda,'theta_canyon',theta_canyon,...
 					'DeltaGMT',DeltaGMT);
@@ -90,8 +90,8 @@ HumidityAtm		=	struct('AtmRelative',rel_hum,'AtmSpecific',q_atm,'AtmVapourPre',e
 %% ANTHROPOGENIC FACTORS
 % Building intertior temperature & anthropogenic heat input
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Tbmin = 20;     % Minimum interior builidng temperature when building heating is switched on [degC] 
-Tbmax = 25;     % Maximum interior builing temperature when air condition is switched on [degC]
+Tbmin = 18;     % Minimum interior builidng temperature when building heating is switched on [degC] 
+Tbmax = 30;     % Maximum interior builing temperature when air condition is switched on [degC]
 
 if (Tatm-273.15)<Tbmin			% Minimum temperature when building heating is switched on
 	Tb = Tbmin+273.15;

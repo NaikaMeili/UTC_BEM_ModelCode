@@ -1,11 +1,11 @@
 function[q_runon_imp,In_imp,dIn_imp_dt,Lk_imp,...
 	q_runon_veg,In_veg,dIn_veg_dt,...
 	q_runon_ground,In_ground,dIn_ground_dt,dV_dt,f_ground,...
-	V,O,OS,Lk,Psi_s,Exwat,Rd,TEroof_veg,Eroof_soil,Runoff,Runon,...
+	V,O,OS,Lk,Psi_s,Exwat,Rd,TEroof_veg,Eroof_soil,Runoff,Runon_ittm,...
 	WBalance_In_imp,WBalance_In_veg,WBalance_In_ground,WBalance_soil,...
 	WBalance_imp_tot,WBalance_veg_tot,WBalance_tot]=...
 	WaterRoof(Eroof_imp,Eroof_veg,Eroof_ground,Eroof_soil,TEroof_veg,...
-	MeteoData,Int,Owater,Runon,FractionsRoof,ParSoilRoof,ParCalculation,ParVegRoof,Anthropogenic,itt)
+	MeteoData,Int_ittm,Owater_ittm,Runon_ittm,FractionsRoof,ParSoilRoof,ParCalculation,ParVegRoof,Anthropogenic)
 
 
 %% INPUT
@@ -73,11 +73,11 @@ function[q_runon_imp,In_imp,dIn_imp_dt,Lk_imp,...
 % WBalance_soil		=	Water balance in the soil  [mm]
 
 Rain			=	MeteoData.Rain;
-In_imp_tm1		=	Int.IntRoofImp(itt,:);
-In_veg_tm1		=	Int.IntRoofVegPlant(itt,:);
-In_ground_tm1	=	Int.IntRoofVegGround(itt,:);
-Otm1			=	Owater.OwRoofSoilVeg(itt,:);
-Runon_tm1		=	Runon.RunonRoofTot(itt,:);
+In_imp_tm1		=	Int_ittm.IntRoofImp;
+In_veg_tm1		=	Int_ittm.IntRoofVegPlant;
+In_ground_tm1	=	Int_ittm.IntRoofVegGround;
+Otm1			=	Owater_ittm.OwRoofSoilVeg;
+Runon_tm1		=	Runon_ittm.RunonRoofTot;
 Per_runoff		=	FractionsRoof.Per_runoff;
 fveg			=	FractionsRoof.fveg;
 fimp			=	FractionsRoof.fimp;
@@ -125,7 +125,7 @@ ZRmax			=	ParVegRoof.ZRmax;
 	0,Rrootl,0,PsiL50,0,PsiX50,Zs,row);
 
 Runoff				=	Per_runoff*(fimp*q_runon_imp + fveg*(q_runon_ground + Rd));			% [mm/dth]
-Runon				=	(1 - Per_runoff)*(fimp*q_runon_imp + fveg*(q_runon_ground + Rd));	% [mm/dth]
+Runon_ittm				=	(1 - Per_runoff)*(fimp*q_runon_imp + fveg*(q_runon_ground + Rd));	% [mm/dth]
 
 % Calculate water balance for check
 WBalance_imp_tot	=	Rain + Runon_tm1 - Eroof_imp*dth*3600*1000/row - q_runon_imp - Lk_imp*dth - dIn_imp_dt;	% [mm/dth]
@@ -137,6 +137,6 @@ E_tot				=	(fimp*Eroof_imp + fveg*(Eroof_veg + Eroof_ground + Eroof_soil + TEroo
 Leak_tot			=	fimp*Lk_imp + fveg*Lk;	% [mm/h]
 Storage_tot			=	fimp*dIn_imp_dt + fveg*(dIn_veg_dt + dIn_ground_dt + dV_dt);	% [mm/dth]
 					
-WBalance_tot		=	Rain + Runon_tm1 + fveg*Anthropogenic.Waterf_roof - E_tot*dth - Leak_tot*dth - Runoff - Runon - Storage_tot;	% [mm/dth]
+WBalance_tot		=	Rain + Runon_tm1 + fveg*Anthropogenic.Waterf_roof - E_tot*dth - Leak_tot*dth - Runoff - Runon_ittm - Storage_tot;	% [mm/dth]
 
 end

@@ -1,6 +1,11 @@
-function[WaterFluxRoof,WaterFluxCan,WaterFluxUrban]=WaterBalanceComponents(MeteoDataRaw,...
+function[WaterFluxRoof,WaterFluxCan,WaterFluxBuild,WaterFluxUrban]=WaterBalanceComponents(MeteoDataRaw,...
     Runon,Leakage,LEflux,dVwater_dt,OwaterInitial,Owater,dInt_dt,Int,Anthropo,...
-    ParSoil,ParCalculation_Out,FractionsRoof_Out,FractionsGround_Out,geometry_Out,Figure)
+    LEbuildInt,BEMWasteHeat,ParHVAC,...
+    ParSoilRoof_Out,ParSoilGround_Out,ParCalculation_Out,FractionsRoof_Out,...
+    FractionsGround_Out,geometry_Out,Gemeotry_m_Out,Figure,ittmTot)
+
+
+for ittm=1:ittmTot
 
 % Calculation parameters
 L_heat			=	1000.*(2501.3 - 2.361.*(MeteoDataRaw.T_atm-273.15));		% Latent heat vaporization/condensation [J/kg]
@@ -10,174 +15,297 @@ dth				=	ParCalculation_Out.dth;
 % Water balance components
 %--------------------------------------------------------------------------
 % Precipitation
+%--------------------------------------------------------------------------
 RainRoof	=   MeteoDataRaw.rain; %[mm/time step]
 RainCan     =   MeteoDataRaw.rain; %[mm/time step]
 RainUrb     =   MeteoDataRaw.rain; %[mm/time step]
 
 % Irrigation at the surface
-IrrSurfRoof	=   FractionsRoof_Out.fveg.*Anthropo.Qf_roof; %[mm/time step]
-IrrSurfCan	=   FractionsGround_Out.fveg.*Anthropo.Waterf_canyonVeg + ...
-                FractionsGround_Out.fbare.*Anthropo.Waterf_canyonBare; %[mm/time step]
-IrrSurfUrb	=   geometry_Out.wcanyon_norm.*IrrSurfCan + geometry_Out.wroof_norm.*IrrSurfRoof; %[mm/time step]
+%--------------------------------------------------------------------------
+IrrSurfRoof	=   FractionsRoof_Out(ittm).fveg.*Anthropo.Qf_roof(:,1,ittm); %[mm/time step]
+IrrSurfCan	=   FractionsGround_Out(ittm).fveg.*Anthropo.Waterf_canyonVeg(:,1,ittm) + ...
+                FractionsGround_Out(ittm).fbare.*Anthropo.Waterf_canyonBare(:,1,ittm); %[mm/time step]
+IrrSurfUrb	=   geometry_Out(ittm).wcanyon_norm.*IrrSurfCan + geometry_Out(ittm).wroof_norm.*IrrSurfRoof; %[mm/time step]
 
 % Runoff leaving the system
-RunoffRoof	=	Runon.RunoffRoofTot;    %[mm/time step] 
-RunoffCan	=	Runon.RunoffGroundTot;  %[mm/time step] 
-RunoffUrb	=	Runon.RunoffUrban;      %[mm/time step]
+%--------------------------------------------------------------------------
+RunoffRoof	=	Runon.RunoffRoofTot(:,1,ittm);    %[mm/time step] 
+RunoffCan	=	Runon.RunoffGroundTot(:,1,ittm);  %[mm/time step] 
+RunoffUrb	=	Runon.RunoffUrban(:,1,ittm);      %[mm/time step]
 
 % Leakage at bottom of soil column, leaving the system
-LeakageRoof	=	dth.*Leakage.LkRoof;	% [mm/time step] Subsurface runoff (out of gridcell)
-LeakageCan	=	dth.*Leakage.LkGround;	% [mm/time step] Subsurface runoff (out of gridcell)
-LeakageUrb	=	dth.*Leakage.LkUrban;	% [mm/time step] Subsurface runoff (out of gridcell)
+%--------------------------------------------------------------------------
+LeakageRoof	=	dth.*Leakage.LkRoof(:,1,ittm);	% [mm/time step] Subsurface runoff (out of gridcell)
+LeakageCan	=	dth.*Leakage.LkGround(:,1,ittm);	% [mm/time step] Subsurface runoff (out of gridcell)
+LeakageUrb	=	dth.*Leakage.LkUrban(:,1,ittm);	% [mm/time step] Subsurface runoff (out of gridcell)
 
 % Evapotranspiration, latent heat
-ETRoof      =   LEflux.LEfluxRoof./L_heat.*dts;% Total evapotranspiration (upward)
-ETCan       =   LEflux.LEfluxCanyon./L_heat.*dts;% Total evapotranspiration (upward)
-ETUrb       =   LEflux.LEfluxUrban./L_heat.*dts;% Total evapotranspiration (upward)
+%--------------------------------------------------------------------------
+ETRoof      =   LEflux.LEfluxRoof(:,1,ittm)./L_heat.*dts;% Total evapotranspiration (upward)
+ETCan       =   LEflux.LEfluxCanyon(:,1,ittm)./L_heat.*dts;% Total evapotranspiration (upward)
+ETUrb       =   LEflux.LEfluxUrban(:,1,ittm)./L_heat.*dts;% Total evapotranspiration (upward)
 
-% Further ET fluxes, according to source
-ETEvapoIntUrb   =   (geometry_Out.wroof_norm.*(FractionsRoof_Out.fimp.*LEflux.LEfluxRoofImp + ...
-                    FractionsRoof_Out.fveg.*(LEflux.LEfluxRoofVegInt + LEflux.LEfluxRoofVegPond)) + ...
-                    geometry_Out.wcanyon_norm.*(FractionsGround_Out.fimp.*LEflux.LEfluxGroundImp + ...
-                    FractionsGround_Out.fbare.*LEflux.LEfluxGroundBarePond + ...
-                    FractionsGround_Out.fveg.*(LEflux.LEfluxGroundVegInt + LEflux.LEfluxGroundVegPond) + ...
-                     4.*geometry_Out.radius_tree.*LEflux.LEfluxTreeInt))./L_heat.*dts;
+% Change in latent heat stored in the air
+%--------------------------------------------------------------------------
+dS_ET_dtBuild   =   LEbuildInt.dSLE_air(:,1,ittm)./L_heat.*dts;
+dS_ET_dtCan     =   LEflux.dS_LE_air(:,1,ittm)./L_heat.*dts;
+dS_ET_dtUrb     =   geometry_Out(ittm).wroof_norm.*dS_ET_dtBuild + geometry_Out(ittm).wcanyon_norm.*dS_ET_dtCan;
 
-ETEvapoSoilUrb  =   (geometry_Out.wroof_norm.*FractionsRoof_Out.fveg.*LEflux.LEfluxRoofVegSoil + ...
-                    geometry_Out.wcanyon_norm.*(FractionsGround_Out.fbare.* LEflux.LEfluxGroundBareSoil + ...
-                    FractionsGround_Out.fveg.*LEflux.LEfluxGroundVegSoil))./L_heat.*dts;
-                
-ETTranspUrb     =   (geometry_Out.wroof_norm.*FractionsRoof_Out.fveg.*LEflux.LTEfluxRoofVeg + ...
-                    geometry_Out.wcanyon_norm.*(FractionsGround_Out.fveg.*LEflux.LTEfluxGroundVeg + ...
-                    4.*geometry_Out.radius_tree.*LEflux.LTEfluxTree))./L_heat.*dts;
+% Urban evapotranspiration fluxes according to their source: 1) Interception
+% and ponding, 2) evaporation from soil, 3) transpiration, 4) Latent heat
+% sources in building interior
+%--------------------------------------------------------------------------
+ETEvapoIntUrb   =   (geometry_Out(ittm).wroof_norm.*(FractionsRoof_Out(ittm).fimp.*LEflux.LEfluxRoofImp(:,1,ittm) + ...
+                    FractionsRoof_Out(ittm).fveg.*(LEflux.LEfluxRoofVegInt(:,1,ittm) + LEflux.LEfluxRoofVegPond(:,1,ittm))) + ...
+                    geometry_Out(ittm).wcanyon_norm.*(FractionsGround_Out(ittm).fimp.*LEflux.LEfluxGroundImp(:,1,ittm) + ...
+                    FractionsGround_Out(ittm).fbare.*LEflux.LEfluxGroundBarePond(:,1,ittm) + ...
+                    FractionsGround_Out(ittm).fveg.*(LEflux.LEfluxGroundVegInt(:,1,ittm) + LEflux.LEfluxGroundVegPond(:,1,ittm)) + ...
+                     4.*geometry_Out(ittm).radius_tree.*LEflux.LEfluxTreeInt(:,1,ittm)))./L_heat.*dts;
 
-ETTest = ETUrb - (ETEvapoIntUrb + ETEvapoSoilUrb + ETTranspUrb);
+ETEvapoSoilUrb  =   (geometry_Out(ittm).wroof_norm.*FractionsRoof_Out(ittm).fveg.*LEflux.LEfluxRoofVegSoil(:,1,ittm) + ...
+                    geometry_Out(ittm).wcanyon_norm.*(FractionsGround_Out(ittm).fbare.* LEflux.LEfluxGroundBareSoil(:,1,ittm) + ...
+                    FractionsGround_Out(ittm).fveg.*LEflux.LEfluxGroundVegSoil(:,1,ittm)))./L_heat.*dts;
                 
-                
+ETTranspUrb     =   (geometry_Out(ittm).wroof_norm.*FractionsRoof_Out(ittm).fveg.*LEflux.LTEfluxRoofVeg(:,1,ittm) + ...
+                    geometry_Out(ittm).wcanyon_norm.*(FractionsGround_Out(ittm).fveg.*LEflux.LTEfluxGroundVeg(:,1,ittm) + ...
+                    4.*geometry_Out(ittm).radius_tree.*LEflux.LTEfluxTree(:,1,ittm)))./L_heat.*dts;
+
+ET_buildAnth    =   geometry_Out(ittm).wroof_norm.*(LEbuildInt.LEpeople(:,1,ittm) + LEbuildInt.LEequip(:,1,ittm))./L_heat.*dts;
+
+                                
 % Change in soil moisture
-dVdtRoof    =   FractionsRoof_Out.fveg.*dVwater_dt.dVRoofSoilVeg_dt;
-dVdtCan     =   dVwater_dt.dVGroundSoilTot_dt;
-dVdtUrb     =	geometry_Out.wcanyon_norm.*dVdtCan + geometry_Out.wroof_norm.*dVdtRoof;
+%--------------------------------------------------------------------------
+dVdtRoof    =   FractionsRoof_Out(ittm).fveg.*dVwater_dt.dVRoofSoilVeg_dt(:,1,ittm);
+dVdtCan     =   dVwater_dt.dVGroundSoilTot_dt(:,1,ittm);
+dVdtUrb     =	geometry_Out(ittm).wcanyon_norm.*dVdtCan + geometry_Out(ittm).wroof_norm.*dVdtRoof;
 
 [dVdtRoofCalc,dVdtCanCalc,dVdtUrbCalc]=soil_functions.PostCalculateSoilMoistureChange(...
-    OwaterInitial,Owater,ParSoil,FractionsRoof_Out,FractionsGround_Out,geometry_Out);
+    OwaterInitial,Owater,ParSoilRoof_Out,ParSoilGround_Out,FractionsRoof_Out,FractionsGround_Out,geometry_Out,ittm);
 
 % Irrigation within soil (due to fixed soil moisture)
+%--------------------------------------------------------------------------
 IrrSoilRoof	=   dVdtRoofCalc - dVdtRoof;
 IrrSoilCan  =   dVdtCanCalc - dVdtCan;
 IrrSoilUrb  =   dVdtUrbCalc - dVdtUrb;
 
 % Change in intercepted water
+%--------------------------------------------------------------------------
 % On plant canopy
-dIdtPlantRoof   =   FractionsRoof_Out.fveg.*dInt_dt.dInt_dtRoofVegPlant;
-dIdtPlantCan    =   FractionsGround_Out.fveg.*dInt_dt.dInt_dtGroundVegPlant+...
-                    4.*geometry_Out.radius_tree.*dInt_dt.dInt_dtTree;
-dIdtPlantUrb    =   geometry_Out.wcanyon_norm.*dIdtPlantCan + geometry_Out.wroof_norm.*dIdtPlantRoof;
+dIdtPlantRoof   =   FractionsRoof_Out(ittm).fveg.*dInt_dt.dInt_dtRoofVegPlant(:,1,ittm);
+dIdtPlantCan    =   FractionsGround_Out(ittm).fveg.*dInt_dt.dInt_dtGroundVegPlant(:,1,ittm)+...
+                    4.*geometry_Out(ittm).radius_tree.*dInt_dt.dInt_dtTree(:,1,ittm);
+dIdtPlantUrb    =   geometry_Out(ittm).wcanyon_norm.*dIdtPlantCan + geometry_Out(ittm).wroof_norm.*dIdtPlantRoof;
 % On ground/surface
-dIdtGroundRoof  =   FractionsRoof_Out.fveg.*dInt_dt.dInt_dtRoofVegGround +... 
-                    FractionsRoof_Out.fimp.*dInt_dt.dInt_dtRoofImp;
-dIdtGroundCan   =   FractionsGround_Out.fveg.*dInt_dt.dInt_dtGroundVegGround +...
-                    FractionsGround_Out.fbare.*dInt_dt.dInt_dtGroundBare +...
-                    FractionsGround_Out.fimp.*dInt_dt.dInt_dtGroundImp;
-dIdtGroundUrb	=   geometry_Out.wcanyon_norm.*dIdtGroundCan + geometry_Out.wroof_norm.*dIdtGroundRoof;
+dIdtGroundRoof  =   FractionsRoof_Out(ittm).fveg.*dInt_dt.dInt_dtRoofVegGround(:,1,ittm) +... 
+                    FractionsRoof_Out(ittm).fimp.*dInt_dt.dInt_dtRoofImp(:,1,ittm);
+dIdtGroundCan   =   FractionsGround_Out(ittm).fveg.*dInt_dt.dInt_dtGroundVegGround(:,1,ittm) +...
+                    FractionsGround_Out(ittm).fbare.*dInt_dt.dInt_dtGroundBare(:,1,ittm) +...
+                    FractionsGround_Out(ittm).fimp.*dInt_dt.dInt_dtGroundImp(:,1,ittm);
+dIdtGroundUrb	=   geometry_Out(ittm).wcanyon_norm.*dIdtGroundCan + geometry_Out(ittm).wroof_norm.*dIdtGroundRoof;
 % Due to runon
-dRun_dtRoof		=	Runon.RunonRoofTot - [0; Runon.RunonRoofTot(1:end-1)];
-dRun_dtCan		=	Runon.RunonGroundTot - [0; Runon.RunonGroundTot(1:end-1)];
-dRun_dtUrb		=	Runon.RunonUrban - [0; Runon.RunonUrban(1:end-1)];
+dRun_dtRoof		=	Runon.RunonRoofTot(:,1,ittm) - [0; Runon.RunonRoofTot(1:end-1,1,ittm)];
+dRun_dtCan		=	Runon.RunonGroundTot(:,1,ittm) - [0; Runon.RunonGroundTot(1:end-1,1,ittm)];
+dRun_dtUrb		=	Runon.RunonUrban(:,1,ittm) - [0; Runon.RunonUrban(1:end-1,1,ittm)];
 % Total
 dIdtRoof	=   dIdtPlantRoof + dIdtGroundRoof + dRun_dtRoof;
 dIdtCan     =   dIdtPlantCan + dIdtGroundCan + dRun_dtCan;
 dIdtUrb     =   dIdtPlantUrb + dIdtGroundUrb + dRun_dtUrb;
 
-% surface water storage (SurfStor)
-IntRoof     =   Int.IntRooftot + Runon.RunonRoofTot;
-IntCan      =   FractionsGround_Out.fimp.*Int.IntGroundImp + ...
-                FractionsGround_Out.fbare.*Int.IntGroundBare + ...
-                FractionsGround_Out.fveg.*(Int.IntGroundVegPlant + Int.IntGroundVegGround) +...
-                4.*geometry_Out.radius_tree.*Int.IntTree + Runon.RunonGroundTot;
-IntUrb      =   geometry_Out.wcanyon_norm.*IntCan + geometry_Out.wroof_norm.*IntRoof;
+% Surface water storage (SurfStor)
+%--------------------------------------------------------------------------
+IntRoof     =   Int.IntRooftot(:,1,ittm) + Runon.RunonRoofTot(:,1,ittm);
+IntCan      =   FractionsGround_Out(ittm).fimp.*Int.IntGroundImp(:,1,ittm) + ...
+                FractionsGround_Out(ittm).fbare.*Int.IntGroundBare(:,1,ittm) + ...
+                FractionsGround_Out(ittm).fveg.*(Int.IntGroundVegPlant(:,1,ittm) + Int.IntGroundVegGround(:,1,ittm)) +...
+                4.*geometry_Out(ittm).radius_tree.*Int.IntTree(:,1,ittm) + Runon.RunonGroundTot(:,1,ittm);
+IntUrb      =   geometry_Out(ittm).wcanyon_norm.*IntCan + geometry_Out(ittm).wroof_norm.*IntRoof;
 
 IntUrb_tm1  =   [0; IntUrb(1:end-1)];
 dIdtUrbCalc =   IntUrb - IntUrb_tm1;
 
+
+% Anthropogenic latent heat fluxes due to sources in building and HVAC
+%--------------------------------------------------------------------------
+% Anthropogenic sources in building interior: people & equipment
+ET_buildAnthRoof    =   0;
+ET_buildAnthCan     =   0;
+ET_buildAnthBuild   =  (LEbuildInt.LEpeople(:,1,ittm) + LEbuildInt.LEequip(:,1,ittm))./L_heat.*dts;
+ET_buildAnthUrb     =   geometry_Out(ittm).wroof_norm.*(LEbuildInt.LEpeople(:,1,ittm) + LEbuildInt.LEequip(:,1,ittm))./L_heat.*dts;
+
+% Latent heat removed from air due to ventilation
+ET_VentRoof         =   0;
+ET_VentCan          =   BEMWasteHeat.LatentFromVent_Can(:,1,ittm)./L_heat.*dts;
+ET_VentBuild        =   LEbuildInt.LEvent(:,1,ittm)./L_heat.*dts;
+ET_VentUrb          =   0;
+
+% ET exchange due to AC
+ET_ACRoof   =   0;
+ET_ACCan    =   BEMWasteHeat.LatentFromAC_Can(:,1,ittm)./L_heat.*dts;
+ET_ACBuild  =   BEMWasteHeat.LatentFromAC_Can(:,1,ittm).*(Gemeotry_m_Out(ittm).Width_canyon./Gemeotry_m_Out(ittm).Width_roof)./L_heat.*dts;
+ET_ACUrb    =   0;
+
+% ET exchange due to HVAC between indoor and outdoor air
+ET_HVACexchRoof   =   0;
+ET_HVACexchCan    =   ET_VentCan + ET_ACCan;
+ET_HVACexchBuild  =   ET_VentBuild - ET_ACBuild;
+ET_HVACexchUrb    =   0;
+
+% Water removed from building interior due to condensation during air
+% conditioning
+ET_WasteWaterACBuild    =   BEMWasteHeat.WaterFromAC_Can(:,1,ittm).*(Gemeotry_m_Out(ittm).Width_canyon./Gemeotry_m_Out(ittm).Width_roof)./L_heat.*dts;
+ET_WasteWaterACUrb      =   geometry_Out(ittm).wroof_norm.*ET_WasteWaterACBuild;
+
+
 % Water balance
+%--------------------------------------------------------------------------
 WBRoof  =   RainRoof + IrrSurfRoof + IrrSoilRoof - RunoffRoof - LeakageRoof - ETRoof - dVdtRoofCalc - dIdtRoof;
-WBCan   =   RainCan + IrrSurfCan + IrrSoilCan - RunoffCan - LeakageCan - ETCan - dVdtCanCalc - dIdtCan;
-WBUrb   =   RainUrb + IrrSurfUrb + IrrSoilUrb - RunoffUrb - LeakageUrb - ETUrb - dVdtUrbCalc - dIdtUrb;
+WBCan   =   RainCan + IrrSurfCan + IrrSoilCan + ET_HVACexchCan - RunoffCan - LeakageCan - ETCan - dVdtCanCalc - dIdtCan - dS_ET_dtCan;
+WBBuild =   ET_buildAnthBuild + ET_HVACexchBuild - ET_WasteWaterACBuild - dS_ET_dtBuild;
+WBUrb   =   RainUrb + IrrSurfUrb + IrrSoilUrb + ET_buildAnthUrb - ET_WasteWaterACUrb - RunoffUrb - LeakageUrb - ETUrb - dVdtUrbCalc - dIdtUrb - dS_ET_dtUrb;
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-WaterFluxRoof.Rain	=   RainRoof; %[mm/time step]
-WaterFluxCan.Rain	=   RainCan; %[mm/time step]
-WaterFluxUrban.Rain	=   RainUrb; %[mm/time step]
 
-WaterFluxRoof.Runoff	=   RunoffRoof; %[mm/time step]
-WaterFluxCan.Runoff     =   RunoffCan; %[mm/time step]
-WaterFluxUrban.Runoff	=   RunoffUrb; %[mm/time step]
-
-WaterFluxRoof.Leakage	=   LeakageRoof; %[mm/time step]
-WaterFluxCan.Leakage	=   LeakageCan; %[mm/time step]
-WaterFluxUrban.Leakage	=   LeakageUrb; %[mm/time step]
-
-WaterFluxRoof.ET	=   ETRoof; %[mm/time step]
-WaterFluxCan.ET     =   ETCan; %[mm/time step]
-WaterFluxUrban.ET	=   ETUrb; %[mm/time step]
-WaterFluxUrban.ETEvaporationFromSurface	=   ETEvapoIntUrb; %[mm/time step]
-WaterFluxUrban.ETEvaporationFromSoil	=   ETEvapoSoilUrb; %[mm/time step]
-WaterFluxUrban.ETTranspiration          =   ETTranspUrb; %[mm/time step]
-
-WaterFluxRoof.dVdt	=   dVdtRoofCalc; %[mm/time step]
-WaterFluxCan.dVdt	=   dVdtCanCalc; %[mm/time step]
-WaterFluxUrban.dVdt	=   dVdtUrbCalc; %[mm/time step]
-
-WaterFluxRoof.dIdt	=   dIdtRoof; %[mm/time step]
-WaterFluxCan.dIdt	=   dIdtCan; %[mm/time step]
-WaterFluxUrban.dIdt	=   dIdtUrb; %[mm/time step]
-
-WaterFluxRoof.IrrSurf	=   IrrSurfRoof; %[mm/time step]
-WaterFluxCan.IrrSurf	=   IrrSurfCan; %[mm/time step]
-WaterFluxUrban.IrrSurf	=   IrrSurfUrb; %[mm/time step]
-
-WaterFluxRoof.IrrSoil	=   IrrSoilRoof; %[mm/time step]
-WaterFluxCan.IrrSoil	=   IrrSoilCan; %[mm/time step]
-WaterFluxUrban.IrrSoil	=   IrrSoilUrb; %[mm/time step]
-
-WaterFluxRoof.IrrTot	=   IrrSoilRoof + IrrSurfRoof; %[mm/time step]
-WaterFluxCan.IrrTot     =   IrrSoilCan + IrrSurfCan; %[mm/time step]
-WaterFluxUrban.IrrTot	=   IrrSoilUrb + IrrSurfUrb; %[mm/time step]
-
-WaterFluxRoof.Int	=   IntRoof; %[mm]
-WaterFluxCan.Int	=   IntCan; %[mm]
-WaterFluxUrban.Int	=   IntUrb; %[mm]
-
-WaterFluxRoof.WB	=   WBRoof; %[mm]
-WaterFluxCan.WB     =   WBCan; %[mm]
-WaterFluxUrban.WB	=   WBUrb; %[mm]
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % figure
-% subplot(1,3,1)
-% plot(WBRoof,'DisplayName','WB_{roof}')
-% subplot(1,3,2)
-% plot(WBCan,'DisplayName','WB_{can}')
-% subplot(1,3,3)
-% plot(WBUrb,'DisplayName','WB_{urb}')
+% tiledlayout(2,2)
+% nexttile; plot(WBRoof); title('Roof');
+% nexttile; plot(WBCan); title('Canyon');
+% nexttile; plot(WBUrb); title('Urban');
+% nexttile; plot(WBBuild); title('Building');
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Incoming rainfall
+WaterFluxRoof.Rain(:,1,ittm)	=   RainRoof; %[mm/time step]
+WaterFluxCan.Rain(:,1,ittm)	=   RainCan; %[mm/time step]
+WaterFluxUrban.Rain(:,1,ittm)	=   RainUrb; %[mm/time step]
+
+% Runoff leaving the system
+WaterFluxRoof.Runoff(:,1,ittm)	=   RunoffRoof; %[mm/time step]
+WaterFluxCan.Runoff(:,1,ittm)     =   RunoffCan; %[mm/time step]
+WaterFluxUrban.Runoff(:,1,ittm)	=   RunoffUrb; %[mm/time step]
+
+% Leakage at the bottom of the soil column -> water leaving the system
+WaterFluxRoof.Leakage(:,1,ittm)	=   LeakageRoof; %[mm/time step]
+WaterFluxCan.Leakage(:,1,ittm)	=   LeakageCan; %[mm/time step]
+WaterFluxUrban.Leakage(:,1,ittm)	=   LeakageUrb; %[mm/time step]
+
+% Evapotranspiration flux
+WaterFluxRoof.ET(:,1,ittm)	=   ETRoof; %[mm/time step]
+WaterFluxCan.ET(:,1,ittm)     =   ETCan; %[mm/time step]
+WaterFluxUrban.ET(:,1,ittm)	=   ETUrb; %[mm/time step]
+% Evapotranspiration based on different sources of the moisture flux
+WaterFluxUrban.ETEvaporationFromSurface(:,1,ittm)	=   ETEvapoIntUrb; %[mm/time step]
+WaterFluxUrban.ETEvaporationFromSoil(:,1,ittm)	=   ETEvapoSoilUrb; %[mm/time step]
+WaterFluxUrban.ETTranspiration(:,1,ittm)          =   ETTranspUrb; %[mm/time step]
+WaterFluxUrban.ETAnthSourceBuildInt(:,1,ittm)     =   ET_buildAnth; %[mm/time step]
+
+% Change in moisture storage in the air
+WaterFluxBuild.dS_ET_dt(:,1,ittm) =   dS_ET_dtBuild; %[mm/time step]
+WaterFluxCan.dS_ET_dt(:,1,ittm)	=   dS_ET_dtCan; %[mm/time step]
+WaterFluxUrban.dS_ET_dt(:,1,ittm)	=   dS_ET_dtUrb; %[mm/time step]
+
+% Exchange of water vapor between indoor and outdoor air
+WaterFluxRoof.ET_HVACexch(:,1,ittm)   =   ET_HVACexchRoof; %[mm/time step]
+WaterFluxCan.ET_HVACexch(:,1,ittm)    =   ET_HVACexchCan; %[mm/time step]
+WaterFluxBuild.ET_HVACexch(:,1,ittm)  =   ET_HVACexchBuild; %[mm/time step]
+WaterFluxUrban.ET_HVACexch(:,1,ittm)  =   ET_HVACexchUrb; %[mm/time step]
+
+% Anthropogenic moisture flux due to people/equipment in buildings 
+WaterFluxRoof.AnthBuildInt(:,1,ittm)  =   0; %[mm/time step]
+WaterFluxCan.AnthBuildInt(:,1,ittm)   =   0; %[mm/time step]
+WaterFluxBuild.AnthBuildInt(:,1,ittm) =   ET_buildAnthBuild; %[mm/time step]
+WaterFluxUrban.AnthBuildInt(:,1,ittm)	=   ET_buildAnthUrb; %[mm/time step]
+
+% Anthropogenic removal of moisture from air due to condensation during
+% air-conditioning process
+WaterFluxRoof.WasteWaterAC(:,1,ittm)  =   0; %[mm/time step]
+WaterFluxCan.WasteWaterAC(:,1,ittm)   =   0; %[mm/time step]
+WaterFluxBuild.WasteWaterAC(:,1,ittm) =   ET_WasteWaterACBuild; %[mm/time step]
+WaterFluxUrban.WasteWaterAC(:,1,ittm)	=   ET_WasteWaterACUrb; %[mm/time step]
+
+% Change in water storage in the soil due to soil moisture change
+WaterFluxRoof.dVdt(:,1,ittm)	=   dVdtRoofCalc; %[mm/time step]
+WaterFluxCan.dVdt(:,1,ittm)	=   dVdtCanCalc; %[mm/time step]
+WaterFluxUrban.dVdt(:,1,ittm)	=   dVdtUrbCalc; %[mm/time step]
+
+% Chang in water storage due to interception change
+WaterFluxRoof.dIdt(:,1,ittm)	=   dIdtRoof; %[mm/time step]
+WaterFluxCan.dIdt(:,1,ittm)	=   dIdtCan; %[mm/time step]
+WaterFluxUrban.dIdt(:,1,ittm)	=   dIdtUrb; %[mm/time step]
+
+% Irrigation flux applied at the surface of the soil
+WaterFluxRoof.IrrSurf(:,1,ittm)	=   IrrSurfRoof; %[mm/time step]
+WaterFluxCan.IrrSurf(:,1,ittm)	=   IrrSurfCan; %[mm/time step]
+WaterFluxUrban.IrrSurf(:,1,ittm)	=   IrrSurfUrb; %[mm/time step]
+
+% Irrigation occuring due to fixed soil moisture in some soil layers
+WaterFluxRoof.IrrSoil(:,1,ittm)	=   IrrSoilRoof; %[mm/time step]
+WaterFluxCan.IrrSoil(:,1,ittm)	=   IrrSoilCan; %[mm/time step]
+WaterFluxUrban.IrrSoil(:,1,ittm)	=   IrrSoilUrb; %[mm/time step]
+
+% Total irritation flux (includes surface irrigation and fixed soil
+% moisture in certain soil layers)
+WaterFluxRoof.IrrTot(:,1,ittm)	=   IrrSoilRoof + IrrSurfRoof; %[mm/time step]
+WaterFluxCan.IrrTot(:,1,ittm)     =   IrrSoilCan + IrrSurfCan; %[mm/time step]
+WaterFluxUrban.IrrTot(:,1,ittm)	=   IrrSoilUrb + IrrSurfUrb; %[mm/time step]
+
+% Intercepted or ponding water
+WaterFluxRoof.Int(:,1,ittm)	=   IntRoof; %[mm]
+WaterFluxCan.Int(:,1,ittm)	=   IntCan; %[mm]
+WaterFluxUrban.Int(:,1,ittm)	=   IntUrb; %[mm]
+
+% Water balance
+WaterFluxRoof.WB(:,1,ittm)	=   WBRoof; %[mm/time step]
+WaterFluxBuild.WB(:,1,ittm)   =   WBBuild; %[mm/time step]
+WaterFluxCan.WB(:,1,ittm)     =   WBCan; %[mm/time step]
+WaterFluxUrban.WB(:,1,ittm)	=   WBUrb; %[mm/time step]
+
+% Water Balance second test
+%--------------------------------------------------------------------------
+WBRoof2     =   WaterFluxRoof.Rain(:,1,ittm) + WaterFluxRoof.IrrTot(:,1,ittm) - WaterFluxRoof.Runoff(:,1,ittm) - WaterFluxRoof.Leakage(:,1,ittm)...
+                - WaterFluxRoof.ET(:,1,ittm) - WaterFluxRoof.dIdt(:,1,ittm) - WaterFluxRoof.dVdt(:,1,ittm);
+WBBuild2    =   WaterFluxBuild.AnthBuildInt(:,1,ittm) + WaterFluxBuild.ET_HVACexch(:,1,ittm) - WaterFluxBuild.WasteWaterAC(:,1,ittm) - WaterFluxBuild.dS_ET_dt(:,1,ittm);
+WBCan2      =   WaterFluxCan.Rain(:,1,ittm) + WaterFluxCan.IrrTot(:,1,ittm) - WaterFluxCan.Runoff(:,1,ittm) - WaterFluxCan.Leakage(:,1,ittm)...
+                -  WaterFluxCan.ET(:,1,ittm) - WaterFluxCan.dIdt(:,1,ittm) - WaterFluxCan.dVdt(:,1,ittm) - WaterFluxCan.dS_ET_dt(:,1,ittm)...
+                + WaterFluxCan.ET_HVACexch(:,1,ittm);
+WBUrb2      =   WaterFluxUrban.Rain(:,1,ittm) + WaterFluxUrban.IrrTot(:,1,ittm) - WaterFluxUrban.Runoff(:,1,ittm) - WaterFluxUrban.Leakage(:,1,ittm)...
+                -WaterFluxUrban.ET(:,1,ittm) - WaterFluxUrban.dIdt(:,1,ittm) - WaterFluxUrban.dVdt(:,1,ittm) - WaterFluxUrban.dS_ET_dt(:,1,ittm)...
+                + WaterFluxUrban.AnthBuildInt(:,1,ittm) - WaterFluxUrban.WasteWaterAC(:,1,ittm);
+
+figure
+tiledlayout(2,2)
+nexttile; plot(WBRoof2); title('Roof');
+nexttile; plot(WBCan2); title('Canyon');
+nexttile; plot(WBUrb2); title('Urban');
+nexttile; plot(WBBuild2); title('Building');
+sgtitle(['Water balance, ittm = ' num2str(ittm)])
+
+% ET Test
+ETbalance2 = WaterFluxUrban.ET(:,1,ittm) - (WaterFluxUrban.ETEvaporationFromSurface(:,1,ittm) + ...
+            WaterFluxUrban.ETEvaporationFromSoil(:,1,ittm) + WaterFluxUrban.ETTranspiration(:,1,ittm)...
+            + WaterFluxUrban.AnthBuildInt(:,1,ittm) - WaterFluxUrban.WasteWaterAC(:,1,ittm) - WaterFluxUrban.dS_ET_dt(:,1,ittm));
+
+% figure
+% plot(ETbalance2); title('ET balance');
+
+end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if Figure==1
-    
+
+for ittm=1:ittmTot    
 % Plot graphs
 TTUrban = table(hour(MeteoDataRaw.Date),month(MeteoDataRaw.Date),...
-            WaterFluxUrban.Rain,WaterFluxUrban.Runoff,WaterFluxUrban.Leakage,...
-            WaterFluxUrban.ET,WaterFluxUrban.ETEvaporationFromSurface,...
-            WaterFluxUrban.ETEvaporationFromSoil,WaterFluxUrban.ETTranspiration,...
-            WaterFluxUrban.dVdt,WaterFluxUrban.dIdt,WaterFluxUrban.IrrSurf,WaterFluxUrban.IrrSoil,...
-            WaterFluxUrban.IrrTot,WaterFluxUrban.Int,WaterFluxUrban.WB);
+            WaterFluxUrban.Rain(:,1,ittm),WaterFluxUrban.Runoff(:,1,ittm),WaterFluxUrban.Leakage(:,1,ittm),...
+            WaterFluxUrban.ET(:,1,ittm),WaterFluxUrban.ETEvaporationFromSurface(:,1,ittm),...
+            WaterFluxUrban.ETEvaporationFromSoil(:,1,ittm),WaterFluxUrban.ETTranspiration(:,1,ittm),...
+            WaterFluxUrban.dVdt(:,1,ittm),WaterFluxUrban.dIdt(:,1,ittm),WaterFluxUrban.IrrSurf(:,1,ittm),WaterFluxUrban.IrrSoil(:,1,ittm),...
+            WaterFluxUrban.IrrTot(:,1,ittm),WaterFluxUrban.Int(:,1,ittm),WaterFluxUrban.WB(:,1,ittm),...
+            WaterFluxUrban.dS_ET_dt(:,1,ittm),WaterFluxUrban.AnthBuildInt(:,1,ittm),WaterFluxUrban.WasteWaterAC(:,1,ittm));
         
-
-
-
 TTUrban.Properties.VariableNames = {'Hour','Month','Rain','Runoff','Leakage',...
     'ET','ETEvaporationFromSurface','ETEvaporationFromSoil','ETTranspiration',...
-    'dVdt','dIdt','IrrSurf','IrrSoil','IrrTot','Int','WB'};
+    'dVdt','dIdt','IrrSurf','IrrSoil','IrrTot','Int','WB',...
+    'dSETdt','QanthBuild','WasteWaterAC'};
 
 TTUrbanDiurnal = varfun(@nanmean,TTUrban,'GroupingVariables','Hour');
 TTUrbanSeasonal = varfun(@nanmean,TTUrban,'GroupingVariables','Month');
@@ -191,7 +319,7 @@ t = tiledlayout(1,3);
 t.Padding = 'compact'; %t.TileSpacing = 'compact';
 
 nexttile
-plot(MeteoDataRaw.Date,WaterFluxUrban.WB,'k','DisplayName','WB')
+plot(MeteoDataRaw.Date,WaterFluxUrban.WB(:,1,ittm),'k','DisplayName','WB')
 xlabel('time'); ylabel('WB mm/time step'); title('Time series');
 %legend
 
@@ -204,7 +332,7 @@ nexttile
 plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_WB,'k','LineWidth',1.5,'DisplayName','WB')
 xlim([1 12]); xlabel('Month'); ylabel('WB mm/time step'); title('Seasonal');
 %legend
-sgtitle('Water budget closure')
+sgtitle(['Water budget closure, ittm = ' num2str(ittm)])
 
 % Evapotranspiration and interception
 f1 = figure;
@@ -219,6 +347,8 @@ hold on
 plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_ETEvaporationFromSurface,'r','LineWidth',1.5,'DisplayName','E_{surface}')
 plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_ETEvaporationFromSoil,'b','LineWidth',1.5,'DisplayName','E_{soil}')
 plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_ETTranspiration,'g','LineWidth',1.5,'DisplayName','T_{vegetation}')
+plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_QanthBuild,'y','LineWidth',1.5,'DisplayName','Q_{LE,anth,building}')
+plot(TTUrbanDiurnal.Hour,-TTUrbanDiurnal.nanmean_WasteWaterAC,'m','LineWidth',1.5,'DisplayName','Q_{AC,waste water}')
 xlim([0 23]); xlabel('hour'); ylabel('ET mm/time step'); subtitle('Diurnal');
 
 nexttile
@@ -227,9 +357,12 @@ hold on
 plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_ETEvaporationFromSurface,'r','LineWidth',1.5,'DisplayName','E_{surface}')
 plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_ETEvaporationFromSoil,'b','LineWidth',1.5,'DisplayName','E_{soil}')
 plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_ETTranspiration,'g','LineWidth',1.5,'DisplayName','T_{vegetation}')
+plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_QanthBuild,'y','LineWidth',1.5,'DisplayName','Q_{LE,anth,building}')
+plot(TTUrbanSeasonal.Month,-TTUrbanSeasonal.nanmean_WasteWaterAC,'m','LineWidth',1.5,'DisplayName','Q_{AC,waste water}')
 xlim([1 12]); xlabel('Month'); ylabel('ET mm/time step'); subtitle('Seasonal');
 legend('Location','NorthEastOutside')
-sgtitle('Evapotranspiration flux partitioning')
+sgtitle(['Evapotranspiration flux partitioning, ittm = ' num2str(ittm)])
+
 
 % Water fluxes
 f1 = figure;
@@ -247,6 +380,7 @@ plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_ET,'g','LineWidth',1.5,'DisplayN
 plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_dVdt,'r','LineWidth',1.5,'DisplayName','dVdt')
 plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_dIdt,'m','LineWidth',1.5,'DisplayName','dIdt')
 plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_Leakage,'c','LineWidth',1.5,'DisplayName','Leakage')
+plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_QanthBuild-TTUrbanDiurnal.nanmean_WasteWaterAC,'y','LineWidth',1.5,'DisplayName','Q_{LE,anth,building,AC}')
 xlim([0 23]); xlabel('hour'); ylabel('Water fluxes mm/time step'); subtitle('Diurnal');
 
 nexttile
@@ -258,12 +392,12 @@ plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_ET,'g','LineWidth',1.5,'Displ
 plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_dVdt,'r','LineWidth',1.5,'DisplayName','dVdt')
 plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_dIdt,'m','LineWidth',1.5,'DisplayName','dIdt')
 plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_Leakage,'c','LineWidth',1.5,'DisplayName','Leakage')
+plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_QanthBuild-TTUrbanSeasonal.nanmean_WasteWaterAC,'y','LineWidth',1.5,'DisplayName','Q_{LE,anth,building,AC}')
 xlim([1 12]); xlabel('Month'); ylabel('Water fluxes mm/time step'); subtitle('Seasonal');
 legend('Location','NorthEastOutside')
-sgtitle('Water fluxes')
-
+sgtitle(['Water fluxes, ittm = ' num2str(ittm)])
 
 end
-
+end
 
 

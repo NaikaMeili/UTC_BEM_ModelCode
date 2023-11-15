@@ -1,4 +1,4 @@
-function[Hcanyon,LEcanyon,ra_canyon,HumidityCan]=HeatFlux_canyon(TemperatureC,Gemeotry_m,MeteoData,ParVegTree,ParTree)
+function[Hcanyon,LEcanyon,ra_canyon,ra_orig,fconv,HumidityCan]=HeatFlux_canyon(TemperatureC,Gemeotry_m,MeteoData,ParVegTree,ParTree,fconvPreCalc,fconv)
 
 % OUTPUT
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -59,16 +59,39 @@ rel_hum_canyon	=	e_T_canyon/esat_T_canyon;
 
 zom_town	=	zomcan;			% Momentum roughness length of canyon, calculated according to McDonald 1998
 zoh_town	=	zom_town/10;	% Heat roughness length of canyon
-% zoh_town	=	zom_town;	% Heat roughness length of canyon
 
+% Aerodynamic resistance calcuculated with Monin Obukhov similarity theory
 [ra]=resistance_functions.Aerodynamic_Resistence(Tatm-273.15,T_canyon-273.15,Pre/100,Zatm,dcan,zom_town,zoh_town,Uatm,ea,e_T_canyon);
-% [ra]=Aerodynamic_Resistence(Ta,Ts,Pre,zatm,disp_h,zom,zoh,Ws);
-% [ra]=Aerodynamic_Resistence(Ta,Ts,Pre,zatm,disp_h,zom,zoh,Ws,ea,es)
 
+ra_orig = ra;
+
+% Include enhancement term for aerodynamic resistance according to Pleim et
+% al. 2007 accounting for non-local transport through large eddies
+if fconvPreCalc ==1
+    if T_canyon-Tatm > 0.1
+        ra_enhanced = ra.*(1-fconv);
+    else
+       ra_enhanced = ra; 
+    end
+else
+    if T_canyon-Tatm > 0.1
+        hPBL = 1000;
+        [fconv,ra_enhanced,~, LAN]=resistance_functions.EnhancementFactorRaPleim(ra,zom_town,zoh_town,dcan,Zatm,Uatm,hPBL);
+        ra_enhanced = ra.*(1-fconv);
+    else
+       ra_enhanced = ra; 
+ 
+    end
+end
+
+ra = ra_enhanced;
+
+% Calculate heat fluxes
 ra_canyon	=	ra;
-Hcanyon		=	cp_atm*rho_atm*(T_canyon-Tatm)./ra;
-Ecanyon		=	rho_atm*(q_canyon-q_atm)./ra;
+Hcanyon    =	cp_atm*rho_atm*(T_canyon-Tatm)./ra;
+Ecanyon	    =	rho_atm*(q_canyon-q_atm)./ra;
 LEcanyon	=	L_heat*Ecanyon;
+
 
 HumidityCan.CanyonRelative		=	rel_hum_canyon;
 HumidityCan.CanyonSpecific		=	q_canyon;

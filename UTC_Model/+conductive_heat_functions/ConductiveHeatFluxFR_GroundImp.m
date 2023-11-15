@@ -1,5 +1,5 @@
-function[G,Tdp]=ForceRestore_conductive_heat_imp(TemperatureC,TempDamp,TempVec,...
-	ParCalculation,ParThermalGround,FractionsGround,itt)
+function[G,Tdp]=ConductiveHeatFluxFR_GroundImp(TemperatureC,TempDamp_ittm,TempVec_ittm,...
+	ParCalculation,ParThermalGround,FractionsGround)
 
 % TemperatureC(:,1)		=	Temperature ground impervious area
 % TemperatureC(:,2)		=	Temperature ground bare area
@@ -13,8 +13,8 @@ function[G,Tdp]=ForceRestore_conductive_heat_imp(TemperatureC,TempDamp,TempVec,.
 % TemperatureC(:,10)	=	specific humidity canyon
 
 Ts				=	TemperatureC(1,1);	
-Tdptm1			=	TempDamp.TDampGroundImp(itt,1);
-Tstm1			=	TempVec.TGroundImp(itt,1);
+Tdptm1			=	TempDamp_ittm.TDampGroundImp;
+Tstm1			=	TempVec_ittm.TGroundImp;
 dts				=	ParCalculation.dts;
 lan_dry_imp		=	ParThermalGround.lan_dry_imp;
 cv_s_imp		=	ParThermalGround.cv_s_imp;

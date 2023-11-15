@@ -1,7 +1,7 @@
 function[SWRin_t,SWRout_t,SWRabs_t,SWRabsDir_t,SWRabsDiff_t,SWREB_t,albedo_canyon]...
          =TotalSWRabsorbed(geometry,FractionsGround,ParTree,...
 		 PropOpticalGround,PropOpticalWall,PropOpticalTree,ParVegTree,MeteoData,...
-         SunPosition,ViewFactor)
+         SunPosition,ViewFactor,ParWindows,BEM_on)
 
 % OUTPUT
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -62,13 +62,13 @@ if trees==1
     % Shortwave radiation absorbed without trees
 	[SWRin_nT,SWRout_nT,SWRabs_nT,SWRabsDir_nT,SWRabsDiff_nT,SWREB_nT,albedo_canyon]...
          =radiation_functions.SWRabsorbedNoTrees(h_can,w_can,fgveg,fgbare,fgimp,aw,agveg,agbare,agimp,...
-         SWR_dir,SWR_diff,theta_Z,theta_n,ViewFactor,ParVegTree);
+         SWR_dir,SWR_diff,theta_Z,theta_n,ViewFactor,ParVegTree,ParWindows,BEM_on);
 	 
     % Shortwave radiation absorbed with trees
 	[SWRin_T,SWRout_T,SWRabs_T,SWRabsDir_T,SWRabsDiff_T,SWREB_T,albedo_canyon]...
          =radiation_functions.SWRabsorbedWithTrees(h_can,w_can,h_tree,r_tree,d_tree,...
          fgveg,fgbare,fgimp,aw,agveg,agbare,agimp,at,...
-         LAIt,SWR_dir,SWR_diff,theta_Z,theta_n,ViewFactor,ParVegTree);
+         LAIt,SWR_dir,SWR_diff,theta_Z,theta_n,ViewFactor,ParVegTree,ParWindows,BEM_on);
 	
 	 NameSWRin		=	fieldnames(SWRin_T);
 	 NameSWRout		=	fieldnames(SWRout_T);
@@ -116,7 +116,7 @@ elseif trees==0
     % Shortwave radiation absorbed without trees
 	[SWRin_nT,SWRout_nT,SWRabs_nT,SWRabsDir_nT,SWRabsDiff_nT,SWREB_nT,albedo_canyon]...
          =radiation_functions.SWRabsorbedNoTrees(h_can,w_can,fgveg,fgbare,fgimp,aw,agveg,agbare,agimp,...
-         SWR_dir,SWR_diff,theta_Z,theta_n,ViewFactor,ParVegTree);
+         SWR_dir,SWR_diff,theta_Z,theta_n,ViewFactor,ParVegTree,ParWindows,BEM_on);
 	 
 	SWRin_t			=	SWRin_nT;
 	SWRout_t		=	SWRout_nT;

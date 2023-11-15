@@ -1,3 +1,4 @@
+NameOutput	=	'SGTest';
 load(['Calculation', NameOutput,'.mat'])
 
 
@@ -19,23 +20,23 @@ load(['Calculation', NameOutput,'.mat'])
 
 %% Energy blance by surface including solver to check for assignment errors
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-EB_RoofImpSolv		=	SWRabs.SWRabsRoofImp(:,:,ittm) + LWRabs.LWRabsRoofImp(:,:,ittm) - Gflux.G1RoofImp(:,:,ittm) - Hflux.HfluxRoofImp(:,:,ittm) - LEflux.LEfluxRoofImp(:,:,ittm) - Solver.ValuesRoof(:,1,ittm);
-EB_RoofVegSolv		=	SWRabs.SWRabsRoofVeg(:,:,ittm) + LWRabs.LWRabsRoofVeg(:,:,ittm) - Gflux.G1RoofVeg(:,:,ittm) - Hflux.HfluxRoofVeg(:,:,ittm) - LEflux.LEfluxRoofVeg(:,:,ittm) - Solver.ValuesRoof(:,2,ittm);
+EB_RoofImpSolv		=	SWRabs.SWRabsRoofImp(:,:,ittm) + LWRabs.LWRabsRoofImp(:,:,ittm) - Gflux.G1RoofImp(:,:,ittm) - Hflux.HfluxRoofImp(:,:,ittm) - LEflux.LEfluxRoofImp(:,:,ittm) - Solver.ValuesEB(:,1,ittm);
+EB_RoofVegSolv		=	SWRabs.SWRabsRoofVeg(:,:,ittm) + LWRabs.LWRabsRoofVeg(:,:,ittm) - Gflux.G1RoofVeg(:,:,ittm) - Hflux.HfluxRoofVeg(:,:,ittm) - LEflux.LEfluxRoofVeg(:,:,ittm) - Solver.ValuesEB(:,2,ittm);
 
-EB_GroundImpSolv	=	SWRabs.SWRabsGroundImp(:,:,ittm) + LWRabs.LWRabsGroundImp(:,:,ittm) - Gflux.G1GroundImp(:,:,ittm) - Hflux.HfluxGroundImp(:,:,ittm) - LEflux.LEfluxGroundImp(:,:,ittm) - Solver.ValuesCanyon(:,1,ittm);
-EB_GroundBareSolv	=	SWRabs.SWRabsGroundBare(:,:,ittm) + LWRabs.LWRabsGroundBare(:,:,ittm) - Gflux.G1GroundBare(:,:,ittm) - Hflux.HfluxGroundBare(:,:,ittm) - LEflux.LEfluxGroundBare(:,:,ittm) - Solver.ValuesCanyon(:,2,ittm);
-EB_GroundVegSolv	=	SWRabs.SWRabsGroundVeg(:,:,ittm) + LWRabs.LWRabsGroundVeg(:,:,ittm) - Gflux.G1GroundVeg(:,:,ittm) - Hflux.HfluxGroundVeg(:,:,ittm) - LEflux.LEfluxGroundVeg(:,:,ittm) - Solver.ValuesCanyon(:,3,ittm);
+EB_GroundImpSolv	=	SWRabs.SWRabsGroundImp(:,:,ittm) + LWRabs.LWRabsGroundImp(:,:,ittm) - Gflux.G1GroundImp(:,:,ittm) - Hflux.HfluxGroundImp(:,:,ittm) - LEflux.LEfluxGroundImp(:,:,ittm) - Solver.ValuesEB(:,3,ittm);
+EB_GroundBareSolv	=	SWRabs.SWRabsGroundBare(:,:,ittm) + LWRabs.LWRabsGroundBare(:,:,ittm) - Gflux.G1GroundBare(:,:,ittm) - Hflux.HfluxGroundBare(:,:,ittm) - LEflux.LEfluxGroundBare(:,:,ittm) - Solver.ValuesEB(:,4,ittm);
+EB_GroundVegSolv	=	SWRabs.SWRabsGroundVeg(:,:,ittm) + LWRabs.LWRabsGroundVeg(:,:,ittm) - Gflux.G1GroundVeg(:,:,ittm) - Hflux.HfluxGroundVeg(:,:,ittm) - LEflux.LEfluxGroundVeg(:,:,ittm) - Solver.ValuesEB(:,5,ittm);
 
-EB_TreeSolv			=	SWRabs.SWRabsTree(:,:,ittm) + LWRabs.LWRabsTree(:,:,ittm) - Hflux.HfluxTree(:,:,ittm) - LEflux.LEfluxTree(:,:,ittm) - Solver.ValuesCanyon(:,6,ittm);
-EB_WallSunSolv		=	SWRabs.SWRabsWallSun(:,:,ittm) + LWRabs.LWRabsWallSun(:,:,ittm) - Gflux.G1WallSun(:,:,ittm) - Hflux.HfluxWallSun(:,:,ittm) - LEflux.LEfluxWallSun(:,:,ittm) - Solver.ValuesCanyon(:,4,ittm);
-EB_WallShadeSolv	=	SWRabs.SWRabsWallShade(:,:,ittm) + LWRabs.LWRabsWallShade(:,:,ittm) - Gflux.G1WallShade(:,:,ittm) - Hflux.HfluxWallShade(:,:,ittm) - LEflux.LEfluxWallShade(:,:,ittm) - Solver.ValuesCanyon(:,5,ittm);
+EB_TreeSolv			=	SWRabs.SWRabsTree(:,:,ittm) + LWRabs.LWRabsTree(:,:,ittm) - Hflux.HfluxTree(:,:,ittm) - LEflux.LEfluxTree(:,:,ittm) - Solver.ValuesEB(:,8,ittm);
+EB_WallSunSolv		=	SWRabs.SWRabsWallSun(:,:,ittm) + LWRabs.LWRabsWallSun(:,:,ittm) - Gflux.G1WallSun(:,:,ittm) - Hflux.HfluxWallSun(:,:,ittm) - LEflux.LEfluxWallSun(:,:,ittm) - Solver.ValuesEB(:,6,ittm);
+EB_WallShadeSolv	=	SWRabs.SWRabsWallShade(:,:,ittm) + LWRabs.LWRabsWallShade(:,:,ittm) - Gflux.G1WallShade(:,:,ittm) - Hflux.HfluxWallShade(:,:,ittm) - LEflux.LEfluxWallShade(:,:,ittm) - Solver.ValuesEB(:,7,ittm);
 
 EB_HfluxCanyonSolv	=	FractionsGround.fimp.*Hflux.HfluxGroundImp(:,:,ittm) + FractionsGround.fbare.*Hflux.HfluxGroundBare(:,:,ittm) + FractionsGround.fveg.*Hflux.HfluxGroundVeg(:,:,ittm) ...
 						+ 4.*geometry.radius_tree.*Hflux.HfluxTree(:,:,ittm) + geometry.hcanyon.*Hflux.HfluxWallSun(:,:,ittm) + geometry.hcanyon.*Hflux.HfluxWallShade(:,:,ittm) + Anthropo.Qf_canyon(:,:,ittm)...
-						- Hflux.HfluxCanyon(:,:,ittm) - Solver.ValuesCanyon(:,9,ittm);
+						- Hflux.HfluxCanyon(:,:,ittm) - Solver.ValuesEB(:,9,ittm);
 					
 EB_LEfluxCanyonSolv	=	FractionsGround.fimp.*LEflux.LEfluxGroundImp(:,:,ittm) + FractionsGround.fbare.*LEflux.LEfluxGroundBare(:,:,ittm) + FractionsGround.fveg.*LEflux.LEfluxGroundVeg(:,:,ittm) ...
-						+ 4.*geometry.radius_tree.*LEflux.LEfluxTree(:,:,ittm) + geometry.hcanyon.*LEflux.LEfluxWallSun(:,:,ittm) + geometry.hcanyon.*LEflux.LEfluxWallShade(:,:,ittm) - LEflux.LEfluxCanyon(:,:,ittm) - Solver.ValuesCanyon(:,10,ittm);
+						+ 4.*geometry.radius_tree.*LEflux.LEfluxTree(:,:,ittm) + geometry.hcanyon.*LEflux.LEfluxWallSun(:,:,ittm) + geometry.hcanyon.*LEflux.LEfluxWallShade(:,:,ittm) - LEflux.LEfluxCanyon(:,:,ittm) - Solver.ValuesEB(:,10,ittm);
 				
 MaxEB_RoofImpSolv		=	max(abs(EB_RoofImpSolv));
 MaxEB_RoofVegSolv		=	max(abs(EB_RoofVegSolv));
@@ -58,23 +59,23 @@ end
 
 %% Check solver convergence
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-SolverRoofSum			=	sum(Solver.ValuesRoof(:,:,ittm),1);
-SolverRoofSumAbs		=	sum(abs(Solver.ValuesRoof(:,:,ittm)),1);
-SolverRoofMaxAbs		=	max(abs(Solver.ValuesRoof(:,:,ittm)),[],1);
-SolverRoofConvCount		=	sum(abs(Solver.ValuesRoof(:,:,ittm))>10^-6,1);
+SolverRoofSum			=	sum(Solver.ValuesEB(:,1:2,ittm),1);
+SolverRoofSumAbs		=	sum(abs(Solver.ValuesEB(:,1:2,ittm)),1);
+SolverRoofMaxAbs		=	max(abs(Solver.ValuesEB(:,1:2,ittm)),[],1);
+SolverRoofConvCount		=	sum(abs(Solver.ValuesEB(:,1:2,ittm))>10^-6,1);
 
-SolverCanyonSum			=	sum(Solver.ValuesCanyon(:,:,ittm),1);
-SolverCanyonSumAbs		=	sum(abs(Solver.ValuesCanyon(:,:,ittm)),1);
-SolverCanyonMaxAbs		=	max(abs(Solver.ValuesCanyon(:,:,ittm)),[],1);
-SolverCanyonConvCount	=	sum(abs(Solver.ValuesCanyon(:,:,ittm))>10^-6,1);
+SolverCanyonSum			=	sum(Solver.ValuesEB(:,3:10,ittm),1);
+SolverCanyonSumAbs		=	sum(abs(Solver.ValuesEB(:,3:10,ittm)),1);
+SolverCanyonMaxAbs		=	max(abs(Solver.ValuesEB(:,3:10,ittm)),[],1);
+SolverCanyonConvCount	=	sum(abs(Solver.ValuesEB(:,3:10,ittm))>10^-6,1);
 
 if any(SolverCanyonConvCount>0)
 	disp(['The solver has problems converging at ittm = ',num2str(ittm)])
 	disp(['The overall sum of the energy balance difference of each canyon component is ',num2str(SolverCanyonSum),' W/m^2.'])
-	disp(['The mean energy balance difference of each canyon component is ',num2str(SolverCanyonSum./length(Solver.ValuesCanyon)),' W/m^2.'])
+	disp(['The mean energy balance difference of each canyon component is ',num2str(SolverCanyonSum./length(Solver.ValuesEB(:,3:10,ittm))),' W/m^2.'])
 	disp(['The number of nonconvergence of each canyon component is ',num2str(SolverCanyonConvCount)])
 	
-	itteration	=	length(Solver.SuccessCanyon(:,1,m));
+	itteration	=	length(Solver.Success(:,1,m));
 	colors		=	[cellstr('r');cellstr('r:');cellstr('b');cellstr('b:');cellstr('b.');...
 				cellstr('g');cellstr('m');cellstr('c');cellstr('m:');cellstr('c:');...
 				cellstr('k');cellstr('y')];
@@ -96,10 +97,10 @@ end
 if any(SolverRoofConvCount>0)
 	disp(['The solver has problems converging at ittm = ',num2str(ittm)])
 	disp(['The overall sum of the energy balance difference of each roof component is ',num2str(SolverRoofSum),' W/m^2.'])
-	disp(['The mean energy balance difference of each roof component is ',num2str(SolverRoofSum./length(Solver.ValuesCanyon)),' W/m^2.'])
+	disp(['The mean energy balance difference of each roof component is ',num2str(SolverRoofSum./length(Solver.ValuesEB(:,1:2,ittm))),' W/m^2.'])
 	disp(['The number of nonconvergence of each roof component is ',num2str(SolverRoofConvCount)])
 	
-	itteration	=	length(Solver.SuccessCanyon(:,1,m));
+	itteration	=	length(Solver.Success(:,1,m));
 	%DateTime	=	datetime(MeteoDataRaw.T_atm(1:itteration,1),1,MeteoDataRaw.T_atm(1:itteration,2),MeteoDataRaw.T_atm(1:itteration,3), 0, 0);
 	colors		=	[cellstr('r');cellstr('r:');cellstr('b');cellstr('b:');cellstr('b.');...
 				cellstr('g');cellstr('m');cellstr('c');cellstr('m:');cellstr('c:');...

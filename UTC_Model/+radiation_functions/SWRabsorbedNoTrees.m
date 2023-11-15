@@ -1,6 +1,6 @@
 function[SWRin_nT,SWRout_nT,SWRabs_nT,SWRabsDir_nT,SWRabsDiff_nT,SWREB_nT,albedo_canyon]...
-         =SWRabsorbedNoTrees(h_can,w_can,fgveg,fgbare,fgimp,aw,agveg,agbare,agimp,...
-         SWR_dir,SWR_diff,theta_Z,theta_n,ViewFactor,ParVegTree)
+         =SWRabsorbedNoTrees(h_can,w_can,fgveg,fgbare,fgimp,awraw,agveg,agbare,agimp,...
+         SWR_dir,SWR_diff,theta_Z,theta_n,ViewFactor,ParVegTree,ParWindows,BEM_on)
  
 % OUTPUT
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -83,11 +83,25 @@ Cimp	=	fgimp>0;
 Cbare	=	fgbare>0;
 Cveg	=	fgveg>0;
 
+if BEM_on==1
+    aw = awraw.*(1-ParWindows.GlazingRatio) + ParWindows.SolarAlbedo.*ParWindows.GlazingRatio;
+else
+    aw = awraw;
+end
+
 % Albedos
 ai	=	[agveg;agbare;agimp;aw;aw;0];
 
 % View factor matrix to solve for infinite reflections equation
 % Omega_i = Tij*Bj
+% B_i		=	[Bveg; Bbare; Bimp; Bwall; Bwall; Bsky];
+Tij	=	[1,0,0, -agveg*F_gw_nT*Cveg, -agveg*F_gw_nT*Cveg, -agveg*F_gs_nT*Cveg;...
+		0,1,0, -agbare*F_gw_nT*Cbare, -agbare*F_gw_nT*Cbare, -agbare*F_gs_nT*Cbare;...
+		0,0,1, -agimp*F_gw_nT*Cimp, -agimp*F_gw_nT*Cimp, -agimp*F_gs_nT*Cimp;...
+		-aw*F_wg_nT*fgveg*Cveg,-aw*F_wg_nT*fgbare*Cbare,-aw*F_wg_nT*fgimp*Cimp, 1, -aw*F_ww_nT, -aw*F_ws_nT;...
+		-aw*F_wg_nT*fgveg*Cveg,-aw*F_wg_nT*fgbare*Cbare,-aw*F_wg_nT*fgimp*Cimp, -aw*F_ww_nT, 1, -aw*F_ws_nT;
+		0, 0, 0, 0, 0, 1];
+
 % B_i		=	[Bveg; Bbare; Bimp; Bwall; Bwall; Bsky];
 Tij	=	[1,0,0, -agveg*F_gw_nT*Cveg, -agveg*F_gw_nT*Cveg, -agveg*F_gs_nT*Cveg;...
 		0,1,0, -agbare*F_gw_nT*Cbare, -agbare*F_gw_nT*Cbare, -agbare*F_gs_nT*Cbare;...

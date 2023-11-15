@@ -22,7 +22,7 @@ else
     LAIvarying = 0;
     LAI_Rvar = 0; LAI_Gvar = 0; LAI_Tvar = 0;
 end
- 
+    
 
 %% GEOMETRY OF URBAN AREA
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -40,10 +40,11 @@ Radius_tree		=	0.289;              % Tree-crown radius (m), Calculated out of re
 Height_tree		=	5-Radius_tree;		% Tree height (m)
 Distance_tree	=	0.5+Radius_tree;	% Tree-to-wall distance (m)
 
+
 Hcan_max	=	NaN;	% Maximum height of roughness elements (buidlings), (m)
 Hcan_std	=	NaN;	% Standard deviation of roughness elements (buildings), (m)
 
-trees   =	0;		% Easy switch to include (=1) and exclude (=0) trees in the urban canyon
+trees   =	1;		% Easy switch to include (=1) and exclude (=0) trees in the urban canyon
 ftree	=	1;		% DO NOT CHANGE: Tree fraction along canyon axis
 
 if isnan(Radius_tree)==1	% Tree radius cannot be NaN
@@ -154,41 +155,41 @@ ParVegRoof	=	struct('LAI',LAI_R,'SAI',SAI_R,'hc',hc_R,'h_disp',h_disp_R,...
 % GROUND VEGETATION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % GRASS
 % General
-LAI_GC      =   2.5;
+LAI_GC      =   1.5;
 LAI_G		=	LAIvarying*LAI_Gvar + (1-LAIvarying) * LAI_GC; 		% Leaf area index for the roof vegetation (-)
 SAI_G		=	0.001;	% Stem area index of ground vegetation (-)
-hc_G		=	0.05;	% canopy height of ground vegetation [m]
+hc_G		=	0.1;	% canopy height of ground vegetation [m]
 h_disp_G	=	2/3*hc_G;	% Zero plane displacement height of ground vegetation [m]
-d_leaf_G	=	2;		% Leaf dimension of ground vegetation [cm]
+d_leaf_G	=	0.8;		% Leaf dimension of ground vegetation [cm]
 
 % Roof water uptake
 CASE_ROOT_G	=	1;		% Type of Root Profile
-ZR95_G		=	300;	% Root depth 95 percentile [mm]
+ZR95_G		=	250;	% Root depth 95 percentile [mm]
 ZR50_G		=	NaN;	% Root depth 50 percentile [mm]
 ZRmax_G		=	NaN;	% Maximum Root depth [mm]
-Rrootl_G	=	4000;	% Root length index [m root / m^2 PFT]
-PsiL50_G	=	-2;		% [MPa]  Water Potential at 50% loss conductivity
-PsiX50_G	=	-5.5;	% Water potential at 50 of xylem hydraulic conductivity and limit for water extraction from soil [MPa]
+Rrootl_G	=	2000;	% Root length index [m root / m^2 PFT]
+PsiL50_G	=	-2.5;		% [MPa]  Water Potential at 50% loss conductivity
+PsiX50_G	=	-3.5;	% Water potential at 50 of xylem hydraulic conductivity and limit for water extraction from soil [MPa]
 
 % Photosynthesis and Transpiration
-FI_G		=	0.04;	% Intrinsec quantum Efficiency [umolCO2/umolPhotons]
+FI_G		=	0.081;	% Intrinsec quantum Efficiency [umolCO2/umolPhotons]
 Do_G		=	2000;	% [Pa] Empirical coefficient for the role of vapor pressure in the biochemical model of photosynthesis
-a1_G		=	5;		% [-] Empirical parameter connecting stomatal aperture and net assimilaton
+a1_G		=	6;		% [-] Empirical parameter connecting stomatal aperture and net assimilaton
 go_G		=	0.01;	% [mol / s m^2] minimal Stomatal Conductance
-CT_G		=	4;		% --> 'CT' == 3  'CT' ==  4 Photosyntesis Typology for Plants, Photosynthetic pathway C3 or C4
+CT_G		=	3;		% --> 'CT' == 3  'CT' ==  4 Photosyntesis Typology for Plants, Photosynthetic pathway C3 or C4
 DSE_G		=	0.649;	% [kJ/mol] Activation Energy - Plant Dependent, Activation Energy in Photosynthesis for Rubisco Capacity
 Ha_G		=	72;		% [kJ / mol K]  entropy factor - Plant Dependent, Activation energy.
 gmes_G		=	Inf;	% [mol CO2/s m2] Mesophyll conductance, not used
-rjv_G		=	2.1;	% [?mol Eq/ ?mol CO2] Scaling factor between Jmax and Vmax
+rjv_G		=	2.2;	% [?mol Eq/ ?mol CO2] Scaling factor between Jmax and Vmax
 Kopt_G		=	0.5;	% [-] optical depth of direct beam perunit plant area
-Knit_G		=	0.3;	% [-] Canopy nitrogen decay coefficient
-Vmax_G		=	54;		% [?mol CO2/ m2 s] Maximum Rubisco capacity at 25°C leaf level
+Knit_G		=	0.2;	% [-] Canopy nitrogen decay coefficient
+Vmax_G		=	58;		% [?mol CO2/ m2 s] Maximum Rubisco capacity at 25°C leaf level
 mSl_G		=	0.0;
 e_rel_G		=	1;		% [-] Relative Efficiency of the photosynthesis apparatus due to Age/Day-length
 e_relN_G	=	1;		% [-] Relative efficiency of the photosynthesis apparatus due to N limitations
 Psi_sto_00_G=	-0.5;	% [MPa]  Water Potential at PLCs loss conductivity
-Psi_sto_50_G=	-1.6;	% [MPa]  Water Potential at 50% loss conductivity
-Sl_G		=	0.025;	% [m^2 gC] specific leaf area of  biomass [m^2 /gC]
+Psi_sto_50_G=	-3;	% [MPa]  Water Potential at 50% loss conductivity
+Sl_G		=	0.022;	% [m^2 gC] specific leaf area of  biomass [m^2 /gC]
 
 ParVegGround	=	struct('LAI',LAI_G,'SAI',SAI_G,'hc',hc_G,'h_disp',h_disp_G,...
 					'd_leaf',d_leaf_G,'CASE_ROOT',CASE_ROOT_G,'ZR95',ZR95_G,'ZR50',ZR50_G,...
@@ -200,19 +201,19 @@ ParVegGround	=	struct('LAI',LAI_G,'SAI',SAI_G,'hc',hc_G,'h_disp',h_disp_G,...
 					
 % TREE VEGETATION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % General
-LAI_TC      =   3;
+LAI_TC      =   1.8;
 LAI_T		=	LAIvarying*LAI_Tvar + (1-LAIvarying) * LAI_TC; 		% Leaf area index for the ground vegetation (-)
-SAI_T		=	0.2;		% Stem area index for the ground vegetation (-)
-d_leaf_T	=	5;		% Leaf dimension of ground vegetation [cm]
+SAI_T		=	0.1;		% Stem area index for the ground vegetation (-)
+d_leaf_T	=	1.5;		% Leaf dimension of ground vegetation [cm]
 
 % Roof water uptake
 CASE_ROOT_T	=	1;		% Type of Root Profile
-ZR95_T		=	1500;	% Root depth 95 percentile [mm]
+ZR95_T		=	1000;	% Root depth 95 percentile [mm]
 ZR50_T		=	NaN;	% Root depth 50 percentile [mm]
 ZRmax_T		=	NaN;	% Maximum Root depth [mm]
-Rrootl_T	=	2200;	% Root length index [m root / m^2 PFT]
-PsiL50_T	=	-2.8;	% [MPa]  Water Potential at 50% loss conductivity
-PsiX50_T	=	-4.5;	% Water potential at 50 of xylem hydraulic conductivity and limit for water extraction from soil [MPa]
+Rrootl_T	=	1200;	% Root length index [m root / m^2 PFT]
+PsiL50_T	=	-1.2;	% [MPa]  Water Potential at 50% loss conductivity
+PsiX50_T	=	-4;	% Water potential at 50 of xylem hydraulic conductivity and limit for water extraction from soil [MPa]
 
 % Photosynthesis and Transpiration
 FI_T		=	0.081;	% Intrinsec quantum Efficiency [umolCO2/umolPhotons]
@@ -223,16 +224,16 @@ CT_T		=	3;		% --> 'CT' == 3  'CT' ==  4 Photosyntesis Typology for Plants, Photo
 DSE_T		=	0.649;	% [kJ/mol] Activation Energy - Plant Dependent, Activation Energy in Photosynthesis for Rubisco Capacity
 Ha_T		=	72;		% [kJ / mol K]  entropy factor - Plant Dependent, Activation energy.
 gmes_T		=	Inf;	% [mol CO2/s m2] Mesophyll conductance, not used
-rjv_T		=	2.2;	% [?mol Eq/ ?mol CO2] Scaling factor between Jmax and Vmax
+rjv_T		=	2;	% [?mol Eq/ ?mol CO2] Scaling factor between Jmax and Vmax
 Kopt_T		=	0.5;	% [-] optical depth of direct beam perunit plant area
-Knit_T		=	0.4;	% [-] Canopy nitrogen decay coefficient
-Vmax_T		=	49;		% [?mol CO2/ m2 s] Maximum Rubisco capacity at 25°C leaf level
+Knit_T		=	0.25;	% [-] Canopy nitrogen decay coefficient
+Vmax_T		=	45;		% [?mol CO2/ m2 s] Maximum Rubisco capacity at 25°C leaf level
 mSl_T		=	0.0;
 e_rel_T		=	1;		% [-] Relative Efficiency of the photosynthesis apparatus due to Age/Day-length
 e_relN_T	=	1;		% [-] Relative efficiency of the photosynthesis apparatus due to N limitations
 Psi_sto_00_T=	-0.9;	% [MPa]  Water Potential at PLCs loss conductivity
-Psi_sto_50_T=	-1.7;	% [MPa]  Water Potential at 50% loss conductivity
-Sl_T		=	0.02;	% [m^2 gC] specific leaf area of  biomass [m^2 /gC]
+Psi_sto_50_T=	-2;	% [MPa]  Water Potential at 50% loss conductivity
+Sl_T		=	0.015;	% [m^2 gC] specific leaf area of  biomass [m^2 /gC]
 SPARTREE	=	2;		% Tree root distribution: 1 = Tree roots can access all water in the soil (imp, bare, veg) equally
 						% 2 =  If the tree crown is smaller than the combined vegetated and bare fraction, 
 						% then the trees only transpire from these fractions. Otherwise, they
@@ -435,8 +436,8 @@ Person		=	struct('PositionPx',PositionPx,'PositionPz',PositionPz,...
 % Turn building energy model on or off
 BEM_on = 1;
 
+% Building Energy Model parameters %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 % Albedo and emissivities of indoor surfaces
 abc = 0.3;       % Albedo ceiling
 abw = 0.3;       % Albedo wall
@@ -495,11 +496,11 @@ ParWindows		=	struct('WindowsOn',WindowsOn,'GlazingRatio',GlazingRatio,...
 
 % Air conditioning and heating parameters ---------------------------------
 ACon        = 1; % Turn AC on and off (on = 1, off = 0)
-Heatingon   = 0; % Turn Heating on and off (on = 1, off = 0)
+Heatingon   = 1; % Turn Heating on and off (on = 1, off = 0)
 
 % Internal temperature and humidity set-points
 TsetpointCooling    = 273.15+25; % Cooling set-point temperature
-TsetpointHeating    = 273.15+20; % Heating set-point temperature
+TsetpointHeating    = 273.15+18; % Heating set-point temperature
 RHsetpointCooling   = 50; % Cooling set-point humidity, e.g. according to Fonseca et al. (2020)
 RHsetpointHeating   = NaN; % Heating set-point humidity, currently not used in the model
 
