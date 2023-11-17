@@ -83,8 +83,8 @@ type	=	0;
 	(TemperatureC,TemperatureB,TempVec_ittm,TempVecB_ittm,Anthropogenic,ParThermalWall,WallLayers,ParCalculation,type,ParWindows,BEM_on);
 
 % Conductive heat flux impervious ground
-[G1GroundImp,Tdp_ground_imp]=conductive_heat_functions.ConductiveHeatFluxFR_GroundImp(TemperatureC,TempDamp_ittm,TempVec_ittm,...
-	ParCalculation,ParThermalGround,FractionsGround);
+[G1GroundImp,Tdp_ground_imp]=conductive_heat_functions.ConductiveHeatFluxFR_GroundImp(TemperatureC,TempDamp_ittm,TempVec_ittm,Owater_ittm,...
+	ParCalculation,ParThermalGround,FractionsGround,ParSoilGround,ParVegTree,ParVegGround);
 
 % Conductive heat flux bare ground
 type	=	0; % bare

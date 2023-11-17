@@ -71,7 +71,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
 tau= 86400; %% [s] time constant
-CTt=2*(sqrt(pi/(lanS(1)*cs_Soil(1)*rsoil(1)*tau))); %%  [K m^2/J] Total Thermal Capacity Soil
+CTt = 2.*(sqrt(pi./(lanS.*cs_Soil.*rsoil.*tau))); %%  [K m^2/J] Total Thermal Capacity Soil
 
 end
 

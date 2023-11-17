@@ -52,12 +52,14 @@ else
 end
 
 
-[~,~,~,Osat,Ohy,~,~,~,~,~,~,~,~,~,...
+[~,dz,~,Osat,Ohy,~,~,~,~,~,~,~,~,~,...
 	~,~,~,~,~,~,~,~,rsd,lan_dry,lan_s,cv_s]...
 	=soil_functions.SoilParametersTotal(Pcla,Psan,Porg,Kfc,Phy,SPAR,Kbot,...
 	CASE_ROOT_H,CASE_ROOT_L,ZR95_H,ZR95_L,ZR50_H,ZR50_L,ZRmax_H,ZRmax_L,Zs);
 
-[~,~,CTt]=soil_functions.Soil_Thermal_properties(Tdptm1-273.15,rsd,lan_dry,lan_s,cv_s,Osat,Ohy,Otm1);
+Otm1Ave = sum((dz./sum(dz)).*Otm1);
+
+[~,~,CTt]=soil_functions.Soil_Thermal_properties(Tdptm1-273.15,rsd,lan_dry,lan_s,cv_s,Osat,Ohy,Otm1Ave);
 
 [G,Tdp]=conductive_heat_functions.Soil_Heat(dts,Ts-273.15,Tstm1-273.15,Tdptm1-273.15,CTt);
 Tdp		=	Tdp + 273.15;
