@@ -24,11 +24,17 @@ function[dcan,zomcan,u_Hcan_max,u_Zp,w_Zp,alpha,RoughnessParameter]=...
 % Zpcan		=	Height of interest within the canyon [m]
 % trees		=	Presence of trees [0: No, 1: Yes]
 
+
+if R_tree==0
+    trees=0;
+end
+
 if trees==0
 	Htree	=	0;
 	R_tree	=	0;
 	LAI_t	=	0;
 end
+
 
 % Displacement height and roughness length according to Kent et al 2017
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -46,8 +52,11 @@ Ap_urb		=	Wcan+Wroof;
 % Frontal area fraction of vegetation and buildings: assumtpion infinite
 % urban canyon perpendicular to the wind direction (Length of building and
 % plot equals infinity)
-Af_build_s	=	Hcan;
-Af_veg_s	=	2*R_tree;
+TreeCrownHeight = min(3, 0.5*Hcan);
+
+Af_build_s	=	Hcan*Wroof;
+Af_veg_s	=	4*R_tree*TreeCrownHeight;
+Ap_urbArea  =	(Wcan+Wroof)*Wroof;
 
 % Tree canopy transmittance (optical = P2D)
 P2D			=	exp(-Kopt*LAI_t);
@@ -66,7 +75,7 @@ dcan_MacD	=	H_tot*(1+a^(-Lp_tot)*(Lp_tot-1));	% displacement height of canyon [m
 Af_build=	Af_build_s;
 Af_veg	=	Af_veg_s;
 
-zomcan_MacD	=	H_tot*(1-dcan_MacD/H_tot)*exp(-(1/k^2*0.5*b*CDb*(1-dcan_MacD/H_tot)*(Af_build+Pv*Af_veg)/Ap_urb)^(-0.5));
+zomcan_MacD	=	H_tot*(1-dcan_MacD/H_tot)*exp(-(1/k^2*0.5*b*CDb*(1-dcan_MacD/H_tot)*(Af_build+Pv*Af_veg)/Ap_urbArea)^(-0.5));
 
 % Inclusion of Kanda et al (2013): Height variability of buildings and
 % vegetation int the formulaton of dcan and zomcan

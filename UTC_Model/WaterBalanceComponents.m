@@ -153,15 +153,17 @@ ET_HVACexchUrb    =   0;
 % Water removed from building interior due to condensation during air
 % conditioning
 ET_WasteWaterACBuild    =   BEMWasteHeat.WaterFromAC_Can(:,1,ittm).*(Gemeotry_m_Out(ittm).Width_canyon./Gemeotry_m_Out(ittm).Width_roof)./L_heat.*dts;
-ET_WasteWaterACUrb      =   geometry_Out(ittm).wroof_norm.*ET_WasteWaterACBuild;
+
+ET_WasteWaterACUrb      =   BEMWasteHeat.WaterFromAC_Can(:,1,ittm).*Gemeotry_m_Out(ittm).Width_canyon./(Gemeotry_m_Out(ittm).Width_canyon+Gemeotry_m_Out(ittm).Width_roof)./L_heat.*dts;
+
 
 
 % Water balance
 %--------------------------------------------------------------------------
 WBRoof  =   RainRoof + IrrSurfRoof + IrrSoilRoof - RunoffRoof - LeakageRoof - ETRoof - dVdtRoofCalc - dIdtRoof;
-WBCan   =   RainCan + IrrSurfCan + IrrSoilCan + ET_HVACexchCan - RunoffCan - LeakageCan - ETCan - dVdtCanCalc - dIdtCan - dS_ET_dtCan;
+WBCan   =   RainCan + IrrSurfCan + IrrSoilCan - RunoffCan - LeakageCan - ETCan - dVdtCanCalc - dIdtCan - dS_ET_dtCan; % ET_HVACexchCan is already includd in ETCan;
 WBBuild =   ET_buildAnthBuild + ET_HVACexchBuild - ET_WasteWaterACBuild - dS_ET_dtBuild;
-WBUrb   =   RainUrb + IrrSurfUrb + IrrSoilUrb + ET_buildAnthUrb - ET_WasteWaterACUrb - RunoffUrb - LeakageUrb - ETUrb - dVdtUrbCalc - dIdtUrb - dS_ET_dtUrb;
+WBUrb   =   RainUrb + IrrSurfUrb + IrrSoilUrb + ET_buildAnthUrb - RunoffUrb - LeakageUrb - ETUrb - dVdtUrbCalc - dIdtUrb - dS_ET_dtUrb; % Moisture removed from the air is already accounted for in ETUrb
 
 
 % figure
@@ -262,27 +264,29 @@ WaterFluxUrban.WB(:,1,ittm)	=   WBUrb; %[mm/time step]
 %--------------------------------------------------------------------------
 WBRoof2     =   WaterFluxRoof.Rain(:,1,ittm) + WaterFluxRoof.IrrTot(:,1,ittm) - WaterFluxRoof.Runoff(:,1,ittm) - WaterFluxRoof.Leakage(:,1,ittm)...
                 - WaterFluxRoof.ET(:,1,ittm) - WaterFluxRoof.dIdt(:,1,ittm) - WaterFluxRoof.dVdt(:,1,ittm);
+
 WBBuild2    =   WaterFluxBuild.AnthBuildInt(:,1,ittm) + WaterFluxBuild.ET_HVACexch(:,1,ittm) - WaterFluxBuild.WasteWaterAC(:,1,ittm) - WaterFluxBuild.dS_ET_dt(:,1,ittm);
+
 WBCan2      =   WaterFluxCan.Rain(:,1,ittm) + WaterFluxCan.IrrTot(:,1,ittm) - WaterFluxCan.Runoff(:,1,ittm) - WaterFluxCan.Leakage(:,1,ittm)...
-                -  WaterFluxCan.ET(:,1,ittm) - WaterFluxCan.dIdt(:,1,ittm) - WaterFluxCan.dVdt(:,1,ittm) - WaterFluxCan.dS_ET_dt(:,1,ittm)...
-                + WaterFluxCan.ET_HVACexch(:,1,ittm);
+                -  WaterFluxCan.ET(:,1,ittm) - WaterFluxCan.dIdt(:,1,ittm) - WaterFluxCan.dVdt(:,1,ittm) - WaterFluxCan.dS_ET_dt(:,1,ittm); % ET_HVACexchCan is already includd in ETCan;
+
 WBUrb2      =   WaterFluxUrban.Rain(:,1,ittm) + WaterFluxUrban.IrrTot(:,1,ittm) - WaterFluxUrban.Runoff(:,1,ittm) - WaterFluxUrban.Leakage(:,1,ittm)...
                 -WaterFluxUrban.ET(:,1,ittm) - WaterFluxUrban.dIdt(:,1,ittm) - WaterFluxUrban.dVdt(:,1,ittm) - WaterFluxUrban.dS_ET_dt(:,1,ittm)...
-                + WaterFluxUrban.AnthBuildInt(:,1,ittm) - WaterFluxUrban.WasteWaterAC(:,1,ittm);
+                + WaterFluxUrban.AnthBuildInt(:,1,ittm); % Moisture removed from the air due AC condensation is already accounted for in ETUrb
 
-figure
-tiledlayout(2,2)
-nexttile; plot(WBRoof2); title('Roof');
-nexttile; plot(WBCan2); title('Canyon');
-nexttile; plot(WBUrb2); title('Urban');
-nexttile; plot(WBBuild2); title('Building');
-sgtitle(['Water balance, ittm = ' num2str(ittm)])
+% figure
+% tiledlayout(2,2)
+% nexttile; plot(WBRoof2(2:end)); title('Roof');
+% nexttile; plot(WBCan2(2:end)); title('Canyon');
+% nexttile; plot(WBUrb2(2:end)); title('Urban');
+% nexttile; plot(WBBuild2(2:end)); title('Building');
+% sgtitle(['Water balance, ittm = ' num2str(ittm)])
 
 % ET Test
-ETbalance2 = WaterFluxUrban.ET(:,1,ittm) - (WaterFluxUrban.ETEvaporationFromSurface(:,1,ittm) + ...
-            WaterFluxUrban.ETEvaporationFromSoil(:,1,ittm) + WaterFluxUrban.ETTranspiration(:,1,ittm)...
-            + WaterFluxUrban.AnthBuildInt(:,1,ittm) - WaterFluxUrban.WasteWaterAC(:,1,ittm) - WaterFluxUrban.dS_ET_dt(:,1,ittm));
-
+% ETbalance2 = WaterFluxUrban.ET(:,1,ittm) - (WaterFluxUrban.ETEvaporationFromSurface(:,1,ittm) + ...
+%             WaterFluxUrban.ETEvaporationFromSoil(:,1,ittm) + WaterFluxUrban.ETTranspiration(:,1,ittm)...
+%             + WaterFluxUrban.AnthBuildInt(:,1,ittm) - WaterFluxUrban.dS_ET_dt(:,1,ittm));
+% 
 % figure
 % plot(ETbalance2); title('ET balance');
 
@@ -380,7 +384,7 @@ plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_ET,'g','LineWidth',1.5,'DisplayN
 plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_dVdt,'r','LineWidth',1.5,'DisplayName','dVdt')
 plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_dIdt,'m','LineWidth',1.5,'DisplayName','dIdt')
 plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_Leakage,'c','LineWidth',1.5,'DisplayName','Leakage')
-plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_QanthBuild-TTUrbanDiurnal.nanmean_WasteWaterAC,'y','LineWidth',1.5,'DisplayName','Q_{LE,anth,building,AC}')
+plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_QanthBuild,'y','LineWidth',1.5,'DisplayName','Q_{LE,anth,build}')
 xlim([0 23]); xlabel('hour'); ylabel('Water fluxes mm/time step'); subtitle('Diurnal');
 
 nexttile
@@ -392,7 +396,7 @@ plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_ET,'g','LineWidth',1.5,'Displ
 plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_dVdt,'r','LineWidth',1.5,'DisplayName','dVdt')
 plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_dIdt,'m','LineWidth',1.5,'DisplayName','dIdt')
 plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_Leakage,'c','LineWidth',1.5,'DisplayName','Leakage')
-plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_QanthBuild-TTUrbanSeasonal.nanmean_WasteWaterAC,'y','LineWidth',1.5,'DisplayName','Q_{LE,anth,building,AC}')
+plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_QanthBuild,'y','LineWidth',1.5,'DisplayName','Q_{LE,anth,build}')
 xlim([1 12]); xlabel('Month'); ylabel('Water fluxes mm/time step'); subtitle('Seasonal');
 legend('Location','NorthEastOutside')
 sgtitle(['Water fluxes, ittm = ' num2str(ittm)])

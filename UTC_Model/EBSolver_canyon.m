@@ -6,7 +6,7 @@ function[Ycanyon,G2WallSun,G2WallShade,SWRabs_t]=EBSolver_canyon(TemperatureC,Te
 		ParThermalGround,ParThermalWall,ParVegGround,ParVegTree,...
 		SunPosition,HumidityAtm,Anthropogenic,ParCalculation,...
         TempVecB_ittm,G2Roof,PropOpticalIndoors,ParHVAC,ParThermalBulidFloor,...
-        ParWindows,BEM_on,RESPreCalc,fconvPreCalc,fconv,rsGroundPreCalc,rsTreePreCalc)
+        ParWindows,BEM_on,RESPreCalc,fconvPreCalc,fconv,rsGroundPreCalc,rsTreePreCalc,HVACSchedule)
 
 
 % Temperature vector:
@@ -35,6 +35,10 @@ SWRabsDir_t.SWRabsTree	=	SWRabsDir_t.SWRabsTree*4*geometry.radius_tree*pi/(4*geo
 SWRabsDiff_t.SWRabsTree	=	SWRabsDiff_t.SWRabsTree*4*geometry.radius_tree*pi/(4*geometry.radius_tree);
 
 if BEM_on==1
+    if ParWindows.WindowsOn==0
+        ParWindows.GlazingRatio = 0;
+    end
+
     SWRabs_t.SWRabsWallSun      =   SWRabs_t.SWRabsWallSun; % W/m^2 wall
     SWRabs_t.SWRabsWindowSun    =   0; % W/m^2 window
     SWRabs_t.SWRtransWindowSun  =   SWRabs_t.SWRabsWallSun; % W/m^2 window
@@ -134,7 +138,7 @@ if BEM_on==1
     SWRinWshd = SWRabs_t.SWRabsWallShadeTransmitted;
     [~,WasteHeat]=BuildingEnergyModel.EBSolver_Building(TemperatureC,TemperatureB,TempVecB_ittm,TempVec_ittm,Humidity_ittm,MeteoData,...
         SWRinWsun,SWRinWshd,G2Roof,G2WallSun,G2WallShade,TempDamp_ittm,SWRabs_t,...
-        Gemeotry_m,PropOpticalIndoors,ParHVAC,ParCalculation,ParThermalBulidFloor,ParWindows,BEM_on);
+        Gemeotry_m,PropOpticalIndoors,ParHVAC,ParCalculation,ParThermalBulidFloor,ParWindows,BEM_on,HVACSchedule);
 else
     WasteHeat.SensibleFromAC_Can = 0; WasteHeat.LatentFromAC_Can = 0;
     WasteHeat.WaterFromAC_Can = 0; WasteHeat.SensibleFromHeat_Can = 0; 

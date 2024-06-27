@@ -136,13 +136,15 @@ dSdt_Air        = geometry_Out(ittm).wcanyon_norm.*(Hflux.dS_H_air(:,1,ittm) + L
                   +geometry_Out(ittm).wroof_norm.*(HbuildInt.dSH_air(:,1,ittm) + LEbuildInt.dSLE_air(:,1,ittm));
 
 % Total anthropogenic heat input
-Qanth           = Anthropo.Qf_canyon(:,1,ittm).*geometry_Out(ittm).wcanyon_norm + Anthropo.Qf_roof(:,1,ittm).*geometry_Out(ittm).wcanyon_norm...
+Qanth           = Anthropo.Qf_canyon(:,1,ittm).*geometry_Out(ittm).wcanyon_norm + Anthropo.Qf_roof(:,1,ittm).*geometry_Out(ittm).wroof_norm...
                     + BEMWasteHeat.TotAnthInput_URB(:,1,ittm);
 
+% Anthropogenic heat input due to condensation of water during AC process
+QanthACcondensation =  BEMWasteHeat.WaterFromAC_Can.*geometry_Out(ittm).wcanyon_norm;
 
 % Total urban energy balance
 if BEM_on==1
-    EBtot = SWRabs_Urban + LWRabs_Urban + Qanth...
+    EBtot = SWRabs_Urban + LWRabs_Urban + Qanth + QanthACcondensation...
             - LE_Urban - H_Urban - Gground_Urban - dSdt_buildEnv - dSdt_Air;
 else
     EBtot = SWRabs_Urban + LWRabs_Urban + Qanth...
@@ -150,8 +152,8 @@ else
 end
 
 
-figure
-plot(MeteoDataRaw.Date,EBtot); title(['EB urban, ittm = ' num2str(ittm)])
+% figure
+% plot(MeteoDataRaw.Date,EBtot); title(['EB urban, ittm = ' num2str(ittm)])
 
 % Critical Energy Balance components out
 %--------------------------------------------------------------------------
@@ -184,6 +186,7 @@ EnergyFluxUrban.G1Building(:,1,ittm)        = G1Building;
 EnergyFluxUrban.dSdtBuildEnv(:,1,ittm)      = dSdt_buildEnv;
 EnergyFluxUrban.dSdt_Air(:,1,ittm)          = dSdt_Air;
 EnergyFluxUrban.Qanth(:,1,ittm)             = Qanth;
+EnergyFluxUrban.QanthACcondensation(:,1,ittm)= QanthACcondensation;
 EnergyFluxUrban.EB(:,1,ittm)                = EBtot;
 
 % Canyon
@@ -211,14 +214,19 @@ EnergyFluxCan.Hflux(:,1,ittm)     = Hflux.HfluxCanyon(:,1,ittm);
 EnergyFluxCan.Gflux(:,1,ittm)     = Gflux.G1Canyon(:,1,ittm);
 EnergyFluxCan.dSdt_Air(:,1,ittm)  = (Hflux.dS_H_air(:,1,ittm) + LEflux.dS_LE_air(:,1,ittm));
 EnergyFluxCan.Qanth(:,1,ittm)     = Anthropo.Qf_canyon(:,1,ittm) + ...
-                            + BEMWasteHeat.SensibleFromVent_Can(:,1,ittm) + BEMWasteHeat.SensibleFromAC_Can(:,1,ittm) + BEMWasteHeat.SensibleFromHeat_Can(:,1,ittm)...
-                            + BEMWasteHeat.LatentFromVent_Can(:,1,ittm) + BEMWasteHeat.LatentFromAC_Can(:,1,ittm) +  BEMWasteHeat.LatentFromHeat_Can(:,1,ittm);
+                                        + BEMWasteHeat.SensibleFromVent_Can(:,1,ittm) + BEMWasteHeat.SensibleFromAC_Can(:,1,ittm) + BEMWasteHeat.SensibleFromHeat_Can(:,1,ittm)...
+                                        + BEMWasteHeat.LatentFromVent_Can(:,1,ittm) + BEMWasteHeat.LatentFromAC_Can(:,1,ittm) +  BEMWasteHeat.LatentFromHeat_Can(:,1,ittm);
 
-EnergyFluxCan.EB(:,1,ittm)        = EnergyFluxCan.SWRabs(:,1,ittm) + EnergyFluxCan.LWRabs(:,1,ittm) + EnergyFluxCan.Qanth(:,1,ittm) ...
+% Anthropogenic heat input due to condensation of water during AC process
+EnergyFluxCan.QanthACcondensation(:,1,ittm) =  BEMWasteHeat.WaterFromAC_Can(:,1,ittm);
+
+EnergyFluxCan.EB(:,1,ittm)        = EnergyFluxCan.SWRabs(:,1,ittm) + EnergyFluxCan.LWRabs(:,1,ittm) + EnergyFluxCan.Qanth(:,1,ittm) + EnergyFluxCan.QanthACcondensation(:,1,ittm)...
                             - EnergyFluxCan.LEflux(:,1,ittm) - EnergyFluxCan.Hflux(:,1,ittm) - EnergyFluxCan.Gflux(:,1,ittm) - EnergyFluxCan.dSdt_Air(:,1,ittm);
 
-figure
-plot(EnergyFluxCan.EB(:,1,ittm)); title(['EB canyon, ittm = ' num2str(ittm)])
+
+% figure
+% plot(EnergyFluxCan.EB(:,1,ittm)); title(['EB canyon, ittm = ' num2str(ittm)])
+
 
 % Roof
 %--------------------------------------------------------------------------
@@ -241,8 +249,8 @@ EnergyFluxRoof.EB(:,1,ittm)       = EnergyFluxRoof.SWRabs(:,1,ittm) + EnergyFlux
 EnergyFluxRoof.SWREB(:,1,ittm)	= SWRin.SWRinTotalRoof(:,1,ittm) - SWRabs.SWRabsTotalRoof(:,1,ittm) - SWRout.SWRoutTotalRoof(:,1,ittm);
 EnergyFluxRoof.LWREB(:,1,ittm)    = LWRin.LWRinTotalRoof(:,1,ittm) - LWRabs.LWRabsTotalRoof(:,1,ittm) - LWRout.LWRoutTotalRoof(:,1,ittm);
 
-figure
-plot(EnergyFluxRoof.EB(:,1,ittm)) ; title('EB roof')
+% figure
+% plot(EnergyFluxRoof.EB(:,1,ittm)) ; title('EB roof')
 
 end
 
@@ -255,11 +263,11 @@ TTUrban = table(hour(MeteoDataRaw.Date),month(MeteoDataRaw.Date),...
             EnergyFluxUrban.SWRin_PlanArea(:,1,ittm),EnergyFluxUrban.SWRabs_SurfArea(:,1,ittm),EnergyFluxUrban.SWRout_Ref_to_Atm(:,1,ittm),...
             EnergyFluxUrban.LWRin_PlanArea(:,1,ittm),EnergyFluxUrban.LWRabs_SurfArea(:,1,ittm),EnergyFluxUrban.LWRout_Ref_to_Atm(:,1,ittm),...
             EnergyFluxUrban.LEflux(:,1,ittm),EnergyFluxUrban.Hflux(:,1,ittm),EnergyFluxUrban.GfluxGround(:,1,ittm) + EnergyFluxUrban.dSdtBuildEnv(:,1,ittm) + EnergyFluxUrban.G1Building(:,1,ittm),...
-            EnergyFluxUrban.Qanth(:,1,ittm),EnergyFluxUrban.EB(:,1,ittm),EnergyFluxUrban.UrbanAlbedo(:,1,ittm),...
+            EnergyFluxUrban.Qanth(:,1,ittm),EnergyFluxUrban.QanthACcondensation(:,1,ittm),EnergyFluxUrban.EB(:,1,ittm),EnergyFluxUrban.UrbanAlbedo(:,1,ittm),...
             EnergyFluxUrban.Hflux(:,1,ittm)./EnergyFluxUrban.LEflux(:,1,ittm));
 
 TTUrban.Properties.VariableNames = {'Hour','Month','SWRin','SWRabs','SWRout','LWRin','LWRabs','LWRout',...
-    'LE','H','G','Qanth','EB','Albedo','BowenRatio'};
+    'LE','H','G','Qanth','QanthACcondensation','EB','Albedo','BowenRatio'};
 
 TTUrbanDiurnal = varfun(@nanmean,TTUrban,'GroupingVariables','Hour');
 TTUrbanSeasonal = varfun(@nanmean,TTUrban,'GroupingVariables','Month');
@@ -289,7 +297,7 @@ nexttile
 plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_EB,'k','LineWidth',1.5,'DisplayName','EB')
 xlim([1 12]); xlabel('Month'); ylabel('EB W/m^{2}'); title('Seasonal');
 %legend
-sgtitle(['Energy budget closure ittm = ' num2str(ittm)])
+sgtitle(['Energy budget closure ittm = ' num2str(ittm),', EB is not fully closed if parital AC is applied'])
 
 % Albedo und Bowen ratio
 f1 = figure;
@@ -351,6 +359,7 @@ plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_LE,'g','LineWidth',1.5,'DisplayN
 plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_G,'b','LineWidth',1.5,'DisplayName','G')
 plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_LWRabs,'m','LineWidth',1.5,'DisplayName','LWR_{abs}')
 plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_Qanth,'k:','LineWidth',1.5,'DisplayName','Q_{f}')
+plot(TTUrbanDiurnal.Hour,TTUrbanDiurnal.nanmean_QanthACcondensation,'k--','LineWidth',1.5,'DisplayName','Q_{f,AC,cond}')
 xlim([0 23]); xlabel('hour'); ylabel('EB W/m^{2}'); title('Energy fluxes'); subtitle('Diurnal');
 legend('Location','southoutside','NumColumns',2)
 
@@ -378,6 +387,7 @@ plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_LE,'g','LineWidth',1.5,'Displ
 plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_G,'b','LineWidth',1.5,'DisplayName','G')
 plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_LWRabs,'m','LineWidth',1.5,'DisplayName','LWR_{abs}')
 plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_Qanth,'k:','LineWidth',1.5,'DisplayName','Q_{f}')
+plot(TTUrbanSeasonal.Month,TTUrbanSeasonal.nanmean_QanthACcondensation,'k--','LineWidth',1.5,'DisplayName','Q_{f,AC,cond}')
 xlim([1 12]); xlabel('month'); ylabel('EB W/m^{2}'); subtitle('Seasonal'); %title('EB');
 %legend
 sgtitle(['Energy fluxes, ittm = ' num2str(ittm)])

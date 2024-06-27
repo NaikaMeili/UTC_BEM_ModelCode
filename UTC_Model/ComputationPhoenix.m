@@ -1,30 +1,37 @@
 %%%%%%%%%% RUN TIME SERIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-load(fullfile('+data_functions', 'FTDataPhoenix1year.mat'))
+load(fullfile('+data_functions', 'TMYPhoenix_RadPart.mat'))
 
 % Decide if a varying LAI timeseries is provided [1] or not [0]
 [LAI_TimeSeries]=data_functions.VaryingLAIInput(0,'LAI_Zurich_Area'); 
 
 
-n			=	size(MeteoData_h,1);% Calculation length, there is no need to change this
+n			=	1000;%size(TMYPhoenix,1); % Calculation length, there is no need to change this
 m			=	1;					% Length for sensitivity analysis
-Name_Site	=	'AZ';	% Name for Data_UEHM_site
-Name_SiteFD	=	'AZ';		% Name for UEHMForcingData
-OPTION_RAY	=	1; % Load precalculated view factors [1], Recalculate view factors [0]
+Name_Site	=	'PH_LCZ3';	% Name for Data_UEHM_site
+Name_SiteFD	=	'PH_LCZ3';		% Name for UEHMForcingData
+Name_ViewFactor = 'PH_LCZ3';
+OPTION_RAY	=	0; % Load precalculated view factors [1], Recalculate view factors [0]
 
-NameOutput	=	'AZ_LCZ6_TreeAC';
+NameOutput	=	'PH_LCZ3';
+
+% Specify which outputs should be saved
+% 1 = Essential energy flux and climate output
+% 2 = Extended energy flux and climate outputs
+% 3 = Extended outputs
+OutputsToSave = 3; 
 
 
 %% Meteo data
 % LWR_in [W/m2], SAB1_in [W/m2], SAB2_in [W/m2], SAD1_in [W/m2], SAD2_in [W/m2]
 % T_atm	[K], windspeed_u[m/s, pressure_atm [Pa], rain [mm/h], rel_humidity [-]
-MeteoData_h.Windspeed(MeteoData_h.windspeed_u(1:n,:)==0) = 0.01;	% Wind speed cannot be 0 otherwise the resistance function fails
-			
-MeteoDataRaw	=	struct('LWR_in',MeteoData_h.LWR_in(1:n,:),'SAB1_in',MeteoData_h.SAB1(1:n,:),...
-					'SAB2_in',MeteoData_h.SAB2(1:n,:),'SAD1_in',MeteoData_h.SAD1(1:n,:),...
-					'SAD2_in',MeteoData_h.SAD2(1:n,:),'T_atm',MeteoData_h.T_atm(1:n,:)+273.15,...
-					'windspeed_u',MeteoData_h.windspeed_u(1:n,:),'pressure_atm',MeteoData_h.pressure_atm(1:n,:),...
-					'rain',MeteoData_h.rain(1:n,:),'rel_humidity',MeteoData_h.rel_humidity(1:n,:)./100,...
-					'Date',MeteoData_h.date_time(1:n,:));	
+TMYPhoenix.WindSpeedms(TMYPhoenix.WindSpeedms(1:n,:)==0) = 0.01;	% Wind speed cannot be 0 otherwise the resistance function fails
+
+MeteoDataRaw	=	struct('LWR_in',TMYPhoenix.LWRin(1:n,:),'SAB1_in',TMYPhoenix.SAB1(1:n,:),...
+					'SAB2_in',TMYPhoenix.SAB2(1:n,:),'SAD1_in',TMYPhoenix.SAD1(1:n,:),...
+					'SAD2_in',TMYPhoenix.SAD2(1:n,:),'T_atm',TMYPhoenix.TairC(1:n,:)+273.15,...
+					'windspeed_u',TMYPhoenix.WindSpeedms(1:n,:),'pressure_atm',TMYPhoenix.PressurePa(1:n,:),...
+					'rain',TMYPhoenix.Rain(1:n,:),'rel_humidity',...
+					TMYPhoenix.RH(1:n,:)./100,'Date',TMYPhoenix.Time(1:n,:));
 
 
 %% Calculation starts here. No need to change anything after this point
@@ -34,7 +41,7 @@ MeteoDataRaw	=	struct('LWR_in',MeteoData_h.LWR_in(1:n,:),'SAB1_in',MeteoData_h.S
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%	
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%	
-clearvars -except MeteoDataRaw n m Name_Site OPTION_RAY NameOutput Name_SiteFD LAI_TimeSeries
+clearvars -except MeteoDataRaw n m Name_Site OPTION_RAY NameOutput Name_SiteFD LAI_TimeSeries Name_ViewFactor OutputsToSave
 
 RESPreCalc      = 1; % Pre-calculate stomatal resistance for faster computation (based on temperature of previous time step)
 fconvPreCalc    = 0; % Pre-calculate convection efficiency enhancement factor for faster computation (based on temperature of previous time step)
@@ -53,7 +60,7 @@ fconvPreCalc    = 0; % Pre-calculate convection efficiency enhancement factor fo
     AlbedoOutput,AlbedoOutputNames,UTCI,LAI_ts,LAI_tsNames,TempVecB,TempVecBNames,HbuildInt,HbuildIntNames,...
     LEbuildInt,LEbuildIntNames,GbuildInt,GbuildIntNames,SWRabsB,SWRabsBNames,...
     LWRabsB,LWRabsBNames,BEMWasteHeat,BEMWasteHeatNames,BEMEnergyUse,BEMEnergyUseNames,...
-    HumidityBuilding,HumidityBuildingNames,ParACHeat,ParACHeatNames,...
+    HumidityBuilding,HumidityBuildingNames,ParACHeat_ts,ParACHeatNames,...
     ...
     MeteoData,ParSoil]=...
     InitializeOutputVariables(MeteoDataRaw,n,m,Name_Site,Name_SiteFD,LAI_TimeSeries);
@@ -78,7 +85,7 @@ for ittm = 1:m
 
 
 %% Calculate view factors
-[ViewFactor,ViewFactorPoint]=ray_tracing.VFUrbanCanyon(OPTION_RAY,Name_Site,Gemeotry_m,geometry,Person,ParTree);
+[ViewFactor,ViewFactorPoint]=ray_tracing.VFUrbanCanyon(OPTION_RAY,Name_ViewFactor,Gemeotry_m,geometry,Person,ParTree);
 
 % Starting with dry soil if roof is fully impervious
 if FractionsRoof.fimp==1
@@ -106,7 +113,7 @@ OwaterInitial.OwGroundSoilTot(1,:,ittm)   = Owater.OwGroundSoilTot(1,:,ittm);
 
 for ittn	= 1:n  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-[SunPosition,MeteoData,HumidityAtm,Anthropogenic,location,ParCalculation]...
+[SunPosition,MeteoData,HumidityAtm,Anthropogenic,HVACSchedule,location,ParCalculation]...
 	=feval(strcat('data_functions.UEHMForcingData_',Name_SiteFD),MeteoDataRaw,ittn,SoilPotW);
 
 
@@ -143,6 +150,7 @@ end
 [ParHVAC,ParHVACorig]=BuildingEnergyModel.AC_HeatingTurnOnOff(ParHVAC,TempVecB_ittm,TempVec_ittm,Humidity_ittm,...
     MeteoData,Gemeotry_m,BEM_on);
 
+
 for HVACittm = 1:2
 % Only if itteration is 2    
 if BEM_on==1 && HVACittm==2
@@ -151,37 +159,41 @@ if BEM_on==1 && HVACittm==2
         break
     end
 
-    if EnergyUse.EnergyForAC_H>-10^-6 && EnergyUse.EnergyForAC_LE>-10^-6 && EnergyUse.EnergyForHeating>-10^-6
-        if ParHVACorig.ACon==1 && round(TempVecB.Tbin(ittn,1,ittm),4)<(ParHVAC.TsetpointCooling-0.01) && round(TempVecB.qbin(ittn,1,ittm),8)<(ParHVAC.q_RHspCooling-10^-6)...
-                && ParHVACorig.Heatingon==1 && round(TempVecB.Tbin(ittn,1,ittm),4)>(ParHVAC.TsetpointHeating+0.01)
+   if EnergyUse.EnergyForAC_H>-10^-6 && EnergyUse.EnergyForAC_LE>-10^-6 && EnergyUse.EnergyForHeating>-10^-6
+        if ParHVAC.ACon==1 && round(TempVecB.Tbin(ittn,1,ittm),4)<(ParHVAC.TsetpointCooling+0.01) && round(TempVecB.qbin(ittn,1,ittm),8)<(ParHVAC.q_RHspCooling+10^-6)
+            break
+        elseif ParHVAC.Heatingon==1 && round(TempVecB.Tbin(ittn,1,ittm),4)>(ParHVAC.TsetpointHeating-0.01)
             break
         end
     end
 
     % Switch on or off HVAC based on temperature and humidity thresholds
-    if ParHVACorig.ACon==1 && round(TempVecB.Tbin(ittn,1,ittm),4)>(ParHVAC.TsetpointCooling+0.01) || round(TempVecB.qbin(ittn,1,ittm),8)>(ParHVAC.q_RHspCooling+10^-6)
+    % (Humidity threshold is currently turned off as we assume that AC is
+    % switched on mostly for cooling purposes and not for dehumidifaction
+    if ParHVACorig.ACon==1 && round(TempVecB.Tbin(ittn,1,ittm),4)>(ParHVAC.TsetpointCooling+0.01) %|| round(TempVecB.qbin(ittn,1,ittm),8)>(ParHVAC.q_RHspCooling+10^-6)
         % Switch on AC based on exceedance of set-point temperature or humidity
         ParHVAC.ACon        = 1;
         ParHVAC.AC_onCool   = 1;
         ParHVAC.AC_onDehum  = 1;
         ParHVAC.Heatingon   = 0;
         ParHVAC.MasterOn    = 1;
-        if round(TempVecB.qbin(ittn,1,ittm),8)<(ParHVAC.q_RHspCooling-10^-6)
+        if round(TempVecB.qbin(ittn,1,ittm),8)<(ParHVAC.q_RHspCooling+10^-6) && round(EnergyUse.EnergyForAC_LE,1)==0
             ParHVAC.AC_onDehum = 0;
-        elseif round(TempVecB.Tbin(ittn,1,ittm),4)<(ParHVAC.TsetpointCooling-0.01) 
+        elseif round(TempVecB.Tbin(ittn,1,ittm),4)<(ParHVAC.TsetpointCooling+0.01) && round(EnergyUse.EnergyForAC_H,1)==0
             ParHVAC.AC_onCool = 0;
         end
-    elseif ParHVACorig.Heatingon==1 && round(TempVecB.Tbin(ittn,1,ittm),4)<(ParHVAC.TsetpointHeating-0.01)
+    elseif ParHVACorig.ACon==1 && EnergyUse.EnergyForAC_H>0 && round(TempVecB.qbin(ittn,1,ittm),8)>(ParHVAC.q_RHspCooling+10^-6)
+        ParHVAC.ACon        = 1;
+        ParHVAC.AC_onCool   = 1;
+        ParHVAC.AC_onDehum  = 1;
+        ParHVAC.MasterOn    = 1;
+    elseif ParHVACorig.Heatingon==1 && round(TempVecB.Tbin(ittn,1,ittm),4)<(ParHVAC.TsetpointHeating-0.01) && round(EnergyUse.EnergyForHeating)==0
         % Switch on heating based on not reaching the set-point temperature
         ParHVAC.ACon        = 0;
         ParHVAC.AC_onCool   = 0;
         ParHVAC.AC_onDehum  = 0;
         ParHVAC.Heatingon   = 1;
         ParHVAC.MasterOn    = 1;
-    end
-
-    if ittn==14
-    test=1;
     end
 
     % Switch of HVAC because of negative energy consumption
@@ -201,6 +213,16 @@ if BEM_on==1 && HVACittm==2
             ParHVAC.AC_onCool   = 1;
             ParHVAC.AC_onDehum  = 0;
             ParHVAC.MasterOn    = 1;
+        elseif EnergyUse.EnergyForAC_H<-10^-6 && EnergyUse.EnergyForAC_LE==0
+            ParHVAC.ACon        = 0;
+            ParHVAC.AC_onCool   = 0;
+            ParHVAC.AC_onDehum  = 0;
+            ParHVAC.MasterOn    = 1;
+        elseif EnergyUse.EnergyForAC_LE<-10^-6 && EnergyUse.EnergyForAC_H==0
+            ParHVAC.ACon        = 0;
+            ParHVAC.AC_onCool   = 0;
+            ParHVAC.AC_onDehum  = 0;
+            ParHVAC.MasterOn    = 1;
         end
     elseif ParHVACorig.Heatingon==1 && EnergyUse.EnergyForHeating<-10^-6
             ParHVAC.Heatingon   = 0;
@@ -208,6 +230,7 @@ if BEM_on==1 && HVACittm==2
     end
 
 end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%	
 % Solve energy budget equations for canyon, roof, and building interior
@@ -221,56 +244,8 @@ end
 		SunPosition,HumidityAtm,Anthropogenic,ParCalculation,...
         PropOpticalIndoors,ParHVAC,ParThermalBulidingInt,ParWindows,BEM_on,...
         TempVec_ittm2Ext,Humidity_ittm2Ext,TempVecB_ittm2Ext,Meteo_ittm,...
-        RESPreCalc,fconvPreCalc,fconv,rsRoofPreCalc,rsGroundPreCalc,rsTreePreCalc);
+        RESPreCalc,fconvPreCalc,fconv,rsRoofPreCalc,rsGroundPreCalc,rsTreePreCalc,HVACSchedule);
 
-% % Recalculate in case AC/Heating was not correctly turned on
-% if BEM_on==1
-%     if ParHVACorig.ACon==1 && round(Ttot(1,21),4)>ParHVAC.TsetpointCooling
-%         ParHVAC.ACon        = 1;
-%         ParHVAC.AC_onCool   = 1;
-%         ParHVAC.AC_onDehum  = 1;
-%         ParHVAC.Heatingon   = 0;
-%         ParHVAC.MasterOn    = 1;
-%         if round(Ttot(1,22),8)<ParHVAC.q_RHspCooling
-%             AC_onDehum = 0;
-%         end
-%         [Ttot,fval,exitflag]=fSolver_Tot(TempVec_ittm,TempVecB_ittm,Humidity_ittm,MeteoData,...
-% 		        Int_ittm,ExWater_ittm,Vwater_ittm,Owater_ittm,SoilPotW_ittm,CiCO2Leaf_ittm,TempDamp_ittm,ViewFactor,...
-% 		        Gemeotry_m,ParTree,geometry,FractionsGround,FractionsRoof,...
-% 		        WallLayers,ParSoilGround,ParInterceptionTree,...
-% 		        PropOpticalGround,PropOpticalWall,PropOpticalTree,...
-% 		        ParThermalGround,ParThermalWall,ParVegGround,ParVegTree,...
-%                 ParSoilRoof,PropOpticalRoof,ParThermalRoof,ParVegRoof,...
-% 		        SunPosition,HumidityAtm,Anthropogenic,ParCalculation,...
-%                 PropOpticalIndoors,ParHVAC,ParThermalBulidingInt,ParWindows,BEM_on,...
-%                 TempVec_ittm2Ext,Humidity_ittm2Ext,TempVecB_ittm2Ext,Meteo_ittm,...
-%                 RESPreCalc,fconvPreCalc,fconv,rsRoofPreCalc,rsGroundPreCalc,rsTreePreCalc);
-% 
-%     elseif ParHVACorig.Heatingon==1 && round(Ttot(1,21),4)<ParHVAC.TsetpointHeating
-%         ParHVAC.ACon        = 0;
-%         ParHVAC.AC_onCool   = 0;
-%         ParHVAC.AC_onDehum  = 0;
-%         ParHVAC.Heatingon   = 1;
-%         ParHVAC.MasterOn    = 1;
-%         [Ttot,fval,exitflag]=fSolver_Tot(TempVec_ittm,TempVecB_ittm,Humidity_ittm,MeteoData,...
-%             Int_ittm,ExWater_ittm,Vwater_ittm,Owater_ittm,SoilPotW_ittm,CiCO2Leaf_ittm,TempDamp_ittm,ViewFactor,...
-%             Gemeotry_m,ParTree,geometry,FractionsGround,FractionsRoof,...
-%             WallLayers,ParSoilGround,ParInterceptionTree,...
-%             PropOpticalGround,PropOpticalWall,PropOpticalTree,...
-%             ParThermalGround,ParThermalWall,ParVegGround,ParVegTree,...
-%             ParSoilRoof,PropOpticalRoof,ParThermalRoof,ParVegRoof,...
-%             SunPosition,HumidityAtm,Anthropogenic,ParCalculation,...
-%             PropOpticalIndoors,ParHVAC,ParThermalBulidingInt,ParWindows,BEM_on,...
-%             TempVec_ittm2Ext,Humidity_ittm2Ext,TempVecB_ittm2Ext,Meteo_ittm,...
-%             RESPreCalc,fconvPreCalc,fconv,rsRoofPreCalc,rsGroundPreCalc,rsTreePreCalc);
-% 
-%         if round(Ttot(1,21),4)<ParHVAC.TsetpointHeating && sum(abs(fval)>0.01)==0
-%             test = 1;
-%         end
-% 
-% 
-%     end
-% end
 
 % Assign output temperatures and humidity
 TempVec.TRoofImp(ittn,1,ittm)		=	Ttot(1,1);
@@ -414,7 +389,7 @@ TB(:,8) =	TempVecB.qbin(ittn,1,ittm);
 		ParThermalGround,ParThermalWall,ParVegGround,ParVegTree,...
 		SunPosition,HumidityAtm,Anthropogenic,ParCalculation,...
         TempVecB_ittm,G2Roof,PropOpticalIndoors,ParHVAC,ParThermalBulidingInt,ParWindows,BEM_on,...
-        RESPreCalc,fconvPreCalc,fconv,rsGroundPreCalc,rsTreePreCalc);
+        RESPreCalc,fconvPreCalc,fconv,rsGroundPreCalc,rsTreePreCalc,HVACSchedule);
 
 
 SWRinWsun = SWRabs_t.SWRabsWallSunTransmitted;
@@ -425,7 +400,7 @@ SWRinWshd = SWRabs_t.SWRabsWallShadeTransmitted;
 [HbuildIntc,LEbuildIntc,GbuildIntc,SWRabsBc,LWRabsBc,TDampGroundBuild,WasteHeat,EnergyUse,HumidBuilding,ParACHeat_t,YBuildInt]=...
     BuildingEnergyModel.EBSolver_BuildingOUTPUT(TC,TB,TempVecB_ittm,TempVec_ittm,Humidity_ittm,MeteoData,...
     SWRinWsun,SWRinWshd,G2Roof,G2WallSun,G2WallShade,TempDamp_ittm,SWRabs_t,...
-    Gemeotry_m,PropOpticalIndoors,ParHVAC,ParCalculation,ParThermalBulidingInt,ParWindows,BEM_on);
+    Gemeotry_m,PropOpticalIndoors,ParHVAC,ParCalculation,ParThermalBulidingInt,ParWindows,BEM_on,HVACSchedule);
 
 end
 
@@ -440,14 +415,6 @@ end
 	Gemeotry_m,ParVegTree,ParTree,MeteoData,FractionsGround,ParVegGround);	
 
 [UTCI_approx]=OTC.UTCI_approx(T2m-273.15,RH_T2m.*100,Tmrt,u_ZPerson);
-
-% if EnergyUse.EnergyForAC_LE<0
-%     test=1;
-% end
-% 
-% if ittn==15
-%     test=1;
-% end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -765,9 +732,9 @@ AlbedoOutput.TotalCanyon(ittn,:,ittm)	=	albedo_canyon;
 AlbedoOutput.Roof(ittn,:,ittm)			=	PropOpticalRoof.albedo;
 
 % AC and heating switches time varying --------------------------------------
-ParACHeatNames = fieldnames(ParACHeat);
+ParACHeatNames = fieldnames(ParACHeat_ts);
 for i=1:length(ParACHeatNames)
-	ParACHeat.(cell2mat(ParACHeatNames(i)))(ittn,:,ittm)=	ParACHeat_t.(cell2mat(ParACHeatNames(i)));
+	ParACHeat_ts.(cell2mat(ParACHeatNames(i)))(ittn,:,ittm)=	ParACHeat_t.(cell2mat(ParACHeatNames(i)));
 end
 
 
@@ -836,8 +803,12 @@ for i=1:size(EBNames,1)
 end
 
 Zatm = MeteoData.Zatm;
+ParHVAC_Out.Acon = ParHVACorig.ACon;
+ParHVAC_Out.Heatingon = ParHVACorig.Heatingon;
 
 SwitchOnFigure = 1;
+
+ParHVAC= ParHVAC_Out;
 
 % Plot and calculate radiation and energy balance
 [WaterFluxRoof,WaterFluxCan,WaterFluxBuild,WaterFluxUrban]=WaterBalanceComponents(MeteoDataRaw,...
@@ -856,6 +827,52 @@ UrbanClimateVariables(TempVec,UTCI,Results2m,MeteoDataRaw,MeanRadiantTemperature
     geometry_Out,FractionsGround_Out,PropOpticalRoof_Out,Anthropo,Gemeotry_m_Out,SwitchOnFigure,ittm,BEM_on);
 
 
+if OutputsToSave==1
+% Option 1: Essential energy flux and climate outputs
+%--------------------------------------------------------------------------
+save(['Calculation',NameOutput],'NameOutput','Solver','n','m','Name_Site','MeteoDataRaw',...
+    'TempVec','Humidity','Results2m','TempVecB','HumidityBuilding',...
+    'MeanRadiantTemperature','UTCI','Wind',...
+    'EnergyFluxUrban','EnergyFluxCan','EnergyFluxRoof',...
+    'WaterFluxRoof','WaterFluxBuild','WaterFluxCan','WaterFluxUrban',...
+    'BEMEnergyUse','BEMWasteHeat',...
+    ...
+	'Gemeotry_m_Out','ParTree_Out','geometry_Out','FractionsRoof_Out','FractionsGround_Out',...
+	'WallLayers_Out','ParSoilRoof_Out','ParSoilGround_Out',...
+	'PropOpticalRoof_Out','PropOpticalGround_Out','PropOpticalWall_Out','PropOpticalTree_Out',...
+	'ParThermalRoof_Out','ParThermalGround_Out','ParThermalWall_Out','ParThermalTree_Out',...
+    'ParCalculation_Out','ParVegRoof_Out','ParVegGround_Out','ParVegTree_Out',...
+    'PropOpticalIndoors_Out','ParThermalBulidingInt_Out','ParWindows_Out','ParHVAC_Out',...
+    'Zatm','AlbedoOutput','ViewFactor','ParACHeat_ts','BEM_on');
+
+elseif OutputsToSave==2
+% Option 2: Extended energy flux and climate outputs
+%--------------------------------------------------------------------------
+save(['Calculation',NameOutput],'NameOutput','Solver','n','m','Name_Site','MeteoDataRaw',...
+    'TempVec','Humidity','Results2m','TempVecB','HumidityBuilding',...
+    'MeanRadiantTemperature','UTCI','Wind',...
+    'EnergyFluxUrban','EnergyFluxCan','EnergyFluxRoof',...
+    'WaterFluxRoof','WaterFluxBuild','WaterFluxCan','WaterFluxUrban',...
+    ....
+    'BEMEnergyUse','BEMWasteHeat',...
+    ...
+    'SWRabs','LWRabs','Hflux','LEflux','Gflux','dStorage',...
+    'Eflux','Runoff','Runon','Leakage','Int','dInt_dt','Infiltration',...
+    'Vwater','dVwater_dt','Owater','SoilPotW','LAI_ts',...
+	'TempDamp','Anthropo',...
+    'HbuildInt','LEbuildInt','GbuildInt','SWRabsB','LWRabsB',...
+    ...
+	'Gemeotry_m_Out','ParTree_Out','geometry_Out','FractionsRoof_Out','FractionsGround_Out',...
+	'WallLayers_Out','ParSoilRoof_Out','ParSoilGround_Out',...
+	'PropOpticalRoof_Out','PropOpticalGround_Out','PropOpticalWall_Out','PropOpticalTree_Out',...
+	'ParThermalRoof_Out','ParThermalGround_Out','ParThermalWall_Out','ParThermalTree_Out',...
+    'ParCalculation_Out','ParVegRoof_Out','ParVegGround_Out','ParVegTree_Out',...
+    'PropOpticalIndoors_Out','ParThermalBulidingInt_Out','ParWindows_Out','ParHVAC_Out',...
+    'Zatm','AlbedoOutput','ViewFactor','ParACHeat_ts','BEM_on');
+
+else
+% Option 3: Extended outputs 
+%--------------------------------------------------------------------------
 save(['Calculation',NameOutput],'NameOutput','Solver','TempVec','Humidity','SWRabs','SWRin','SWRout','SWREB','LWRabs','LWRin','LWRout',...
 	'LWREB','Hflux','LEflux','Gflux','dStorage','RES','Eflux','Runoff','Runon','Leakage',...
 	'Int','dInt_dt','Infiltration','Vwater','dVwater_dt','Owater',...
@@ -870,23 +887,8 @@ save(['Calculation',NameOutput],'NameOutput','Solver','TempVec','Humidity','SWRa
     'PropOpticalIndoors_Out','ParThermalBulidingInt_Out','ParWindows_Out','ParHVAC_Out',...
     'LAI_ts','Results2mEnergyFlux','MeanRadiantTemperature','Zatm','UTCI',...
     'AlbedoOutput','ViewFactor','EnergyFluxUrban','EnergyFluxCan','EnergyFluxRoof',...
-    'WaterFluxRoof','WaterFluxBuild','WaterFluxCan','WaterFluxUrban','ParSoil',...
-     'TempVecB','HbuildInt','LEbuildInt','GbuildInt','SWRabsB','LWRabsB',...
-     'BEMEnergyUse','BEMWasteHeat','HumidityBuilding','ParACHeat','BEM_on','ittm');
+    'WaterFluxRoof','WaterFluxBuild','WaterFluxCan','WaterFluxUrban',...
+    'TempVecB','HbuildInt','LEbuildInt','GbuildInt','SWRabsB','LWRabsB',...
+    'BEMEnergyUse','BEMWasteHeat','HumidityBuilding','ParACHeat_ts','BEM_on','ittm');
 
-
-
-%% Check the energy balance and calculation
-% EnergyBalanceCheck
-
-for j=1:ittm
-figure
-hold on
-for i=1:size(Solver.ValuesEB,2)
-plot(MeteoDataRaw.Date,Solver.ValuesEB(:,i,j))
 end
-end
-
-
-sum(abs(Solver.ValuesEB - Solver.YfunctionOutput),1)
-

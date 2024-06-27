@@ -1,4 +1,4 @@
-function[SunPosition,MeteoData,HumidityAtm,Anthropogenic,location,ParCalculation]...
+function[SunPosition,MeteoData,HumidityAtm,Anthropogenic,HVACSchedule,location,ParCalculation]...
 	=UEHMForcingData(MeteoDataRaw,itt,varargin)
 
 % Input variables
@@ -17,10 +17,10 @@ date_time		=	MeteoDataRaw.Date;
 
 %% Location properties of the urban area
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-phi				=	33.483847;		% latitude positive north (degrees)
-lambda			=	-112.142609;	% longitude positive east (degrees)
-theta_canyon	=	deg2rad(90);					% canyon orientation (rad)
-DeltaGMT		=	-7;								% difference with Greenwich Meridian Time [h]
+phi				=	35.6;		% latitude positive north (degrees)
+lambda			=	139.8;	% longitude positive east (degrees)
+theta_canyon	=	deg2rad(45);					% canyon orientation (rad)
+DeltaGMT		=	9;								% difference with Greenwich Meridian Time [h]
 		
 location		=	struct('phi',phi,'lambda',lambda,'theta_canyon',theta_canyon,...
 					'DeltaGMT',DeltaGMT);
@@ -61,7 +61,7 @@ end
 
 %% Meteorological data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Zatm			=	25;						% Atmospheric reference height [m]
+Zatm			=	30;						% Atmospheric reference height [m]
 Tatm			=	T_atm(itt,1);			% Air Temperature at atmospheric reference level [K]
 Uatm			=	windspeed_u(itt,1);		% Wind speed at atmospheric reference level [m/s]
 Uatm(Uatm==0)	=	0.01;					% WINDSPEED CANNOT BE 0 OTHERWISE THE LEAF BOUNDARY RESISTANCE FAILS
@@ -90,8 +90,8 @@ HumidityAtm		=	struct('AtmRelative',rel_hum,'AtmSpecific',q_atm,'AtmVapourPre',e
 %% ANTHROPOGENIC FACTORS
 % Building intertior temperature & anthropogenic heat input
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Tbmin = 18;     % Minimum interior builidng temperature when building heating is switched on [degC] 
-Tbmax = 30;     % Maximum interior builing temperature when air condition is switched on [degC]
+Tbmin = 20;     % Minimum interior builidng temperature when building heating is switched on [degC] 
+Tbmax = 25;     % Maximum interior builing temperature when air condition is switched on [degC]
 
 if (Tatm-273.15)<Tbmin			% Minimum temperature when building heating is switched on
 	Tb = Tbmin+273.15;
@@ -112,6 +112,23 @@ Waterf_roof			=	0;  % [mm/time step] applied on the vegetated ground surface are
 
 Anthropogenic	=	struct('Tb',Tb,'Qf_canyon',Qf_canyon,'Qf_roof',Qf_roof,...
 					'Waterf_canyonVeg',Waterf_canyonVeg,'Waterf_canyonBare',Waterf_canyonBare,'Waterf_roof',Waterf_roof);
+
+% HVAC internal heat gains and schedule, only used if BEM is on
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Internal heat gains, can be constant or added timevarying based on the
+% input time
+HVACSchedule.Hequip     = 0; % Sensible heat from equipment, W/m^2 building ground area;
+HVACSchedule.Hpeople    = 0; % Sensible heat from pepole, W/m^2 building ground area;
+HVACSchedule.LEequip    = 0; % Latent heat from equipment, W/m^2 building ground area;
+HVACSchedule.LEpeople   = 0; % Latent heat from people, W/m^2 building ground area;
+
+% Fraction of airconditioned space. This only influences how much
+% anthropogenic heat is emitted into the canyon. E.g. if only 30% of the
+% space is occupied, it would only reemit 30% of the anthropogenic heat
+% back into the canyon. However, indoor temperature is still air conditioned and
+% this is a limitation if the buildings are not well insulated.
+HVACSchedule.AirConRoomFraction = 1;
+
 
 %% GENERAL PARAMETERS FOR CALCULATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -1,6 +1,6 @@
 function[YBuildInt,WasteHeat]=EBSolver_Building(TemperatureC,TemperatureB,TempVecB_ittm,TempVec_ittm,Humidity_ittm,MeteoData,...
     SWRinWsun,SWRinWshd,G2Roof,G2WallSun,G2WallShade,TempDamp_ittm,SWRabs_t,...
-    Gemeotry_m,PropOpticalIndoors,ParHVAC,ParCalculation,ParThermalBulidingInt,ParWindows,BEM_on)
+    Gemeotry_m,PropOpticalIndoors,ParHVAC,ParCalculation,ParThermalBulidingInt,ParWindows,BEM_on,HVACSchedule)
 
 
 % Simple Building energy model
@@ -45,7 +45,6 @@ qairout = TemperatureC(10); % Specific humidity at outdoor calucation height (hd
 Hwall   = Gemeotry_m.Height_canyon;     % Building height [m]
 Wroof   = Gemeotry_m.Width_roof;        % Roof width [m]
 Wcan    = Gemeotry_m.Width_canyon;      % Street/canyon width [m]
-WinToWallR  = ParWindows.GlazingRatio;  % Window fraction of total wall area [-]
 
 % Temperature [K] and specific humidity [kg/kg] conditions from previous time step
 Tbin_tm1            = TempVecB_ittm.Tbin;               % Building internal temperature from previous timestep
@@ -163,7 +162,11 @@ end
 
 % Internal sensible and latent heat sources (W/m^2) per ground area, positive flux indicates added to indoor air
 %--------------------------------------------------------------------------
-[Hequip,Hpeople,LEequip,LEpeople]=BuildingEnergyModel.IndoorSensibleLatentHeatSource();
+%[Hequip,Hpeople,LEequip,LEpeople]=BuildingEnergyModel.IndoorSensibleLatentHeatSource();
+Hequip      = HVACSchedule.Hequip;
+Hpeople     = HVACSchedule.Hpeople;
+LEequip     = HVACSchedule.LEequip;
+LEpeople    = HVACSchedule.LEpeople;
 
 
 % Sensible and latent heat load due to ventilation (W/m^2) per ground area, (air exchange between indoor and outdoor air) 
@@ -235,9 +238,9 @@ if AC_on==1
     % The sensible and latent heat flux from the AC does not only account
     % for heat brought in through ventilation, but also heat that is
     % internally released by the walls
-    WasteHeat.SensibleFromAC_Can    = (H_AC_Heat + f_AC_LEToQ*LE_AC_Heat + (H_AC_Heat+LE_AC_Heat)/COP_AC)*Wroof/Wcan; % (W/m^2) canyon ground
-    WasteHeat.LatentFromAC_Can      = (1-f_AC_LEToQ)*LE_AC_Heat*Wroof/Wcan; %  W/m^2 canyon ground
-    WasteHeat.WaterFromAC_Can       = f_AC_LEToQ*LE_AC_Heat*Wroof/Wcan; %  W/m^2 canyon ground, water that is condensed and removed as runoff in sewer system 
+    WasteHeat.SensibleFromAC_Can    = (H_AC_Heat + LE_AC_Heat + (H_AC_Heat+LE_AC_Heat)/COP_AC)*Wroof/Wcan; % (W/m^2) canyon ground
+    WasteHeat.LatentFromAC_Can      = LE_AC_Heat*Wroof/Wcan; %  W/m^2 canyon ground
+    WasteHeat.WaterFromAC_Can       = LE_AC_Heat*Wroof/Wcan; %  W/m^2 canyon ground, water that is condensed and removed as runoff in sewer system 
     
     WasteHeat.SensibleFromHeat_Can  = 0; % W/m^2 canyon ground
     WasteHeat.LatentFromHeat_Can    = 0; % W/m^2 canyon ground
@@ -278,7 +281,7 @@ elseif  Heat_on==1
     EnergyUse.EnergyForAC       = 0; % W*h
     EnergyUse.EnergyForAC_H     = 0; % W*h
     EnergyUse.EnergyForAC_LE    = 0; % W*h
-    EnergyUse.EnergyForHeating  = dth*(-H_AC_Heat-LE_AC_Heat)/COP_Heat; % W*h
+    EnergyUse.EnergyForHeating  = dth*(-H_AC_Heat-LE_AC_Heat)*Wroof/COP_Heat; % W*h
     
 else
     WasteHeat.SensibleFromAC_Can    = 0; % W/m^2 canyon ground
@@ -297,6 +300,22 @@ else
     EnergyUse.EnergyForAC_LE    = 0; % W*h
     EnergyUse.EnergyForHeating  = 0; % W*h
 end
+
+% Apply fraction of Air conditioned rooms for calculation of energy use and
+% for waste heat calculation
+WasteHeat.SensibleFromAC_Can    = HVACSchedule.AirConRoomFraction.*WasteHeat.SensibleFromAC_Can;
+WasteHeat.LatentFromAC_Can      = HVACSchedule.AirConRoomFraction.*WasteHeat.LatentFromAC_Can;
+WasteHeat.WaterFromAC_Can       = HVACSchedule.AirConRoomFraction.*WasteHeat.WaterFromAC_Can;
+WasteHeat.SensibleFromHeat_Can  = HVACSchedule.AirConRoomFraction.*WasteHeat.SensibleFromHeat_Can;
+WasteHeat.LatentFromHeat_Can    = HVACSchedule.AirConRoomFraction.*WasteHeat.LatentFromHeat_Can;
+WasteHeat.SensibleFromVent_Can  = HVACSchedule.AirConRoomFraction.*WasteHeat.SensibleFromVent_Can;
+WasteHeat.LatentFromVent_Can    = HVACSchedule.AirConRoomFraction.*WasteHeat.LatentFromVent_Can;
+WasteHeat.TotAnthInput_URB      = HVACSchedule.AirConRoomFraction.*WasteHeat.TotAnthInput_URB;
+EnergyUse.EnergyForAC           = HVACSchedule.AirConRoomFraction.*EnergyUse.EnergyForAC;
+EnergyUse.EnergyForAC_H         = HVACSchedule.AirConRoomFraction.*EnergyUse.EnergyForAC_H;
+EnergyUse.EnergyForAC_LE        = HVACSchedule.AirConRoomFraction.*EnergyUse.EnergyForAC_LE;
+EnergyUse.EnergyForHeating      = HVACSchedule.AirConRoomFraction.*EnergyUse.EnergyForHeating;
+
 
 
 % ----------- In case of no BEM

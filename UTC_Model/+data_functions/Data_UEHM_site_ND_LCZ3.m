@@ -22,23 +22,22 @@ else
     LAIvarying = 0;
     LAI_Rvar = 0; LAI_Gvar = 0; LAI_Tvar = 0;
 end
-    
+ 
 
 %% GEOMETRY OF URBAN AREA
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Height_canyon	=	6.5;				% Canyon (building) height (m)
-% Width_canyon	=	12.4;				% Canyon (road) width (m)
-% Width_roof		=	11.9;				% Roof width (m), calculated from the land cover fraction and the street width.
-% Radius_tree		=	1.86;              % Tree-crown radius (m), Calculated out of rescaled tree fraction and street width (assuming two uniform strips of tree rows)
-% Height_tree		=	6.2-Radius_tree;		% Tree height (m)
-% Distance_tree	=	0.5+Radius_tree;	% Tree-to-wall distance (m)
-
 Height_canyon	=	6.5;				% Canyon (building) height (m)
-Width_canyon	=	5.78;				% Canyon (road) width (m)
-Width_roof		=	4.73;				% Roof width (m), calculated from the land cover fraction and the street width.
-Radius_tree		=	0.289;              % Tree-crown radius (m), Calculated out of rescaled tree fraction and street width (assuming two uniform strips of tree rows)
+Width_canyon	=	5.8;				% Canyon (road) width (m)
+Width_roof		=	7.1;				% Roof width (m), calculated from the land cover fraction and the street width.
+Radius_tree		=	Width_canyon.*0.2./4;              % Tree-crown radius (m), Calculated out of rescaled tree fraction and street width (assuming two uniform strips of tree rows)
 Height_tree		=	5-Radius_tree;		% Tree height (m)
-Distance_tree	=	0.5+Radius_tree;	% Tree-to-wall distance (m)
+
+if 4*Radius_tree+2<Width_canyon
+    Distance_tree	=	1+Radius_tree;	% Tree-to-wall distance (m)
+else
+    dt = (Width_canyon-(4*Radius_tree))/3;
+    Distance_tree = dt+Radius_tree;
+end
 
 
 Hcan_max	=	NaN;	% Maximum height of roughness elements (buidlings), (m)
@@ -86,19 +85,11 @@ Per_runoff_R	=	1;		% Percentage of excess water that leaves the system as runoff
 FractionsRoof	=	struct('fveg',fveg_R,'fimp',fimp_R,'Per_runoff',Per_runoff_R);
 
 % GROUND %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% fveg_raw = [0.2 0.5 0.7];
-% fbare_raw  = [0.1 0.1 0.1];
-% fimp_raw = 1-(fveg_raw + fbare_raw);
-% 
-% fveg_G	=	fveg_raw(varargin{1, 1});	% Vegetated ground raction (-)
-% fbare_G	=	fbare_raw(varargin{1, 1});	% Bare ground raction (-)
-% fimp_G	=	fimp_raw(varargin{1, 1});	% Impervious ground raction (-)
+fveg_G	=	0.23;	    % Vegetated ground raction (-)
+fbare_G	=	0.1;	    % Bare ground raction (-)
+fimp_G	=	1-fveg_G-fbare_G;	% Impervious ground raction (-)
 
-fveg_G	=	0.3;	% Vegetated ground raction (-)
-fbare_G	=	0.0;	% Bare ground raction (-)
-fimp_G	=	0.7;	% Impervious ground raction (-)
-
-Per_runoff_G	=	0.9;	% Percentage of excess water that leaves the system as runoff, needs to be between 0-1 [-]
+Per_runoff_G	=	0.5;	% Percentage of excess water that leaves the system as runoff, needs to be between 0-1 [-]
 
 FractionsGround	=	struct('fveg',fveg_G,'fbare',fbare_G,'fimp',fimp_G,'Per_runoff',Per_runoff_G);
 
@@ -155,41 +146,41 @@ ParVegRoof	=	struct('LAI',LAI_R,'SAI',SAI_R,'hc',hc_R,'h_disp',h_disp_R,...
 % GROUND VEGETATION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % GRASS
 % General
-LAI_GC      =   1.5;
+LAI_GC      =   2.5;
 LAI_G		=	LAIvarying*LAI_Gvar + (1-LAIvarying) * LAI_GC; 		% Leaf area index for the roof vegetation (-)
 SAI_G		=	0.001;	% Stem area index of ground vegetation (-)
-hc_G		=	0.1;	% canopy height of ground vegetation [m]
+hc_G		=	0.05;	% canopy height of ground vegetation [m]
 h_disp_G	=	2/3*hc_G;	% Zero plane displacement height of ground vegetation [m]
-d_leaf_G	=	0.8;		% Leaf dimension of ground vegetation [cm]
+d_leaf_G	=	2;		% Leaf dimension of ground vegetation [cm]
 
 % Roof water uptake
 CASE_ROOT_G	=	1;		% Type of Root Profile
-ZR95_G		=	250;	% Root depth 95 percentile [mm]
+ZR95_G		=	300;	% Root depth 95 percentile [mm]
 ZR50_G		=	NaN;	% Root depth 50 percentile [mm]
 ZRmax_G		=	NaN;	% Maximum Root depth [mm]
-Rrootl_G	=	2000;	% Root length index [m root / m^2 PFT]
-PsiL50_G	=	-2.5;		% [MPa]  Water Potential at 50% loss conductivity
-PsiX50_G	=	-3.5;	% Water potential at 50 of xylem hydraulic conductivity and limit for water extraction from soil [MPa]
+Rrootl_G	=	4000;	% Root length index [m root / m^2 PFT]
+PsiL50_G	=	-2;		% [MPa]  Water Potential at 50% loss conductivity
+PsiX50_G	=	-5.5;	% Water potential at 50 of xylem hydraulic conductivity and limit for water extraction from soil [MPa]
 
 % Photosynthesis and Transpiration
-FI_G		=	0.081;	% Intrinsec quantum Efficiency [umolCO2/umolPhotons]
+FI_G		=	0.04;	% Intrinsec quantum Efficiency [umolCO2/umolPhotons]
 Do_G		=	2000;	% [Pa] Empirical coefficient for the role of vapor pressure in the biochemical model of photosynthesis
-a1_G		=	6;		% [-] Empirical parameter connecting stomatal aperture and net assimilaton
+a1_G		=	5;		% [-] Empirical parameter connecting stomatal aperture and net assimilaton
 go_G		=	0.01;	% [mol / s m^2] minimal Stomatal Conductance
-CT_G		=	3;		% --> 'CT' == 3  'CT' ==  4 Photosyntesis Typology for Plants, Photosynthetic pathway C3 or C4
+CT_G		=	4;		% --> 'CT' == 3  'CT' ==  4 Photosyntesis Typology for Plants, Photosynthetic pathway C3 or C4
 DSE_G		=	0.649;	% [kJ/mol] Activation Energy - Plant Dependent, Activation Energy in Photosynthesis for Rubisco Capacity
 Ha_G		=	72;		% [kJ / mol K]  entropy factor - Plant Dependent, Activation energy.
 gmes_G		=	Inf;	% [mol CO2/s m2] Mesophyll conductance, not used
-rjv_G		=	2.2;	% [?mol Eq/ ?mol CO2] Scaling factor between Jmax and Vmax
+rjv_G		=	2.1;	% [?mol Eq/ ?mol CO2] Scaling factor between Jmax and Vmax
 Kopt_G		=	0.5;	% [-] optical depth of direct beam perunit plant area
-Knit_G		=	0.2;	% [-] Canopy nitrogen decay coefficient
-Vmax_G		=	58;		% [?mol CO2/ m2 s] Maximum Rubisco capacity at 25°C leaf level
+Knit_G		=	0.3;	% [-] Canopy nitrogen decay coefficient
+Vmax_G		=	54;		% [?mol CO2/ m2 s] Maximum Rubisco capacity at 25°C leaf level
 mSl_G		=	0.0;
 e_rel_G		=	1;		% [-] Relative Efficiency of the photosynthesis apparatus due to Age/Day-length
 e_relN_G	=	1;		% [-] Relative efficiency of the photosynthesis apparatus due to N limitations
 Psi_sto_00_G=	-0.5;	% [MPa]  Water Potential at PLCs loss conductivity
-Psi_sto_50_G=	-3;	% [MPa]  Water Potential at 50% loss conductivity
-Sl_G		=	0.022;	% [m^2 gC] specific leaf area of  biomass [m^2 /gC]
+Psi_sto_50_G=	-1.6;	% [MPa]  Water Potential at 50% loss conductivity
+Sl_G		=	0.025;	% [m^2 gC] specific leaf area of  biomass [m^2 /gC]
 
 ParVegGround	=	struct('LAI',LAI_G,'SAI',SAI_G,'hc',hc_G,'h_disp',h_disp_G,...
 					'd_leaf',d_leaf_G,'CASE_ROOT',CASE_ROOT_G,'ZR95',ZR95_G,'ZR50',ZR50_G,...
@@ -201,19 +192,19 @@ ParVegGround	=	struct('LAI',LAI_G,'SAI',SAI_G,'hc',hc_G,'h_disp',h_disp_G,...
 					
 % TREE VEGETATION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % General
-LAI_TC      =   1.8;
+LAI_TC      =   3;
 LAI_T		=	LAIvarying*LAI_Tvar + (1-LAIvarying) * LAI_TC; 		% Leaf area index for the ground vegetation (-)
-SAI_T		=	0.1;		% Stem area index for the ground vegetation (-)
-d_leaf_T	=	1.5;		% Leaf dimension of ground vegetation [cm]
+SAI_T		=	0.2;		% Stem area index for the ground vegetation (-)
+d_leaf_T	=	5;		% Leaf dimension of ground vegetation [cm]
 
 % Roof water uptake
 CASE_ROOT_T	=	1;		% Type of Root Profile
-ZR95_T		=	1000;	% Root depth 95 percentile [mm]
+ZR95_T		=	1500;	% Root depth 95 percentile [mm]
 ZR50_T		=	NaN;	% Root depth 50 percentile [mm]
 ZRmax_T		=	NaN;	% Maximum Root depth [mm]
-Rrootl_T	=	1200;	% Root length index [m root / m^2 PFT]
-PsiL50_T	=	-1.2;	% [MPa]  Water Potential at 50% loss conductivity
-PsiX50_T	=	-4;	% Water potential at 50 of xylem hydraulic conductivity and limit for water extraction from soil [MPa]
+Rrootl_T	=	2200;	% Root length index [m root / m^2 PFT]
+PsiL50_T	=	-2.8;	% [MPa]  Water Potential at 50% loss conductivity
+PsiX50_T	=	-4.5;	% Water potential at 50 of xylem hydraulic conductivity and limit for water extraction from soil [MPa]
 
 % Photosynthesis and Transpiration
 FI_T		=	0.081;	% Intrinsec quantum Efficiency [umolCO2/umolPhotons]
@@ -224,16 +215,16 @@ CT_T		=	3;		% --> 'CT' == 3  'CT' ==  4 Photosyntesis Typology for Plants, Photo
 DSE_T		=	0.649;	% [kJ/mol] Activation Energy - Plant Dependent, Activation Energy in Photosynthesis for Rubisco Capacity
 Ha_T		=	72;		% [kJ / mol K]  entropy factor - Plant Dependent, Activation energy.
 gmes_T		=	Inf;	% [mol CO2/s m2] Mesophyll conductance, not used
-rjv_T		=	2;	% [?mol Eq/ ?mol CO2] Scaling factor between Jmax and Vmax
+rjv_T		=	2.2;	% [?mol Eq/ ?mol CO2] Scaling factor between Jmax and Vmax
 Kopt_T		=	0.5;	% [-] optical depth of direct beam perunit plant area
-Knit_T		=	0.25;	% [-] Canopy nitrogen decay coefficient
-Vmax_T		=	45;		% [?mol CO2/ m2 s] Maximum Rubisco capacity at 25°C leaf level
+Knit_T		=	0.4;	% [-] Canopy nitrogen decay coefficient
+Vmax_T		=	49;		% [?mol CO2/ m2 s] Maximum Rubisco capacity at 25°C leaf level
 mSl_T		=	0.0;
 e_rel_T		=	1;		% [-] Relative Efficiency of the photosynthesis apparatus due to Age/Day-length
 e_relN_T	=	1;		% [-] Relative efficiency of the photosynthesis apparatus due to N limitations
 Psi_sto_00_T=	-0.9;	% [MPa]  Water Potential at PLCs loss conductivity
-Psi_sto_50_T=	-2;	% [MPa]  Water Potential at 50% loss conductivity
-Sl_T		=	0.015;	% [m^2 gC] specific leaf area of  biomass [m^2 /gC]
+Psi_sto_50_T=	-1.7;	% [MPa]  Water Potential at 50% loss conductivity
+Sl_T		=	0.02;	% [m^2 gC] specific leaf area of  biomass [m^2 /gC]
 SPARTREE	=	2;		% Tree root distribution: 1 = Tree roots can access all water in the soil (imp, bare, veg) equally
 						% 2 =  If the tree crown is smaller than the combined vegetated and bare fraction, 
 						% then the trees only transpire from these fractions. Otherwise, they
@@ -253,11 +244,11 @@ ParVegTree	=	struct('LAI',LAI_T,'SAI',SAI_T,'d_leaf',d_leaf_T,'CASE_ROOT',CASE_R
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ROOF OPTICAL PROPERTIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 aveg_R		=	0.2;	% Roof vegetation surface albedo (-)
-aimp_R		=	0.15;	% Roof impervious albedo (-)
+aimp_R		=	0.2;	% Roof impervious albedo (-)
 albedo_R	=	fveg_R*aveg_R+fimp_R*aimp_R;	% equivalent roof surface albedo (-)
 
 eveg_R		=	1 - exp(-(LAI_R+SAI_R));	% Roof vegetation emissivity (-) 
-eimp_R		=	0.95;	% Roof impervious emissivity (-)
+eimp_R		=	0.97;	% Roof impervious emissivity (-)
 emissivity_R=	fveg_R*eveg_R+fimp_R*eimp_R;	% equivalent roof surface emissivity (-)
 
 PropOpticalRoof	=	struct('aveg',aveg_R,'aimp',aimp_R,'albedo',albedo_R,...
@@ -265,7 +256,7 @@ PropOpticalRoof	=	struct('aveg',aveg_R,'aimp',aimp_R,'albedo',albedo_R,...
 
 % GROUND OPTICAL PROPERTIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 aveg_G		=	0.2;	% Ground vegetation surface albedo (-)
-abare_G		=	0.15;	% Ground vegetation surface albedo (-)
+abare_G		=	0.2;	% Ground vegetation surface albedo (-)
 aimp_G		=	0.1;	% Ground impervious albedo (-)
 albedo_G	=	fveg_G*aveg_G + fbare_G*abare_G + fimp_G*aimp_G;	% equivalent ground surface albedo (-)
 
@@ -278,8 +269,8 @@ PropOpticalGround	=	struct('aveg',aveg_G,'abare',abare_G,'aimp',aimp_G,'albedo',
 						'eveg',eveg_G,'ebare',ebare_G,'eimp',eimp_G,'emissivity',emissivity_G);
 					
 % WALL OPTICAL PROPERTIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-albedo_W		=	0.4;	% Wall surface albedo (-)
-emissivity_W	=	0.95;	% Wall emissivity (-)
+albedo_W		=	0.3;	% Wall surface albedo (-)
+emissivity_W	=	0.97;	% Wall emissivity (-)
 
 PropOpticalWall	=	struct('albedo',albedo_W,'emissivity',emissivity_W);
 
@@ -293,20 +284,20 @@ PropOpticalTree	=	struct('albedo',albedo_T,'emissivity',emissivity_T);
 %% THERMAL PROPERTIES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ROOF THERMAL PROPERTIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-lan_dry_imp_R	=	0.67;		% Thermal conductivity dry solid [W/m K]
-cv_s_imp_R		=	1.0*10^6;	% Volumetric heat capacity solid [J/m^3 K]
+lan_dry_imp_R	=	0.1;		% Thermal conductivity dry solid [W/m K]
+cv_s_imp_R		=	1.26*10^6;	% Volumetric heat capacity solid [J/m^3 K]
 
 ParThermalRoof	=	struct('lan_dry_imp',lan_dry_imp_R,'cv_s_imp',cv_s_imp_R);
 
 % GROUND THERMAL PROPERTIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-lan_dry_imp_G	=	1.2;		% Thermal conductivity dry solid [W/m K]
+lan_dry_imp_G	=	1.5;		% Thermal conductivity dry solid [W/m K]
 cv_s_imp_G		=	1.5*10^6;	% Volumetric heat capacity solid [J/m^3 K]
 
 ParThermalGround	=	struct('lan_dry_imp',lan_dry_imp_G,'cv_s_imp',cv_s_imp_G);
 
 % WALL THERMAL PROPERTIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-lan_dry_W	=	0.67;			% Thermal conductivity dry solid [W/m K]
-cv_s_W		=	1.0*10^6;		% Volumetric heat capacity solid [J/m^3 K]
+lan_dry_W	=	0.28;			% Thermal conductivity dry solid [W/m K]
+cv_s_W		=	1.7*10^6;		% Volumetric heat capacity solid [J/m^3 K]
 
 ParThermalWall	=	struct('lan_dry',lan_dry_W,'cv_s',cv_s_W);
 
@@ -314,7 +305,7 @@ ParThermalWall	=	struct('lan_dry',lan_dry_W,'cv_s',cv_s_W);
 % This is not used in the model yet
 Cthermal_leaf	=	640;	% [J m-2 K-1] Heat capacity per single leaf area based on Kitaya et al. 2003, Ryu et al. 2016
 
-ParThermalTree	=	struct('Cthermal_leaf',Cthermal_leaf);            
+ParThermalTree	=	struct('Cthermal_leaf',Cthermal_leaf);                  
 					
 					
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -322,8 +313,8 @@ ParThermalTree	=	struct('Cthermal_leaf',Cthermal_leaf);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ROOF %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Layer thickness
-dz1_R	=	0.1;       % Thickness of first roof layer [m]
-dz2_R	=	0.1;       % Thickness of second roof layer [m]
+dz1_R	=	0.105;       % Thickness of first roof layer [m]
+dz2_R	=	0.105;       % Thickness of second roof layer [m]
 
 % Soil layer discretization 
 Zs_R	=	[ 0 10 20 50 100];	% soil layer discretization [mm]
@@ -348,8 +339,8 @@ FixSM_LayerEnd_G    =   ms_G; % Last layer with fixed soil moisture
 
 % WALL %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Layer thickness %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-dz1_W	=	0.1;       % Thickness of first wall layer [m]
-dz2_W	=	0.1;       % Thickness of second wall layer [m]
+dz1_W	=	0.11;       % Thickness of first wall layer [m]
+dz2_W	=	0.11;       % Thickness of second wall layer [m]
 
 WallLayers	=	struct('dz1_wall',dz1_W,'dz2_wall',dz2_W);
 
@@ -388,7 +379,7 @@ Psan_G	=	0.40;	% Fraction of sand in the soil [-]
 Porg_G	=	0.025;	% Fraction of organic material in the soil [-]
 
 % Interception and soil parameters
-In_max_imp_G		=	0.5; % 0.2;	% Maxiumum interception capacity of impervious ground area [mm]
+In_max_imp_G		=	0.25; % 0.2;	% Maxiumum interception capacity of impervious ground area [mm]
 In_max_underveg_G	=	10;		% Maxiumum interception capacity of vegetated ground area [mm]
 In_max_bare_G		=	10;		% Maxiumum interception capacity of bare ground area [mm]
 Sp_In_G				=	0.2;	% specific water retained by a vegetated surface on the ground [mm m^2 VEG area m^-2 plant area]
@@ -436,8 +427,8 @@ Person		=	struct('PositionPx',PositionPx,'PositionPz',PositionPz,...
 % Turn building energy model on or off
 BEM_on = 1;
 
-% Building Energy Model parameters %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % Albedo and emissivities of indoor surfaces
 abc = 0.3;       % Albedo ceiling
 abw = 0.3;       % Albedo wall
@@ -445,10 +436,10 @@ abg = 0.3;       % Albedo ground
 abm = 0.3;       % Albedo internal mass
 
 % accroding to Oleson et al. (2019)
-ec = 0.9;       % Emissitivity ceiling
-eg = 0.9;       % Emissitivity ground
-ew = 0.9;       % Emissitivity wall
-em = 0.9;       % Emissitivity internal mass
+ec = 0.95;       % Emissitivity ceiling
+eg = 0.95;       % Emissitivity ground
+ew = 0.95;       % Emissitivity wall
+em = 0.95;       % Emissitivity internal mass
 
 PropOpticalIndoors		=	struct('abc',abc,'abw',abw,'abg',abg,'abm',abm,'ec',ec,'eg',eg,'ew',ew,'em',em);
 
@@ -474,7 +465,7 @@ ParThermalBulidingInt		=	struct('IntMassOn',IntMassOn,'FloorHeight',FloorHeight,
 % Window parameters -------------------------------------------------------
 % Fraction of windows, current scheme does not build for very high window ratios (e.g. do not simulate a glass tower)
 WindowsOn    = 1;    % Include windows in the simulation (1 = yes, 0 = no)
-GlazingRatio = 0.3;  % Glazing to wall ratio (window-to-wall ratio), e.g. 0.2 is 20% windows
+GlazingRatio = 0.15;  % Glazing to wall ratio (window-to-wall ratio), e.g. 0.2 is 20% windows
 
 % Heat conduction and capacity of windows
 Uvalue      = 4.95;     % W/m^2K, U-value = Thermal conductivity / thickness (e.g. Bueno et al. 2012)
@@ -496,25 +487,23 @@ ParWindows		=	struct('WindowsOn',WindowsOn,'GlazingRatio',GlazingRatio,...
 
 % Air conditioning and heating parameters ---------------------------------
 ACon        = 1; % Turn AC on and off (on = 1, off = 0)
-Heatingon   = 1; % Turn Heating on and off (on = 1, off = 0)
+Heatingon   = 0; % Turn Heating on and off (on = 1, off = 0)
 
 % Internal temperature and humidity set-points
 TsetpointCooling    = 273.15+25; % Cooling set-point temperature
-TsetpointHeating    = 273.15+18; % Heating set-point temperature
-RHsetpointCooling   = 50; % Cooling set-point humidity, e.g. according to Fonseca et al. (2020)
+TsetpointHeating    = 273.15+20; % Heating set-point temperature
+RHsetpointCooling   = 60; % Cooling set-point humidity, e.g. according to Fonseca et al. (2020)
 RHsetpointHeating   = NaN; % Heating set-point humidity, currently not used in the model
 
 % Air exchange rate, expressed as internal building volumne air per hour
-ACH = 4; % air changes per hour (1/h): Fonseca et al. 2020 "Values of ACH can oscillate between 2.4 and 12 depending on the building occupancy type"
+ACH = 0.5; % air changes per hour (1/h): Fonseca et al. 2020 "Values of ACH can oscillate between 2.4 and 12 depending on the building occupancy type"
 
 % Coefficient of performance for air conditioning and heating
-COPAC   = 3; % Coefficient of performance for AC
+COPAC   = 3.26; % Coefficient of performance for AC
 COPHeat = 0.9; % Coefficient of performance for Heating
 
-% Parameter specifying fate of humidity removed by air-conditioning /
-% indoor dehumidification, either water vapor is condensed and ends up as
-% waste water / runoff or it is not condensed and just added to the canyon
-% air
+% Parameter specifying fate (condensed or reemitted) of humidity removed by
+% air-conditioning: currently not used i calculation
 f_ACLatentToQ = 1; % Fraction (0-1) of latent heat removed by AC that is condensed and ends up in the wastewater/ruonff. The rest is emitted back into the canyon
 
 ParHVAC		=	struct('ACon',ACon,'Heatingon',Heatingon,...

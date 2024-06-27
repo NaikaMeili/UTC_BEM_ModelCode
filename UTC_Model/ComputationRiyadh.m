@@ -1,18 +1,17 @@
 %%%%%%%%%% RUN TIME SERIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-load(fullfile('+data_functions', 'TMYSingapore_RadPart.mat'))
+load(fullfile('+data_functions', 'TMYRiyadh_RadPart.mat'))
 
 % Decide if a varying LAI timeseries is provided [1] or not [0]
 [LAI_TimeSeries]=data_functions.VaryingLAIInput(0,'LAI_Zurich_Area'); 
 
-
-n			=	size(TMYSingapore,1); % Calculation length, there is no need to change this
+n			=	size(TMYRiyadh,1); % Calculation length, there is no need to change this
 m			=	1;					% Length for sensitivity analysis
-Name_Site	=	'SG_LCZ3';	% Name for Data_UEHM_site
-Name_SiteFD	=	'SG_LCZ3';		% Name for UEHMForcingData
-Name_ViewFactor = 'SG_LCZ3';
+Name_Site	=	'RY_LCZ3';	% Name for Data_UEHM_site
+Name_SiteFD	=	'RY_LCZ3';		% Name for UEHMForcingData
+Name_ViewFactor = 'RY_LCZ3';
 OPTION_RAY	=	1; % Load precalculated view factors [1], Recalculate view factors [0]
 
-NameOutput	=	'SG_LCZ3';
+NameOutput	=	'RY_LCZ3';
 
 % Specify which outputs should be saved
 % 1 = Essential energy flux and climate output
@@ -24,14 +23,14 @@ OutputsToSave = 3;
 %% Meteo data
 % LWR_in [W/m2], SAB1_in [W/m2], SAB2_in [W/m2], SAD1_in [W/m2], SAD2_in [W/m2]
 % T_atm	[K], windspeed_u[m/s, pressure_atm [Pa], rain [mm/h], rel_humidity [-]
-TMYSingapore.WindSpeedms(TMYSingapore.WindSpeedms(1:n,:)==0) = 0.01;	% Wind speed cannot be 0 otherwise the resistance function fails
+TMYRiyadh.WindSpeedms(TMYRiyadh.WindSpeedms(1:n,:)==0) = 0.01;	% Wind speed cannot be 0 otherwise the resistance function fails
 
-MeteoDataRaw	=	struct('LWR_in',TMYSingapore.LWRin(1:n,:),'SAB1_in',TMYSingapore.SAB1(1:n,:),...
-					'SAB2_in',TMYSingapore.SAB2(1:n,:),'SAD1_in',TMYSingapore.SAD1(1:n,:),...
-					'SAD2_in',TMYSingapore.SAD2(1:n,:),'T_atm',TMYSingapore.TairC(1:n,:)+273.15,...
-					'windspeed_u',TMYSingapore.WindSpeedms(1:n,:),'pressure_atm',TMYSingapore.PressurePa(1:n,:),...
-					'rain',TMYSingapore.Rain(1:n,:),'rel_humidity',...
-					TMYSingapore.RH(1:n,:)./100,'Date',TMYSingapore.Time(1:n,:));
+MeteoDataRaw	=	struct('LWR_in',TMYRiyadh.LWRin(1:n,:),'SAB1_in',TMYRiyadh.SAB1(1:n,:),...
+					'SAB2_in',TMYRiyadh.SAB2(1:n,:),'SAD1_in',TMYRiyadh.SAD1(1:n,:),...
+					'SAD2_in',TMYRiyadh.SAD2(1:n,:),'T_atm',TMYRiyadh.TairC(1:n,:)+273.15,...
+					'windspeed_u',TMYRiyadh.WindSpeedms(1:n,:),'pressure_atm',TMYRiyadh.PressurePa(1:n,:),...
+					'rain',TMYRiyadh.Rain(1:n,:),'rel_humidity',...
+					TMYRiyadh.RH(1:n,:)./100,'Date',TMYRiyadh.Time(1:n,:));
 
 
 %% Calculation starts here. No need to change anything after this point
